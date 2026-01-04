@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "lighthouse:audit": "node scripts/lighthouse-audit.js",
@@ -72,6 +72,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.16",
+    "browserslist": "^4.28.1",
+    "caniuse-lite": "^1.0.30001762",
     "jsdom": "^26.1.0",
     "node-fetch": "^3.3.2",
     "postcss": "^8.4.31",
