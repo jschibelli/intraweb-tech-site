@@ -15,6 +15,9 @@ const nextConfig = {
     }
     return config;
   },
+  // Turbopack config to silence the error in Next.js 16
+  // The webpack config above is still used when building with --webpack flag
+  turbopack: {},
 };
 
 module.exports = withBundleAnalyzer(nextConfig); 
