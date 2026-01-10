@@ -6,7 +6,7 @@ import ProcessTimeline from "@/components/portfolio/ProcessTimeline";
 import ResultsHighlights from "@/components/portfolio/ResultsHighlights";
 import TeamComposition from "@/components/portfolio/TeamComposition";
 import ClientTestimonial from "@/components/portfolio/ClientTestimonial";
-import ContactCTA from "@/components/portfolio/ContactCTA";
+
 import NavPrevNext from "@/components/portfolio/NavPrevNext";
 import Image from "next/image";
 

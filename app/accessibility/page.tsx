@@ -1,4 +1,4 @@
-import Link from "next/link";
+
 
 export default function AccessibilityStatement() {
   return (
@@ -30,7 +30,7 @@ export default function AccessibilityStatement() {
           <section className="mb-10">
             <h2>Known Accessibility Gaps</h2>
             <p>
-              While we strive to ensure that our website is fully accessible, some content may not be fully accessible due to limitations or areas that are currently under improvement. We are continuously working to address these issues and improve our website's accessibility.
+              While we strive to ensure that our website is fully accessible, some content may not be fully accessible due to limitations or areas that are currently under improvement. We are continuously working to address these issues and improve our website&apos;s accessibility.
             </p>
           </section>
           <section className="mb-10">
@@ -62,7 +62,7 @@ export default function AccessibilityStatement() {
             <h2>Feedback and Contact</h2>
             <p>
               We welcome your feedback on the accessibility of our website. If you encounter any accessibility barriers or have suggestions for improvement, please contact us at:{' '}
-              <a 
+              <a
                 href="mailto:contact@intrawebtech.com"
                 className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition-colors duration-200"
               >

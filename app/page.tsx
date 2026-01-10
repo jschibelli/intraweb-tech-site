@@ -6,7 +6,7 @@ import About from "../components/About";
 import Testimonials from "../components/Testimonials";
 import SynaplyAI from "../components/SynaplyAI";
 import FAQ from "../components/FAQ";
-import projectsData from "@/data/projects.json";
+
 
 export default function Home() {
   return (

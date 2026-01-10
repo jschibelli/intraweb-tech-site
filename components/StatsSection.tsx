@@ -1,7 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader } from "./ui/card"
-import { Button } from "./ui/Button"
 import { Gauge, Rocket, BarChart3, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -39,7 +37,7 @@ export function StatsSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-gray-700 to-gray-700/95" />
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-      
+
       <div className="max-w-5xl mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -51,7 +49,7 @@ export function StatsSection() {
             Real Numbers, Real Growth
           </h2>
           <p className="font-sans text-lg md:text-xl text-center mb-12 max-w-2xl mx-auto text-teal-100">
-            Our clients don't just get websites—they get measurable business results.
+            Our clients don&apos;t just get websites—they get measurable business results.
           </p>
         </motion.div>
 
@@ -64,7 +62,7 @@ export function StatsSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <div 
+              <div
                 className="flex flex-col p-8 rounded-xl shadow-lg bg-gray-800 border border-gray-700 border-t-4 border-teal-500 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
               >
                 <div className="flex items-center gap-4 mb-4">

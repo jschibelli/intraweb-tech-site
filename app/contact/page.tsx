@@ -13,9 +13,9 @@ export default function ContactPage() {
         </div>
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">Get in Touch</h1>
-          <p className="text-xl md:text-2xl text-teal-400 font-semibold mb-4">Let's discuss your project</p>
+          <p className="text-xl md:text-2xl text-teal-400 font-semibold mb-4">Let&apos;s discuss your project</p>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Have a question or want to work together? We'd love to hear from you. Fill out the form below or use our contact information.
+            Have a question or want to work together? We&apos;d love to hear from you. Fill out the form below or use our contact information.
           </p>
         </div>
       </section>

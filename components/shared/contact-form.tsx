@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -54,10 +54,10 @@ export default function ContactForm() {
       }
       setSubmitStatus({
         type: "success",
-        message: "Thank you for your message! We'll get back to you soon.",
+        message: "Thank you for your message! We&apos;ll get back to you soon.",
       });
       reset();
-    } catch (error) {
+    } catch {
       setSubmitStatus({
         type: "error",
         message: "Failed to send message. Please try again later.",
@@ -71,11 +71,10 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {submitStatus && (
         <div
-          className={`p-4 rounded-md ${
-            submitStatus.type === "success"
+          className={`p-4 rounded-md ${submitStatus.type === "success"
               ? "bg-teal-50 text-teal-600"
               : "bg-red-50 text-red-600"
-          }`}
+            }`}
         >
           {submitStatus.message}
         </div>

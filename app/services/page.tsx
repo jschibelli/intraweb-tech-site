@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Code, Palette, Cloud, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+
 
 const iconMap = {
   Code,
@@ -104,11 +105,12 @@ export default function ServicesPage() {
                 {/* Case Study */}
                 {service.caseStudies[0] && (
                   <div className="flex-1">
-                    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-                      <img
+                    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg relative h-48">
+                      <Image
                         src={service.caseStudies[0].image}
                         alt={service.caseStudies[0].title}
-                        className="w-full h-48 object-cover"
+                        fill
+                        className="object-cover"
                       />
                       <div className="p-6">
                         <h3 className="text-xl font-semibold mb-2">{service.caseStudies[0].title}</h3>

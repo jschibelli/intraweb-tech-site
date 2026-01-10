@@ -49,11 +49,11 @@ export function TeamProcess() {
             How Our Hybrid Team Works
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            At IntraWeb Technologies, human creativity leads — and AI agents execute with precision. Here's how our collaboration model delivers faster, smarter results.
+            At IntraWeb Technologies, human creativity leads — and AI agents execute with precision. Here&apos;s how our collaboration model delivers faster, smarter results.
           </p>
         </div>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, i) => (
+          {items.map((item) => (
             <div
               key={item.title}
               className="bg-[#232b3d] rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-800"

@@ -18,7 +18,7 @@ export default function ContactCTA() {
             Ready to Start Your Project?
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8">
-            Let's discuss how our hybrid human+AI approach can help you achieve
+            Let&apos;s discuss how our hybrid human+AI approach can help you achieve
             your goals faster and more efficiently.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
