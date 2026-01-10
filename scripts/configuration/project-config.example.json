@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "setupDate": "YYYY-MM-DD",
+  "organization": "YourOrgOrUser",
+  "isOrganization": true,
+  "defaultProject": "yourprojectkey",
+  "projects": {
+    "yourprojectkey": {
+      "name": "Your Project Name",
+      "projectNumber": 0,
+      "projectId": "PVT_...",
+      "fieldIds": {},
+      "options": {},
+      "defaults": {
+        "Status": "Backlog",
+        "Priority": "P1",
+        "Size": "M",
+        "Estimate": 0
+      }
+    }
+  },
+  "issueTypes": {}
+}
+
+
+
