@@ -4,10 +4,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    // Allow production builds to complete even with ESLint errors
-    ignoreDuringBuilds: true,
-  },
+  // Empty turbopack config to silence the warning
+  // eslint configuration is now handled via eslint-config-next in package.json
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
