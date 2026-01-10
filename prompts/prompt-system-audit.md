@@ -1,5 +1,5 @@
 ---
-title: Portfolio OS Prompt System Audit
+title: Workant Prompt System Audit
 owner: automation
 version: 0.1.0
 last_reviewed: 2025-11-15
@@ -7,7 +7,7 @@ linked_scripts: []
 status: draft
 ---
 
-# Portfolio OS Prompt System Audit
+# Workant Prompt System Audit
 
 _Generated: 2025-11-15_
 

@@ -2,13 +2,13 @@
 
 ## 📚 **Complete Guide to Using Scripts with AI Prompts**
 
-This guide teaches you how to effectively integrate Portfolio OS scripts with AI prompts for maximum productivity and automation.
+This guide teaches you how to effectively integrate Workant scripts with AI prompts for maximum productivity and automation.
 
 ---
 
 ## 🎯 **Overview**
 
-The Portfolio OS scripts system is designed to work seamlessly with AI prompts, allowing you to:
+The Workant scripts system is designed to work seamlessly with AI prompts, allowing you to:
 - Automate repetitive tasks
 - Generate consistent outputs
 - Maintain project standards

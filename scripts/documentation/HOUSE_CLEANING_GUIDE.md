@@ -1,8 +1,8 @@
-# Portfolio OS House Cleaning Guide
+# Workant House Cleaning Guide
 
 ## Overview
 
-The Portfolio OS house cleaning system provides comprehensive maintenance and organization tools for the development branch. It ensures the codebase remains clean, organized, and maintainable.
+The Workant house cleaning system provides comprehensive maintenance and organization tools for the development branch. It ensures the codebase remains clean, organized, and maintainable.
 
 ## 🧹 **House Cleaning Scripts**
 
@@ -259,4 +259,4 @@ pwsh -File scripts/utilities/house-cleaning.ps1 -Mode organization -DryRun
 
 ---
 
-**This comprehensive house cleaning system ensures the Portfolio OS codebase remains clean, organized, and maintainable!** 🧹✨
+**This comprehensive house cleaning system ensures the Workant codebase remains clean, organized, and maintainable!** 🧹✨

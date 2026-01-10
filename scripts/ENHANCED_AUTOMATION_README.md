@@ -512,6 +512,6 @@ Get-Acl prompts/workflows/multi-agent-e2e-workflow.md
 ---
 
 **Last Updated**: 2025-10-10  
-**Maintained By**: Portfolio OS Development Team  
+**Maintained By**: Workant Development Team  
 **Questions?**: Create an issue or check existing documentation
 

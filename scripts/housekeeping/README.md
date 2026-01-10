@@ -1,8 +1,8 @@
-# Portfolio OS Housekeeping Scripts - Developer's Guide
+# Workant Housekeeping Scripts - Developer's Guide
 
 ## Overview
 
-The housekeeping folder contains a comprehensive suite of PowerShell scripts designed to maintain and organize the Portfolio OS project structure. These scripts automate file organization, cleanup, and validation tasks to ensure the project remains well-structured and clean.
+The housekeeping folder contains a comprehensive suite of PowerShell scripts designed to maintain and organize the Workant project structure. These scripts automate file organization, cleanup, and validation tasks to ensure the project remains well-structured and clean.
 
 ## Scripts Overview
 
@@ -486,4 +486,4 @@ $VerbosePreference = "Continue"
 .\clean-house-target.ps1 -Target help
 ```
 
-This documentation provides comprehensive guidance for using the housekeeping scripts effectively in the Portfolio OS project development workflow.
+This documentation provides comprehensive guidance for using the housekeeping scripts effectively in the Workant project development workflow.

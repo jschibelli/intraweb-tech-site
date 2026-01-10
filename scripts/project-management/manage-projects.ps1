@@ -2,62 +2,62 @@
 # Usage: .\scripts\project-manager.ps1 -Operation <OPERATION> -Issues <ISSUE_LIST> [OPTIONS]
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet("add", "configure", "status", "labels", "milestone", "all")]
     [string]$Operation,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string[]]$Issues = @(),
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("blog", "dashboard", "docs", "infra", "custom")]
     [string]$Preset = "custom",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Priority = "P1",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("XS", "S", "M", "L", "XL")]
     [string]$Size = "M",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$App = "Portfolio Site",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Area = "Frontend",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Milestone = "",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string[]]$Labels = @(),
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("Backlog", "In progress", "In review", "Ready", "Ready for Merge", "Done")]
     [string]$Status = "Ready",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ProjectId = "PVT_kwHOAEnMVc4BCu-c",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun
 )
 
 # Define issue presets
 $presets = @{
-    "blog" = @(196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208)
+    "blog"      = @(196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208)
     "dashboard" = @(150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160)
-    "docs" = @(180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190)
-    "infra" = @(170, 171, 172, 173, 174, 175, 176, 177, 178, 179)
+    "docs"      = @(180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190)
+    "infra"     = @(170, 171, 172, 173, 174, 175, 176, 177, 178, 179)
 }
 
 # Define field IDs
 $fieldIds = @{
     "Priority" = "PVTSSF_lAHOAEnMVc4BCu-czg028qQ"
-    "Size" = "PVTSSF_lAHOAEnMVc4BCu-czg028qU"
-    "App" = "PVTSSF_lAHOAEnMVc4BCu-czg156-s"
-    "Area" = "PVTSSF_lAHOAEnMVc4BCu-czg156_Y"
-    "Status" = "PVTSSF_lAHOAEnMVc4BCu-czg028oM"
+    "Size"     = "PVTSSF_lAHOAEnMVc4BCu-czg028qU"
+    "App"      = "PVTSSF_lAHOAEnMVc4BCu-czg156-s"
+    "Area"     = "PVTSSF_lAHOAEnMVc4BCu-czg156_Y"
+    "Status"   = "PVTSSF_lAHOAEnMVc4BCu-czg028oM"
 }
 
 # Define option IDs
@@ -68,20 +68,20 @@ $optionIds = @{
         "P2" = "f47ac10b-58cc-4372-a567-0e02b2c3d481"
         "P3" = "f47ac10b-58cc-4372-a567-0e02b2c3d482"
     }
-    "Size" = @{
+    "Size"     = @{
         "XS" = "f47ac10b-58cc-4372-a567-0e02b2c3d483"
-        "S" = "f47ac10b-58cc-4372-a567-0e02b2c3d484"
-        "M" = "f47ac10b-58cc-4372-a567-0e02b2c3d485"
-        "L" = "f47ac10b-58cc-4372-a567-0e02b2c3d486"
+        "S"  = "f47ac10b-58cc-4372-a567-0e02b2c3d484"
+        "M"  = "f47ac10b-58cc-4372-a567-0e02b2c3d485"
+        "L"  = "f47ac10b-58cc-4372-a567-0e02b2c3d486"
         "XL" = "f47ac10b-58cc-4372-a567-0e02b2c3d487"
     }
-    "Status" = @{
-        "Backlog" = "f75ad846"
-        "In progress" = "47fc9ee4"
-        "In review" = "aba860b9"
-        "Ready" = "e18bf179"
+    "Status"   = @{
+        "Backlog"         = "f75ad846"
+        "In progress"     = "47fc9ee4"
+        "In review"       = "aba860b9"
+        "Ready"           = "e18bf179"
         "Ready for Merge" = "5c9bd758"
-        "Done" = "98236657"
+        "Done"            = "98236657"
     }
 }
 
@@ -96,9 +96,11 @@ function Write-ColorOutput {
 function Get-IssueList {
     if ($Preset -ne "custom" -and $presets.ContainsKey($Preset)) {
         return $presets[$Preset]
-    } elseif ($Issues.Count -gt 0) {
+    }
+    elseif ($Issues.Count -gt 0) {
         return $Issues
-    } else {
+    }
+    else {
         Write-ColorOutput "Error: No issues specified. Use -Issues parameter or -Preset option." "Red"
         exit 1
     }
@@ -118,7 +120,8 @@ function Add-IssueToProject {
         gh project item-add 20 --owner jschibelli --url "https://github.com/jschibelli/portfolio-os/issues/$IssueNumber"
         Start-Sleep -Seconds 2
         return $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  Failed to add issue #$IssueNumber to project" "Red"
         return $false
     }
@@ -140,7 +143,8 @@ function Get-ProjectItemId {
             }
         }
         return $null
-    } catch {
+    }
+    catch {
         return $null
     }
 }
@@ -160,7 +164,8 @@ function Set-ProjectField {
     try {
         gh project item-edit --id $ProjectItemId --project-id $ProjectId --field-id $FieldId --single-select-option-id $OptionId
         return $true
-    } catch {
+    }
+    catch {
         return $false
     }
 }
@@ -180,7 +185,8 @@ function Set-IssueLabels {
     try {
         gh issue edit $IssueNumber --add-label ($Labels -join ',')
         return $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  Failed to set labels for issue #$IssueNumber" "Red"
         return $false
     }
@@ -201,14 +207,15 @@ function Set-IssueMilestone {
     try {
         gh issue edit $IssueNumber --milestone $Milestone
         return $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  Failed to set milestone for issue #$IssueNumber" "Red"
         return $false
     }
 }
 
 # Main execution
-Write-ColorOutput "=== Portfolio OS Project Manager ===" "Blue"
+Write-ColorOutput "=== Workant Project Manager ===" "Blue"
 Write-ColorOutput "Operation: $Operation" "Green"
 Write-ColorOutput "Preset: $Preset" "Green"
 
@@ -255,7 +262,8 @@ foreach ($issueNumber in $issueList) {
             if ($optionIds.Status.ContainsKey($Status)) {
                 $success = Set-ProjectField $projectItemId $fieldIds.Status $optionIds.Status[$Status] -and $success
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "  No project item found for issue #$issueNumber" "Red"
             $success = $false
         }
@@ -274,7 +282,8 @@ foreach ($issueNumber in $issueList) {
     if ($success) {
         Write-ColorOutput "  ✓ Issue #$issueNumber processed successfully" "Green"
         $successCount++
-    } else {
+    }
+    else {
         Write-ColorOutput "  ✗ Failed to process issue #$issueNumber" "Red"
     }
     
@@ -289,7 +298,8 @@ Write-ColorOutput "Failed: $($totalCount - $successCount)" "Red"
 if ($successCount -eq $totalCount) {
     Write-ColorOutput "All operations completed successfully!" "Green"
     exit 0
-} else {
+}
+else {
     Write-ColorOutput "Some operations failed. Please check the output above." "Red"
     exit 1
 }

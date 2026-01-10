@@ -2,12 +2,12 @@
 # Easy access to common housekeeping tasks
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("clean", "organize", "validate", "help")]
     [string]$Action = "help"
 )
 
-Write-Host "Portfolio OS Quick Housekeeping" -ForegroundColor Magenta
+Write-Host "Workant Quick Housekeeping" -ForegroundColor Magenta
 Write-Host "===============================" -ForegroundColor Magenta
 
 switch ($Action) {

@@ -15,7 +15,7 @@
 
 ## 🎯 Overview
 
-The Portfolio OS Project Management System is an enterprise-grade automation suite designed to streamline GitHub project management, automate issue configuration, manage project boards, and optimize development workflows. It provides intelligent project field management, automated status updates, webhook integrations, and comprehensive project analytics.
+The Workant Project Management System is an enterprise-grade automation suite designed to streamline GitHub project management, automate issue configuration, manage project boards, and optimize development workflows. It provides intelligent project field management, automated status updates, webhook integrations, and comprehensive project analytics.
 
 ### Key Features
 - **Automated Project Field Management**: Intelligent field population and standardization

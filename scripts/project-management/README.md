@@ -1,6 +1,6 @@
 # Project Management Scripts
 
-This directory contains PowerShell scripts for comprehensive GitHub project management, automated field configuration, and project board optimization for the Portfolio OS project.
+This directory contains PowerShell scripts for comprehensive GitHub project management, automated field configuration, and project board optimization for the Workant project.
 
 ## 📁 Directory Structure
 
@@ -188,7 +188,7 @@ $issues = @(196, 197, 198, 199, 200, 201, 202, 203, 204, 205)
 - **Base Branch**: `develop`
 
 ### Field IDs
-The system uses predefined field IDs for Portfolio OS project:
+The system uses predefined field IDs for Workant project:
 - **Status**: `PVTSSF_lAHOAEnMVc4BCu-czg028oM`
 - **Priority**: `PVTSSF_lAHOAEnMVc4BCu-czg028qQ`
 - **Size**: `PVTSSF_lAHOAEnMVc4BCu-czg028qU`
@@ -219,7 +219,7 @@ The system uses predefined field IDs for Portfolio OS project:
 These scripts require:
 - **GitHub CLI** (`gh`) - For project and issue management
 - **PowerShell 7+** - For script execution
-- **Portfolio OS Project** - Must be run from project root
+- **Workant Project** - Must be run from project root
 - **Authentication** - GitHub CLI must be authenticated
 
 ## 📚 Documentation

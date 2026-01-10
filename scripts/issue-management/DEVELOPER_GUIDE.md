@@ -17,7 +17,7 @@
 
 ## 🎯 Overview
 
-The Issue Management System is a comprehensive PowerShell-based automation suite designed for enterprise-scale GitHub issue management within the Portfolio OS project. It provides intelligent issue analysis, automated configuration, implementation workflows, and queue management capabilities.
+The Issue Management System is a comprehensive PowerShell-based automation suite designed for enterprise-scale GitHub issue management within the Workant project. It provides intelligent issue analysis, automated configuration, implementation workflows, and queue management capabilities.
 
 ### Key Features
 - **AI-Powered Analysis**: Intelligent issue requirements extraction and analysis
@@ -284,7 +284,7 @@ REDIS_URL=your_redis_url
 
 Add to your PowerShell profile (`$PROFILE`):
 ```powershell
-# Portfolio OS Issue Management Functions
+# Workant Issue Management Functions
 function Get-IssueAnalysis {
     param([int]$IssueNumber)
     & ".\scripts\issue-management\analysis\analyze-issues.ps1" -IssueNumber $IssueNumber

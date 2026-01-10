@@ -1,4 +1,4 @@
-# Portfolio OS House Cleaning Script - Final Working Version
+# Workant House Cleaning Script - Final Working Version
 # Basic development branch maintenance
 
 param(
@@ -6,7 +6,7 @@ param(
     [switch]$DryRun = $false
 )
 
-Write-Host "Portfolio OS House Cleaning Script" -ForegroundColor Magenta
+Write-Host "Workant House Cleaning Script" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Mode: $Mode | DryRun: $DryRun" -ForegroundColor Cyan
 
@@ -39,11 +39,13 @@ if ($RootFiles.Count -gt 0) {
                 if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                 Move-Item $file.FullName $targetDir
                 Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-            } elseif ($extension -eq ".md") {
+            }
+            elseif ($extension -eq ".md") {
                 $targetDir = "docs"
                 Move-Item $file.FullName $targetDir
                 Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-            } else {
+            }
+            else {
                 $targetDir = "scripts/utilities"
                 if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                 Move-Item $file.FullName $targetDir
@@ -51,7 +53,8 @@ if ($RootFiles.Count -gt 0) {
             }
         }
     }
-} else {
+}
+else {
     Write-Host "SUCCESS: File structure is well organized" -ForegroundColor Green
 }
 
@@ -86,7 +89,8 @@ foreach ($dir in $RequiredDirs) {
 if ($MissingDirs.Count -gt 0) {
     Write-Host "WARNING: Missing required directories:" -ForegroundColor Yellow
     $MissingDirs | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-} else {
+}
+else {
     Write-Host "SUCCESS: All required directories present" -ForegroundColor Green
 }
 
@@ -102,7 +106,8 @@ foreach ($file in $RequiredFiles) {
 if ($MissingFiles.Count -gt 0) {
     Write-Host "WARNING: Missing required files:" -ForegroundColor Yellow
     $MissingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-} else {
+}
+else {
     Write-Host "SUCCESS: All required files present" -ForegroundColor Green
 }
 
@@ -132,7 +137,8 @@ Update documentation as needed
 "@
     $report | Out-File -FilePath $reportPath -Encoding UTF8
     Write-Host "SUCCESS: Report generated: $reportPath" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "INFO: Would generate report in logs/ directory" -ForegroundColor Cyan
 }
 

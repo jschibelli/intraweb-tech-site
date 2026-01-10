@@ -1,24 +1,24 @@
-# PR Quality Checker for Portfolio OS
+# PR Quality Checker for Workant
 # Usage: .\pr-quality-checker.ps1 -PRNumber <NUMBER> [-Checks <CHECKS>] [-AutoFix]
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$PRNumber,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("all", "linting", "formatting", "tests", "security", "performance", "documentation")]
     [string]$Checks = "all",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$AutoFix,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$RunTests,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ExportTo,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$Detailed
 )
 
@@ -28,7 +28,8 @@ $utilsPath = Join-Path (Split-Path -Parent $scriptPath) "core-utilities\github-u
 
 if (Test-Path $utilsPath) {
     . $utilsPath
-} else {
+}
+else {
     Write-Warning "GitHub utilities not found at $utilsPath"
 }
 
@@ -63,9 +64,9 @@ function Test-Linting {
     Write-Host "`n🔍 LINTING CHECK" -ForegroundColor Yellow
     
     $lintResults = @{
-        Passed = 0
-        Failed = 0
-        Errors = @()
+        Passed   = 0
+        Failed   = 0
+        Errors   = @()
         Warnings = @()
     }
     
@@ -88,12 +89,14 @@ function Test-Linting {
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "  ✅ Passed" -ForegroundColor Green
                     $lintResults.Passed++
-                } else {
+                }
+                else {
                     Write-Host "  ❌ Failed" -ForegroundColor Red
                     $lintResults.Failed++
                     $lintResults.Errors += "Linting errors in $filename"
                 }
-            } else {
+            }
+            else {
                 Write-Host "  ⚠️  File not found locally" -ForegroundColor Yellow
                 $lintResults.Warnings += "Cannot check $filename - file not found locally"
             }
@@ -119,9 +122,9 @@ function Test-Formatting {
     Write-Host "`n🎨 FORMATTING CHECK" -ForegroundColor Yellow
     
     $formatResults = @{
-        Passed = 0
-        Failed = 0
-        Errors = @()
+        Passed   = 0
+        Failed   = 0
+        Errors   = @()
         Warnings = @()
     }
     
@@ -138,7 +141,8 @@ function Test-Formatting {
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "  ✅ Properly formatted" -ForegroundColor Green
                     $formatResults.Passed++
-                } else {
+                }
+                else {
                     Write-Host "  ❌ Formatting issues" -ForegroundColor Red
                     $formatResults.Failed++
                     $formatResults.Errors += "Formatting issues in $filename"
@@ -153,7 +157,8 @@ function Test-Formatting {
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 Write-Host "  ⚠️  File not found locally" -ForegroundColor Yellow
                 $formatResults.Warnings += "Cannot check $filename - file not found locally"
             }
@@ -179,10 +184,10 @@ function Test-Security {
     Write-Host "`n🔒 SECURITY CHECK" -ForegroundColor Yellow
     
     $securityResults = @{
-        Passed = 0
-        Failed = 0
-        Errors = @()
-        Warnings = @()
+        Passed          = 0
+        Failed          = 0
+        Errors          = @()
+        Warnings        = @()
         Vulnerabilities = @()
     }
     
@@ -209,16 +214,17 @@ function Test-Security {
                 foreach ($pattern in $sensitivePatterns) {
                     if ($content -match $pattern.Pattern) {
                         $securityResults.Vulnerabilities += @{
-                            File = $filename
+                            File     = $filename
                             Severity = $pattern.Severity
-                            Message = $pattern.Message
-                            Pattern = $pattern.Pattern
+                            Message  = $pattern.Message
+                            Pattern  = $pattern.Pattern
                         }
                         
                         if ($pattern.Severity -eq "High") {
                             $securityResults.Failed++
                             $securityResults.Errors += "$($pattern.Message) in $filename"
-                        } else {
+                        }
+                        else {
                             $securityResults.Warnings += "$($pattern.Message) in $filename"
                         }
                     }
@@ -227,7 +233,8 @@ function Test-Security {
                 if ($securityResults.Vulnerabilities.Count -eq 0) {
                     $securityResults.Passed++
                 }
-            } else {
+            }
+            else {
                 Write-Host "  ⚠️  File not found locally" -ForegroundColor Yellow
                 $securityResults.Warnings += "Cannot check $filename - file not found locally"
             }
@@ -263,11 +270,11 @@ function Test-Performance {
     Write-Host "`n⚡ PERFORMANCE CHECK" -ForegroundColor Yellow
     
     $perfResults = @{
-        Passed = 0
-        Failed = 0
-        Errors = @()
+        Passed   = 0
+        Failed   = 0
+        Errors   = @()
         Warnings = @()
-        Issues = @()
+        Issues   = @()
     }
     
     # Performance anti-patterns
@@ -292,15 +299,16 @@ function Test-Performance {
                 foreach ($pattern in $perfPatterns) {
                     if ($content -match $pattern.Pattern) {
                         $perfResults.Issues += @{
-                            File = $filename
+                            File     = $filename
                             Severity = $pattern.Severity
-                            Message = $pattern.Message
+                            Message  = $pattern.Message
                         }
                         
                         if ($pattern.Severity -eq "High") {
                             $perfResults.Failed++
                             $perfResults.Errors += "$($pattern.Message) in $filename"
-                        } else {
+                        }
+                        else {
                             $perfResults.Warnings += "$($pattern.Message) in $filename"
                         }
                     }
@@ -309,7 +317,8 @@ function Test-Performance {
                 if ($perfResults.Issues.Count -eq 0) {
                     $perfResults.Passed++
                 }
-            } else {
+            }
+            else {
                 Write-Host "  ⚠️  File not found locally" -ForegroundColor Yellow
                 $perfResults.Warnings += "Cannot check $filename - file not found locally"
             }
@@ -345,10 +354,10 @@ function Test-Documentation {
     Write-Host "`n📚 DOCUMENTATION CHECK" -ForegroundColor Yellow
     
     $docResults = @{
-        Passed = 0
-        Failed = 0
-        Errors = @()
-        Warnings = @()
+        Passed      = 0
+        Failed      = 0
+        Errors      = @()
+        Warnings    = @()
         MissingDocs = @()
     }
     
@@ -374,7 +383,7 @@ function Test-Documentation {
                     
                     if ($beforeFunction -notmatch "/\*\*" -and $functionName -notmatch "^(test|spec|mock)") {
                         $docResults.MissingDocs += @{
-                            File = $filename
+                            File     = $filename
                             Function = $functionName
                         }
                         $docResults.Warnings += "Missing documentation for function '$functionName' in $filename"
@@ -387,7 +396,8 @@ function Test-Documentation {
                 }
                 
                 $docResults.Passed++
-            } else {
+            }
+            else {
                 Write-Host "  ⚠️  File not found locally" -ForegroundColor Yellow
                 $docResults.Warnings += "Cannot check $filename - file not found locally"
             }
@@ -422,10 +432,10 @@ function Run-Tests {
     Write-Host "`n🧪 RUNNING TESTS" -ForegroundColor Yellow
     
     $testResults = @{
-        Passed = 0
-        Failed = 0
-        Skipped = 0
-        Errors = @()
+        Passed   = 0
+        Failed   = 0
+        Skipped  = 0
+        Errors   = @()
         Warnings = @()
     }
     
@@ -448,12 +458,14 @@ function Run-Tests {
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "✅ All tests passed" -ForegroundColor Green
                 $testResults.Passed++
-            } else {
+            }
+            else {
                 Write-Host "❌ Tests failed" -ForegroundColor Red
                 $testResults.Failed++
                 $testResults.Errors += "Test failures detected"
             }
-        } else {
+        }
+        else {
             Write-Host "⚠️  No package.json found - cannot run tests" -ForegroundColor Yellow
             $testResults.Warnings += "No package.json found - cannot run tests"
         }
@@ -478,14 +490,14 @@ function Export-QualityReport {
     
     $report = @{
         GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        PRNumber = $PRNumber
-        Checks = $Checks
-        AutoFix = $AutoFix
-        Results = $Results
-        Summary = @{
-            TotalChecks = ($Results.Values | Measure-Object).Count
-            TotalPassed = ($Results.Values | ForEach-Object { $_.Passed } | Measure-Object -Sum).Sum
-            TotalFailed = ($Results.Values | ForEach-Object { $_.Failed } | Measure-Object -Sum).Sum
+        PRNumber    = $PRNumber
+        Checks      = $Checks
+        AutoFix     = $AutoFix
+        Results     = $Results
+        Summary     = @{
+            TotalChecks   = ($Results.Values | Measure-Object).Count
+            TotalPassed   = ($Results.Values | ForEach-Object { $_.Passed } | Measure-Object -Sum).Sum
+            TotalFailed   = ($Results.Values | ForEach-Object { $_.Failed } | Measure-Object -Sum).Sum
             TotalWarnings = ($Results.Values | ForEach-Object { $_.Warnings.Count } | Measure-Object -Sum).Sum
         }
     }

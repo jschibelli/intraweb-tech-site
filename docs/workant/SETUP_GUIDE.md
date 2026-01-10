@@ -106,7 +106,7 @@ If you configure multiple projects, select which one should be the default:
 ```
 Available projects:
   1. workant - @Workant
-  2. portfolio - @Portfolio OS
+  2. portfolio - @Workant
 Select default project (1-2): 1
 ```
 

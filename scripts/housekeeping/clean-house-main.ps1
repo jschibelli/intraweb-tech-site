@@ -1,16 +1,16 @@
-# Portfolio OS House Cleaning Script - Simple Working Version
+# Workant House Cleaning Script - Simple Working Version
 # Organizes files and cleans up the project
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("full", "organization", "cleanup", "validation", "docs")]
     [string]$Mode = "full",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun = $false
 )
 
-Write-Host "Portfolio OS House Cleaning Script" -ForegroundColor Magenta
+Write-Host "Workant House Cleaning Script" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Mode: $Mode | DryRun: $DryRun" -ForegroundColor Cyan
 
@@ -38,10 +38,10 @@ function Organize-DocsFolder {
     
     # Files that should be moved to specific subdirectories
     $docsMoves = @{
-        "CODE_OF_CONDUCT.md" = "docs/"
-        "CONTRIBUTING.md" = "docs/"
+        "CODE_OF_CONDUCT.md"             = "docs/"
+        "CONTRIBUTING.md"                = "docs/"
         "HASHNODE_API_IMPLEMENTATION.md" = "docs/api/"
-        "license.md" = "docs/"
+        "license.md"                     = "docs/"
     }
     
     # Project management files
@@ -68,7 +68,8 @@ function Organize-DocsFolder {
                 
                 Move-Item $sourcePath $targetPath -Force
                 Write-Host "SUCCESS: Moved $file to $targetPath" -ForegroundColor Green
-            } else {
+            }
+            else {
                 Write-Host "Would move $file to $targetPath" -ForegroundColor Yellow
             }
             $movedFiles++
@@ -84,7 +85,8 @@ function Organize-DocsFolder {
             if (!$DryRun) {
                 Move-Item $sourcePath $targetPath -Force
                 Write-Host "SUCCESS: Moved $file to project-management/" -ForegroundColor Green
-            } else {
+            }
+            else {
                 Write-Host "Would move $file to project-management/" -ForegroundColor Yellow
             }
             $movedFiles++
@@ -93,7 +95,8 @@ function Organize-DocsFolder {
     
     if ($movedFiles -gt 0) {
         Write-Host "SUCCESS: Organized $movedFiles files in docs folder" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "SUCCESS: Docs folder is already well organized" -ForegroundColor Green
     }
 }
@@ -120,11 +123,13 @@ function Organize-FileStructure {
                     if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                     Move-Item $file.FullName $targetDir
                     Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-                } elseif ($extension -eq ".md") {
+                }
+                elseif ($extension -eq ".md") {
                     $targetDir = "docs"
                     Move-Item $file.FullName $targetDir
                     Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-                } else {
+                }
+                else {
                     $targetDir = "scripts/utilities"
                     if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                     Move-Item $file.FullName $targetDir
@@ -132,7 +137,8 @@ function Organize-FileStructure {
                 }
             }
         }
-    } else {
+    }
+    else {
         Write-Host "SUCCESS: File structure is well organized" -ForegroundColor Green
     }
 }
@@ -171,7 +177,8 @@ function Validate-ProjectStructure {
     if ($MissingDirs.Count -gt 0) {
         Write-Host "WARNING: Missing required directories:" -ForegroundColor Yellow
         $MissingDirs | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-    } else {
+    }
+    else {
         Write-Host "SUCCESS: All required directories present" -ForegroundColor Green
     }
     
@@ -187,7 +194,8 @@ function Validate-ProjectStructure {
     if ($MissingFiles.Count -gt 0) {
         Write-Host "WARNING: Missing required files:" -ForegroundColor Yellow
         $MissingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-    } else {
+    }
+    else {
         Write-Host "SUCCESS: All required files present" -ForegroundColor Green
     }
 }
@@ -226,7 +234,8 @@ try {
     }
     
     Write-Host "SUCCESS: House cleaning completed successfully!" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "ERROR: House cleaning failed: $($_.Exception.Message)" -ForegroundColor Red
 }
 Write-Host "House cleaning script completed!" -ForegroundColor Green

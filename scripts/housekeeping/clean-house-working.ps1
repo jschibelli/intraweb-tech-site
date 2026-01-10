@@ -1,4 +1,4 @@
-# Portfolio OS House Cleaning Script - WORKING VERSION
+# Workant House Cleaning Script - WORKING VERSION
 # Actually does housekeeping work
 
 param(
@@ -6,7 +6,7 @@ param(
     [switch]$DryRun = $false
 )
 
-Write-Host "Portfolio OS House Cleaning Script" -ForegroundColor Magenta
+Write-Host "Workant House Cleaning Script" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Mode: $Mode | DryRun: $DryRun" -ForegroundColor Cyan
 
@@ -45,21 +45,25 @@ if ($RootFiles.Count -gt 0) {
                 if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                 Move-Item $file.FullName $targetDir
                 Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-            } elseif ($extension -eq ".md") {
+            }
+            elseif ($extension -eq ".md") {
                 $targetDir = "docs"
                 Move-Item $file.FullName $targetDir
                 Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
-            } else {
+            }
+            else {
                 $targetDir = "scripts/utilities"
                 if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
                 Move-Item $file.FullName $targetDir
                 Write-Host "SUCCESS: Moved $($file.Name) to $targetDir" -ForegroundColor Green
             }
         }
-    } else {
+    }
+    else {
         Write-Host "DRY RUN: Would move $($RootFiles.Count) files" -ForegroundColor Yellow
     }
-} else {
+}
+else {
     Write-Host "SUCCESS: No misplaced files found in root directory" -ForegroundColor Green
 }
 
@@ -102,7 +106,8 @@ foreach ($dir in $buildDirs) {
 
 if ($CleanedFiles -gt 0) {
     Write-Host "SUCCESS: Cleaned up $CleanedFiles temporary files and directories" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "INFO: No temporary files found to clean" -ForegroundColor Cyan
 }
 
@@ -121,7 +126,8 @@ foreach ($dir in $RequiredDirs) {
 if ($MissingDirs.Count -gt 0) {
     Write-Host "WARNING: Missing required directories:" -ForegroundColor Yellow
     $MissingDirs | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-} else {
+}
+else {
     Write-Host "SUCCESS: All required directories present" -ForegroundColor Green
 }
 
@@ -137,7 +143,8 @@ foreach ($file in $RequiredFiles) {
 if ($MissingFiles.Count -gt 0) {
     Write-Host "WARNING: Missing required files:" -ForegroundColor Yellow
     $MissingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
-} else {
+}
+else {
     Write-Host "SUCCESS: All required files present" -ForegroundColor Green
 }
 
@@ -173,7 +180,8 @@ Update documentation as needed
 "@
     $report | Out-File -FilePath $reportPath -Encoding UTF8
     Write-Host "SUCCESS: Report generated: $reportPath" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "DRY RUN: Would generate report in logs/ directory" -ForegroundColor Yellow
 }
 

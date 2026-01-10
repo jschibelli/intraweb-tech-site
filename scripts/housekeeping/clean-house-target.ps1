@@ -1,15 +1,15 @@
-# Portfolio OS Targeted House Cleaning Script
+# Workant Targeted House Cleaning Script
 # Quick access to folder-specific cleaning
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("scripts", "docs", "prompts", "apps", "packages", "automation", "help")]
     [string]$Target = "help",
     [string]$Mode = "full",
     [switch]$DryRun = $false
 )
 
-Write-Host "Portfolio OS Targeted House Cleaning" -ForegroundColor Magenta
+Write-Host "Workant Targeted House Cleaning" -ForegroundColor Magenta
 Write-Host "====================================" -ForegroundColor Magenta
 
 switch ($Target) {

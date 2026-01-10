@@ -1,7 +1,7 @@
 # GitHub Issue Auto-Configuration System
 
 ## 🎯 Overview
-This system automates the configuration of GitHub issues with proper project fields, labels, and milestone assignments for the Portfolio OS project.
+This system automates the configuration of GitHub issues with proper project fields, labels, and milestone assignments for the Workant project.
 
 ## 🚀 Quick Start
 

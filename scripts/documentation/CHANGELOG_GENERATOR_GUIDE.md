@@ -446,5 +446,5 @@ This script is part of the portfolio-os project and follows the same license.
 
 ---
 
-**Generated with ❤️ by the Portfolio OS Documentation Team**
+**Generated with ❤️ by the Workant Documentation Team**
 

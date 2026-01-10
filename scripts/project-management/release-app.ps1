@@ -3,20 +3,20 @@
 # Usage: .\scripts\project-management\release-app.ps1 -App "site|dashboard|docs" [-DryRun]
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet("site", "dashboard", "docs", "root")]
     [string]$App,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Message = "",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun
 )
 
 function Show-Banner {
     Write-Host "===============================================" -ForegroundColor Blue
-    Write-Host "      Portfolio OS App Release Manager" -ForegroundColor Blue
+    Write-Host "      Workant App Release Manager" -ForegroundColor Blue
     Write-Host "===============================================" -ForegroundColor Blue
     Write-Host ""
 }
@@ -33,41 +33,41 @@ function Get-AppInfo {
     param([string]$AppName)
     
     $appConfigs = @{
-        "site" = @{
-            Path = "apps/site"
-            Name = "Portfolio Site"
+        "site"      = @{
+            Path           = "apps/site"
+            Name           = "Portfolio Site"
             CurrentVersion = "0.9.0"
-            NextVersion = "1.0.0"
-            TagSuffix = "-site"
-            Emoji = "LAUNCH"
-            Description = "Portfolio Site Launch"
+            NextVersion    = "1.0.0"
+            TagSuffix      = "-site"
+            Emoji          = "LAUNCH"
+            Description    = "Portfolio Site Launch"
         }
         "dashboard" = @{
-            Path = "apps/dashboard"
-            Name = "Dashboard"
+            Path           = "apps/dashboard"
+            Name           = "Dashboard"
             CurrentVersion = "0.5.0"
-            NextVersion = "1.0.0"
-            TagSuffix = "-dashboard"
-            Emoji = "DASHBOARD"
-            Description = "Dashboard Launch"
+            NextVersion    = "1.0.0"
+            TagSuffix      = "-dashboard"
+            Emoji          = "DASHBOARD"
+            Description    = "Dashboard Launch"
         }
-        "docs" = @{
-            Path = "apps/docs"
-            Name = "Documentation Site"
+        "docs"      = @{
+            Path           = "apps/docs"
+            Name           = "Documentation Site"
             CurrentVersion = "0.1.0"
-            NextVersion = "1.0.0"
-            TagSuffix = "-docs"
-            Emoji = "DOCS"
-            Description = "Documentation Site Launch"
+            NextVersion    = "1.0.0"
+            TagSuffix      = "-docs"
+            Emoji          = "DOCS"
+            Description    = "Documentation Site Launch"
         }
-        "root" = @{
-            Path = "."
-            Name = "Complete Platform"
+        "root"      = @{
+            Path           = "."
+            Name           = "Complete Platform"
             CurrentVersion = "1.0.0"
-            NextVersion = "2.0.0"
-            TagSuffix = ""
-            Emoji = "PLATFORM"
-            Description = "Complete Platform Launch"
+            NextVersion    = "2.0.0"
+            TagSuffix      = ""
+            Emoji          = "PLATFORM"
+            Description    = "Complete Platform Launch"
         }
     }
     
@@ -80,9 +80,11 @@ function Get-NextRootVersion {
     
     if ($tags -match "v2\.") {
         return "2.1.0"  # Platform already launched, increment minor
-    } elseif ($tags -match "v1\.") {
+    }
+    elseif ($tags -match "v1\.") {
         return "1.1.0"  # Site launched, increment minor
-    } else {
+    }
+    else {
         return "0.9.0"  # Pre-launch
     }
 }
@@ -115,7 +117,8 @@ function Update-AppVersion {
     
     if ($DryRun) {
         Write-ColorOutput "  [DRY RUN] Would update $AppPath/package.json: $oldVersion → $NewVersion" "Cyan"
-    } else {
+    }
+    else {
         $packageJson | ConvertTo-Json -Depth 100 | Set-Content "$AppPath/package.json"
         Write-ColorOutput "  ✅ Updated $AppPath/package.json: $oldVersion → $NewVersion" "Green"
     }
@@ -142,7 +145,8 @@ function Update-AppChangelog {
     
     if ($DryRun) {
         Write-ColorOutput "  [DRY RUN] Would update $changelogPath with v$Version entry" "Cyan"
-    } else {
+    }
+    else {
         $content = Get-Content $changelogPath -Raw
         $content = $content -replace "## \[Unreleased\]", "## [Unreleased]$entry"
         $content | Set-Content $changelogPath
@@ -193,12 +197,14 @@ function Update-RootChangelog {
     
     if ($DryRun) {
         Write-ColorOutput "  [DRY RUN] Would update root CHANGELOG.md" "Cyan"
-    } else {
+    }
+    else {
         $content = Get-Content "CHANGELOG.md" -Raw
         # Find the first ## [ and insert before it
         if ($content -match "(## \[\d+\.\d+\.\d+\])") {
             $content = $content -replace "(## \[\d+\.\d+\.\d+\])", "$entry`$1"
-        } else {
+        }
+        else {
             $content += "`n$entry"
         }
         $content | Set-Content "CHANGELOG.md"
@@ -252,7 +258,8 @@ function Create-Release {
         $commitMsg = "chore: Release $($AppInfo.Name) v$($AppInfo.NextVersion)"
         git commit -m $commitMsg
         Write-ColorOutput "  ✅ Changes committed" "Green"
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ⚠️  Commit failed or no changes to commit" "Yellow"
     }
     
@@ -267,7 +274,8 @@ function Create-Release {
         git push origin develop
         git push origin $Tag
         Write-ColorOutput "  ✅ Pushed to GitHub" "Green"
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Failed to create/push tag: $_" "Red"
         exit 1
     }

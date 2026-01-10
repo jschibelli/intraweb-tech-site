@@ -2,7 +2,7 @@
 
 ## 📚 **Complete Guide to Scripts and Prompt Integration**
 
-This comprehensive tutorial teaches developers how to effectively use the Portfolio OS scripts system with AI prompts for maximum productivity.
+This comprehensive tutorial teaches developers how to effectively use the Workant scripts system with AI prompts for maximum productivity.
 
 ---
 
@@ -23,7 +23,7 @@ This comprehensive tutorial teaches developers how to effectively use the Portfo
 ### **Prerequisites**
 - PowerShell 7+ installed
 - GitHub CLI (`gh`) configured
-- Access to Portfolio OS repository
+- Access to Workant repository
 - Basic understanding of PowerShell
 
 ### **Quick Start**

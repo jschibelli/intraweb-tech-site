@@ -1,8 +1,8 @@
 # 📚 Scripts Documentation
 
-## 🎯 **Welcome to Portfolio OS Scripts Documentation**
+## 🎯 **Welcome to Workant Scripts Documentation**
 
-This folder contains comprehensive documentation for the Portfolio OS scripts system, providing developers with everything they need to effectively use and maintain the automation scripts.
+This folder contains comprehensive documentation for the Workant scripts system, providing developers with everything they need to effectively use and maintain the automation scripts.
 
 ---
 
@@ -283,7 +283,7 @@ $DebugPreference = "Continue"
 
 ## 📚 **Additional Resources**
 
-- **GitHub Repository**: Portfolio OS main repository
+- **GitHub Repository**: Workant main repository
 - **Scripts Folder**: `scripts/` directory
 - **Documentation**: This folder
 - **Support**: Check troubleshooting section

@@ -3,22 +3,22 @@
 # Usage: .\scripts\project-management\create-release.ps1 -Version "1.0.0" [-PreRelease "beta.1"] [-DryRun]
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$Version,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$PreRelease = "",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Message = "",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun
 )
 
 function Show-Banner {
     Write-Host "===============================================" -ForegroundColor Blue
-    Write-Host "      Portfolio OS Release Manager" -ForegroundColor Blue
+    Write-Host "      Workant Release Manager" -ForegroundColor Blue
     Write-Host "===============================================" -ForegroundColor Blue
     Write-Host ""
 }
@@ -61,13 +61,17 @@ function Get-ReleaseType {
     
     if (-not $PreRelease) {
         return "Stable Release"
-    } elseif ($PreRelease -match "alpha") {
+    }
+    elseif ($PreRelease -match "alpha") {
         return "Alpha Pre-release"
-    } elseif ($PreRelease -match "beta") {
+    }
+    elseif ($PreRelease -match "beta") {
         return "Beta Pre-release"
-    } elseif ($PreRelease -match "rc") {
+    }
+    elseif ($PreRelease -match "rc") {
         return "Release Candidate"
-    } else {
+    }
+    else {
         return "Pre-release"
     }
 }
@@ -89,7 +93,8 @@ function Test-GitStatus {
             Write-ColorOutput "  ❌ Release cancelled" "Red"
             exit 1
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "  ✅ Working directory is clean" "Green"
     }
     
@@ -155,10 +160,12 @@ function Update-PackageVersions {
                 Write-ColorOutput "     - apps/site/package.json" "White"
                 Write-ColorOutput "     - apps/dashboard/package.json" "White"
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "  [DRY RUN] Would update package.json to $Version" "Cyan"
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "  ✅ package.json already at correct version" "Green"
     }
 }
@@ -216,7 +223,8 @@ function Create-Release {
     try {
         git tag -a $FullVersion -m $Message
         Write-ColorOutput "  ✅ Tag created locally" "Green"
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Failed to create tag: $_" "Red"
         exit 1
     }
@@ -226,7 +234,8 @@ function Create-Release {
     try {
         git push origin $FullVersion
         Write-ColorOutput "  ✅ Tag pushed successfully!" "Green"
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Failed to push tag: $_" "Red"
         Write-ColorOutput "  Rolling back local tag..." "Yellow"
         git tag -d $FullVersion

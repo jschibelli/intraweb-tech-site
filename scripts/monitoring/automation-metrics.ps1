@@ -1,21 +1,21 @@
-# Advanced Analytics and Monitoring System for Portfolio OS Automation
+# Advanced Analytics and Monitoring System for Workant Automation
 # Usage: .\scripts\automation\monitoring\automation-metrics.ps1 [-Operation <OPERATION>] [-ExportTo <FILE>] [-TimeRange <DAYS>]
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("overview", "performance", "issues", "agents", "trends", "health", "alerts")]
     [string]$Operation = "overview",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ExportTo,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$TimeRange = 30,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$RealTime,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$Detailed
 )
 
@@ -31,12 +31,12 @@ if (Test-Path $githubUtilsPath) {
 
 # Global metrics storage
 $global:metrics = @{
-    Issues = @{}
-    Agents = @{}
+    Issues      = @{}
+    Agents      = @{}
     Performance = @{}
-    Trends = @{}
-    Health = @{}
-    Alerts = @()
+    Trends      = @{}
+    Health      = @{}
+    Alerts      = @()
 }
 
 function Get-ColorOutput {
@@ -69,7 +69,8 @@ function Load-HistoricalMetrics {
             $historicalData = Get-Content $historicalFile -Raw | ConvertFrom-Json
             $global:metrics = $historicalData
             Write-Host "📈 Loaded historical metrics data" -ForegroundColor Cyan
-        } catch {
+        }
+        catch {
             Write-Host "⚠️  Could not load historical metrics: $($_.Exception.Message)" -ForegroundColor Yellow
         }
     }
@@ -82,7 +83,8 @@ function Save-Metrics {
     try {
         $global:metrics | ConvertTo-Json -Depth 5 | Out-File -FilePath $metricsFile -Encoding UTF8
         Write-Host "💾 Metrics saved to historical data" -ForegroundColor Green
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to save metrics: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -93,18 +95,18 @@ function Collect-IssueMetrics {
     try {
         # Get all issues from the last TimeRange days
         $cutoffDate = (Get-Date).AddDays(-$TimeRange).ToString("yyyy-MM-dd")
-        $issues = gh issue list --state all --limit 100 --json number,title,state,labels,assignees,createdAt,updatedAt,closedAt | ConvertFrom-Json
+        $issues = gh issue list --state all --limit 100 --json number, title, state, labels, assignees, createdAt, updatedAt, closedAt | ConvertFrom-Json
         
         $issueMetrics = @{
-            Total = $issues.Count
-            Open = ($issues | Where-Object { $_.state -eq "OPEN" }).Count
-            Closed = ($issues | Where-Object { $_.state -eq "CLOSED" }).Count
-            ByPriority = @{}
-            ByLabel = @{}
-            ByAssignee = @{}
+            Total          = $issues.Count
+            Open           = ($issues | Where-Object { $_.state -eq "OPEN" }).Count
+            Closed         = ($issues | Where-Object { $_.state -eq "CLOSED" }).Count
+            ByPriority     = @{}
+            ByLabel        = @{}
+            ByAssignee     = @{}
             ResolutionTime = @()
-            CreatedPerDay = @{}
-            ClosedPerDay = @{}
+            CreatedPerDay  = @{}
+            ClosedPerDay   = @{}
         }
         
         foreach ($issue in $issues) {
@@ -162,7 +164,8 @@ function Collect-IssueMetrics {
         $global:metrics.Issues = $issueMetrics
         Write-Host "✅ Issue metrics collected: $($issueMetrics.Total) total issues" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to collect issue metrics: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -175,11 +178,11 @@ function Collect-AgentMetrics {
         $worktreeStateFile = Join-Path $scriptPath "..\issue-management\worktree-state.json"
         
         $agentMetrics = @{
-            TotalAgents = 0
-            ActiveAgents = 0
-            AgentWorkloads = @{}
+            TotalAgents      = 0
+            ActiveAgents     = 0
+            AgentWorkloads   = @{}
             AgentPerformance = @{}
-            LastActivity = @{}
+            LastActivity     = @{}
         }
         
         if (Test-Path $worktreeStateFile) {
@@ -198,7 +201,8 @@ function Collect-AgentMetrics {
                     LastActivity = $agent.Value.LastActivity
                 }
             }
-        } else {
+        }
+        else {
             # Fallback: analyze based on branch names and recent commits
             $branches = git branch -a | Where-Object { $_ -match "agent-\d+" }
             $agentMetrics.TotalAgents = $branches.Count
@@ -216,7 +220,8 @@ function Collect-AgentMetrics {
         $global:metrics.Agents = $agentMetrics
         Write-Host "✅ Agent metrics collected: $($agentMetrics.TotalAgents) agents, $($agentMetrics.ActiveAgents) active" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to collect agent metrics: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -227,10 +232,10 @@ function Collect-PerformanceMetrics {
     try {
         $performanceMetrics = @{
             ScriptExecutionTimes = @{}
-            APIResponseTimes = @{}
-            ErrorRates = @{}
-            SuccessRates = @{}
-            ResourceUsage = @{}
+            APIResponseTimes     = @{}
+            ErrorRates           = @{}
+            SuccessRates         = @{}
+            ResourceUsage        = @{}
         }
         
         # Analyze script execution logs if available
@@ -253,15 +258,16 @@ function Collect-PerformanceMetrics {
         
         # System resource usage
         $performanceMetrics.ResourceUsage = @{
-            CPUUsage = (Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 1).CounterSamples.CookedValue
+            CPUUsage    = (Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 1).CounterSamples.CookedValue
             MemoryUsage = [Math]::Round((Get-Process -Name "powershell" -ErrorAction SilentlyContinue | Measure-Object WorkingSet -Sum).Sum / 1MB, 2)
-            DiskSpace = (Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq "C:" }).FreeSpace / 1GB
+            DiskSpace   = (Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq "C:" }).FreeSpace / 1GB
         }
         
         $global:metrics.Performance = $performanceMetrics
         Write-Host "✅ Performance metrics collected" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to collect performance metrics: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -271,9 +277,9 @@ function Analyze-Trends {
     
     try {
         $trendMetrics = @{
-            IssueVelocity = @{}
-            ResolutionTrends = @{}
-            AgentEfficiency = @{}
+            IssueVelocity      = @{}
+            ResolutionTrends   = @{}
+            AgentEfficiency    = @{}
             AutomationAdoption = @{}
         }
         
@@ -286,7 +292,7 @@ function Analyze-Trends {
             }
             $trendMetrics.IssueVelocity = @{
                 RecentAverage = [Math]::Round($totalClosed / $recentDays.Count, 2)
-                Trend = if ($totalClosed -gt 0) { "Increasing" } else { "Stable" }
+                Trend         = if ($totalClosed -gt 0) { "Increasing" } else { "Stable" }
             }
         }
         
@@ -295,14 +301,15 @@ function Analyze-Trends {
             $avgResolutionTime = ($global:metrics.Issues.ResolutionTime | Measure-Object -Average).Average
             $trendMetrics.ResolutionTrends = @{
                 AverageHours = [Math]::Round($avgResolutionTime, 2)
-                Trend = if ($avgResolutionTime -lt 24) { "Fast" } elseif ($avgResolutionTime -lt 72) { "Medium" } else { "Slow" }
+                Trend        = if ($avgResolutionTime -lt 24) { "Fast" } elseif ($avgResolutionTime -lt 72) { "Medium" } else { "Slow" }
             }
         }
         
         $global:metrics.Trends = $trendMetrics
         Write-Host "✅ Trend analysis completed" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to analyze trends: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -312,9 +319,9 @@ function Check-SystemHealth {
     
     try {
         $healthMetrics = @{
-            Overall = "Healthy"
-            Issues = @()
-            Warnings = @()
+            Overall         = "Healthy"
+            Issues          = @()
+            Warnings        = @()
             Recommendations = @()
         }
         
@@ -343,7 +350,8 @@ function Check-SystemHealth {
             }
             
             $memoryUsage = $global:metrics.Performance.ResourceUsage.MemoryUsage
-            if ($memoryUsage -gt 1000) { # MB
+            if ($memoryUsage -gt 1000) {
+                # MB
                 $healthMetrics.Warnings += "High memory usage: $memoryUsage MB"
             }
         }
@@ -351,16 +359,19 @@ function Check-SystemHealth {
         # Determine overall health
         if ($healthMetrics.Warnings.Count -gt 3) {
             $healthMetrics.Overall = "Critical"
-        } elseif ($healthMetrics.Warnings.Count -gt 1) {
+        }
+        elseif ($healthMetrics.Warnings.Count -gt 1) {
             $healthMetrics.Overall = "Warning"
-        } elseif ($healthMetrics.Issues.Count -gt 0) {
+        }
+        elseif ($healthMetrics.Issues.Count -gt 0) {
             $healthMetrics.Overall = "Attention"
         }
         
         $global:metrics.Health = $healthMetrics
         Write-Host "✅ System health check completed: $($healthMetrics.Overall)" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to check system health: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -374,8 +385,8 @@ function Generate-Alerts {
         # Health-based alerts
         if ($global:metrics.Health.Overall -eq "Critical") {
             $alerts += @{
-                Type = "Critical"
-                Message = "System health is critical - immediate attention required"
+                Type      = "Critical"
+                Message   = "System health is critical - immediate attention required"
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
             }
         }
@@ -383,8 +394,8 @@ function Generate-Alerts {
         # Performance alerts
         if ($global:metrics.Performance.ResourceUsage.CPUUsage -gt 90) {
             $alerts += @{
-                Type = "Warning"
-                Message = "CPU usage is critically high: $([Math]::Round($global:metrics.Performance.ResourceUsage.CPUUsage, 1))%"
+                Type      = "Warning"
+                Message   = "CPU usage is critically high: $([Math]::Round($global:metrics.Performance.ResourceUsage.CPUUsage, 1))%"
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
             }
         }
@@ -392,8 +403,8 @@ function Generate-Alerts {
         # Issue velocity alerts
         if ($global:metrics.Trends.IssueVelocity.Trend -eq "Decreasing") {
             $alerts += @{
-                Type = "Info"
-                Message = "Issue resolution velocity is decreasing"
+                Type      = "Info"
+                Message   = "Issue resolution velocity is decreasing"
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
             }
         }
@@ -401,13 +412,14 @@ function Generate-Alerts {
         $global:metrics.Alerts = $alerts
         Write-Host "✅ Generated $($alerts.Count) alerts" -ForegroundColor Green
         
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to generate alerts: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
 function Show-Overview {
-    Write-Host "`n📊 PORTFOLIO OS AUTOMATION OVERVIEW" -ForegroundColor Cyan
+    Write-Host "`n📊 WORKANT AUTOMATION OVERVIEW" -ForegroundColor Cyan
     Write-Host "====================================" -ForegroundColor Cyan
     
     # Issues Summary
@@ -566,7 +578,8 @@ try {
     
     Write-Host "`n✅ Analytics and monitoring completed successfully" -ForegroundColor Green
     
-} catch {
+}
+catch {
     Write-Error "An error occurred in analytics system: $($_.Exception.Message)"
     exit 1
 }

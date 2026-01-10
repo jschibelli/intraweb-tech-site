@@ -13,7 +13,7 @@ status: draft
 
 **Always start here**: `DOCS_MAP.md` in the repository root
 
-This file provides a complete map of all documentation in Portfolio OS.
+This file provides a complete map of all documentation in Workant.
 
 ## Documentation Site
 

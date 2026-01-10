@@ -1,17 +1,17 @@
-# Real-Time Monitoring Dashboard for Portfolio OS
+# Real-Time Monitoring Dashboard for Workant
 # Usage: .\real-time-dashboard.ps1 [-RefreshInterval <SECONDS>] [-MaxRuntime <MINUTES>]
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$RefreshInterval = 30,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$MaxRuntime = 60,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$ShowAlerts,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$ShowPerformance
 )
 
@@ -25,7 +25,7 @@ function Clear-Console {
 
 function Show-Header {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "🔄 PORTFOLIO OS REAL-TIME DASHBOARD" -ForegroundColor Cyan
+    Write-Host "🔄 WORKANT REAL-TIME DASHBOARD" -ForegroundColor Cyan
     Write-Host "Last Updated: $timestamp" -ForegroundColor Gray
     Write-Host "Refresh Interval: $RefreshInterval seconds" -ForegroundColor Gray
     Write-Host "Runtime Limit: $MaxRuntime minutes" -ForegroundColor Gray
@@ -62,12 +62,13 @@ function Show-RecentActivity {
         if ($recentCommits) {
             Write-Host "Recent Commits (Last Hour):" -ForegroundColor Gray
             $recentCommits | ForEach-Object { Write-Host "  $_" -ForegroundColor White }
-        } else {
+        }
+        else {
             Write-Host "No commits in the last hour" -ForegroundColor Gray
         }
         
         # Get recent issues
-        $recentIssues = gh issue list --state open --limit 3 --json number,title,updatedAt | ConvertFrom-Json
+        $recentIssues = gh issue list --state open --limit 3 --json number, title, updatedAt | ConvertFrom-Json
         if ($recentIssues) {
             Write-Host "`nRecent Issues:" -ForegroundColor Gray
             $recentIssues | ForEach-Object { 
@@ -109,9 +110,11 @@ function Show-SystemHealth {
     $diskSpace = (Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq "C:" }).FreeSpace / 1GB
     if ($diskSpace -gt 10) {
         $healthChecks += @{ Name = "Disk Space"; Status = "✅ $([Math]::Round($diskSpace, 1)) GB Free"; Color = "Green" }
-    } elseif ($diskSpace -gt 5) {
+    }
+    elseif ($diskSpace -gt 5) {
         $healthChecks += @{ Name = "Disk Space"; Status = "⚠️  $([Math]::Round($diskSpace, 1)) GB Free"; Color = "Yellow" }
-    } else {
+    }
+    else {
         $healthChecks += @{ Name = "Disk Space"; Status = "❌ $([Math]::Round($diskSpace, 1)) GB Free"; Color = "Red" }
     }
     
@@ -152,7 +155,8 @@ function Show-Alerts {
     
     if ($alerts.Count -eq 0) {
         Write-Host "  No active alerts" -ForegroundColor Green
-    } else {
+    }
+    else {
         foreach ($alert in $alerts) {
             Write-Host "  ⚠️  $alert" -ForegroundColor Red
         }

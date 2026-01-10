@@ -1,0 +1,59 @@
+{
+  "issueTypes": {},
+  "version": "1.0",
+  "isOrganization": false,
+  "organization": "jschibelli",
+  "defaultProject": "intraweblanding",
+  "setupDate": "2026-01-09",
+  "projects": {
+    "intraweblanding": {
+      "fieldIds": {
+        "Labels": "PVTF_lAHOAEnMVc4BMSUIzg7nP3A",
+        "Size": "PVTSSF_lAHOAEnMVc4BMSUIzg7nP6I",
+        "Priority": "PVTSSF_lAHOAEnMVc4BMSUIzg7nP6E",
+        "Linked pull requests": "PVTF_lAHOAEnMVc4BMSUIzg7nP3E",
+        "Reviewers": "PVTF_lAHOAEnMVc4BMSUIzg7nP3Q",
+        "Repository": "PVTF_lAHOAEnMVc4BMSUIzg7nP3M",
+        "Status": "PVTSSF_lAHOAEnMVc4BMSUIzg7nP28",
+        "Parent issue": "PVTF_lAHOAEnMVc4BMSUIzg7nP3U",
+        "Sub-issues progress": "PVTF_lAHOAEnMVc4BMSUIzg7nP3Y",
+        "Assignees": "PVTF_lAHOAEnMVc4BMSUIzg7nP24",
+        "Estimate": "PVTF_lAHOAEnMVc4BMSUIzg7nP6M",
+        "Start date": "PVTF_lAHOAEnMVc4BMSUIzg7nP6Q",
+        "Title": "PVTF_lAHOAEnMVc4BMSUIzg7nP20",
+        "Target date": "PVTF_lAHOAEnMVc4BMSUIzg7nP6U",
+        "Milestone": "PVTF_lAHOAEnMVc4BMSUIzg7nP3I"
+      },
+      "defaults": {
+        "Estimate": 0,
+        "Size": "M",
+        "Status": "Backlog",
+        "Priority": "P1"
+      },
+      "projectNumber": 24,
+      "name": "@intraweb-landing",
+      "options": {
+        "Size": {
+          "S": "f784b110",
+          "M": "7515a9f1",
+          "XL": "db339eb2",
+          "L": "817d0097",
+          "XS": "6c6483d2"
+        },
+        "Status": {
+          "Ready": "61e4505c",
+          "In review": "df73e18b",
+          "Done": "98236657",
+          "Backlog": "f75ad846",
+          "In progress": "47fc9ee4"
+        },
+        "Priority": {
+          "P2": "da944a9c",
+          "P1": "0a877460",
+          "P0": "79628723"
+        }
+      },
+      "projectId": "PVT_kwHOAEnMVc4BMSUI"
+    }
+  }
+}

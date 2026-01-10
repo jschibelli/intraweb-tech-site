@@ -1,27 +1,27 @@
-# Issue Implementation System for Portfolio OS Automation
+# Issue Implementation System for Workant Automation
 # Usage: .\scripts\automation\issue-implementation.ps1 -IssueNumber <ISSUE_NUMBER> [-Mode <MODE>] [-Interactive] [-DryRun]
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$IssueNumber,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("analyze", "plan", "implement", "validate", "complete", "auto")]
     [string]$Mode = "auto",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$Interactive,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$OutputDir,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$GenerateTests,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$UpdateDocumentation
 )
 
@@ -45,17 +45,17 @@ if (Test-Path $branchUtilsPath) {
 
 # Global implementation state
 $global:implementationState = @{
-    IssueNumber = $IssueNumber
-    CurrentMode = $Mode
-    Analysis = @{}
-    Plan = @{}
-    Implementation = @{}
-    Validation = @{}
-    Status = "Initialized"
-    StartTime = Get-Date
-    Steps = @()
-    FilesModified = @()
-    TestsCreated = @()
+    IssueNumber          = $IssueNumber
+    CurrentMode          = $Mode
+    Analysis             = @{}
+    Plan                 = @{}
+    Implementation       = @{}
+    Validation           = @{}
+    Status               = "Initialized"
+    StartTime            = Get-Date
+    Steps                = @()
+    FilesModified        = @()
+    TestsCreated         = @()
     DocumentationUpdated = @()
 }
 
@@ -196,9 +196,11 @@ function Detect-IssueType {
     # Determine type based on scores
     if ($bugScore -gt $taskScore -and $bugScore -gt $featureScore) {
         return "Bug"
-    } elseif ($taskScore -gt $featureScore) {
+    }
+    elseif ($taskScore -gt $featureScore) {
         return "Task"
-    } else {
+    }
+    else {
         return "Feature"  # Default to Feature
     }
 }
@@ -231,7 +233,8 @@ function Set-IssueTypeOnGitHub {
                 }
             }
         }
-    } catch {
+    }
+    catch {
         # Silently fail - issue type setting is optional
     }
     
@@ -256,11 +259,13 @@ function Ensure-BranchLinkedToIssue {
             Write-ColorOutput "    ✅ Branch exists on remote - GitHub will auto-detect it" "Green"
             Write-ColorOutput "    ℹ️  Branch name contains issue number, so it will appear in Development section" "Cyan"
             return $true
-        } else {
+        }
+        else {
             Write-ColorOutput "    ⚠️  Branch not found on remote - ensure it's pushed" "Yellow"
             return $false
         }
-    } catch {
+    }
+    catch {
         return $false
     }
 }
@@ -283,9 +288,9 @@ function Initialize-ImplementationSystem {
     # Log implementation start
     $global:implementationState.Steps += @{
         Timestamp = Get-Date
-        Action = "System Initialized"
-        Status = "Success"
-        Details = "Implementation system started for issue #$IssueNumber"
+        Action    = "System Initialized"
+        Status    = "Success"
+        Details   = "Implementation system started for issue #$IssueNumber"
     }
     
     Write-ColorOutput "✅ Implementation system initialized" "Green"
@@ -304,20 +309,20 @@ function Analyze-Issue {
             
             # Parse analysis results
             $global:implementationState.Analysis = @{
-                Requirements = @{}
-                AcceptanceCriteria = @()
+                Requirements          = @{}
+                AcceptanceCriteria    = @()
                 TechnicalRequirements = @()
-                FilesToModify = @()
-                Priority = "Medium"
-                Complexity = "Medium"
-                EstimatedHours = "Unknown"
-                Labels = @()
-                Assignees = @()
-                IssueType = "Feature"  # Default to Feature if not found
+                FilesToModify         = @()
+                Priority              = "Medium"
+                Complexity            = "Medium"
+                EstimatedHours        = "Unknown"
+                Labels                = @()
+                Assignees             = @()
+                IssueType             = "Feature"  # Default to Feature if not found
             }
             
             # Get detailed issue information including issue type
-            $issueData = gh issue view $IssueNumber --json number,title,body,labels,assignees,state,url,createdAt,updatedAt,issueType
+            $issueData = gh issue view $IssueNumber --json number, title, body, labels, assignees, state, url, createdAt, updatedAt, issueType
             $issue = $issueData | ConvertFrom-Json
             
             # Extract or detect issue type
@@ -325,7 +330,8 @@ function Analyze-Issue {
             if ($issue.issueType -and $issue.issueType.name) {
                 $detectedIssueType = $issue.issueType.name
                 Write-ColorOutput "    Issue Type: $detectedIssueType (from GitHub)" "Cyan"
-            } else {
+            }
+            else {
                 # Automatically detect issue type from content
                 Write-ColorOutput "    Detecting issue type from content..." "Gray"
                 $detectedIssueType = Detect-IssueType -Title $issue.title -Body $issue.body -Labels $issue.labels.name
@@ -336,7 +342,8 @@ function Analyze-Issue {
                     Write-ColorOutput "    Setting issue type on GitHub..." "Gray"
                     if (Set-IssueTypeOnGitHub -IssueNumber $IssueNumber -IssueType $detectedIssueType) {
                         Write-ColorOutput "    ✅ Issue type set to '$detectedIssueType' on GitHub" "Green"
-                    } else {
+                    }
+                    else {
                         Write-ColorOutput "    ⚠️  Could not set issue type on GitHub (may require permissions)" "Yellow"
                     }
                 }
@@ -405,26 +412,28 @@ function Analyze-Issue {
             Write-ColorOutput "    Complexity: $($global:implementationState.Analysis.Complexity)" "Cyan"
             Write-ColorOutput "    Estimated Hours: $($global:implementationState.Analysis.EstimatedHours)" "Cyan"
             
-        } else {
+        }
+        else {
             throw "Issue analyzer not found at: $issueAnalyzerPath"
         }
         
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Issue Analysis"
-            Status = "Success"
-            Details = "Analyzed issue requirements and extracted implementation details"
+            Action    = "Issue Analysis"
+            Status    = "Success"
+            Details   = "Analyzed issue requirements and extracted implementation details"
         }
         
         return $true
         
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Issue analysis failed: $($_.Exception.Message)" "Red"
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Issue Analysis"
-            Status = "Failed"
-            Details = $_.Exception.Message
+            Action    = "Issue Analysis"
+            Status    = "Failed"
+            Details   = $_.Exception.Message
         }
         return $false
     }
@@ -435,63 +444,63 @@ function Generate-ImplementationPlan {
     
     try {
         $plan = @{
-            Phases = @()
+            Phases        = @()
             EstimatedTime = $global:implementationState.Analysis.EstimatedHours
-            RiskLevel = if ($global:implementationState.Analysis.Complexity -eq "High") { "High" } else { "Medium" }
-            Dependencies = @()
-            Deliverables = @()
+            RiskLevel     = if ($global:implementationState.Analysis.Complexity -eq "High") { "High" } else { "Medium" }
+            Dependencies  = @()
+            Deliverables  = @()
         }
         
         # Phase 1: Setup and Analysis
         $plan.Phases += @{
-            Name = "Setup and Analysis"
+            Name     = "Setup and Analysis"
             Duration = "15-30 minutes"
-            Tasks = @(
+            Tasks    = @(
                 "Review issue requirements",
                 "Set up development environment",
                 "Create feature branch",
                 "Analyze existing codebase structure"
             )
-            Status = "Pending"
+            Status   = "Pending"
         }
         
         # Phase 2: Implementation
         $plan.Phases += @{
-            Name = "Core Implementation"
+            Name     = "Core Implementation"
             Duration = $global:implementationState.Analysis.EstimatedHours
-            Tasks = @(
+            Tasks    = @(
                 "Implement core functionality",
                 "Add proper error handling",
                 "Ensure accessibility compliance",
                 "Follow established patterns"
             )
-            Status = "Pending"
+            Status   = "Pending"
         }
         
         # Phase 3: Testing and Quality
         $plan.Phases += @{
-            Name = "Testing and Quality Assurance"
+            Name     = "Testing and Quality Assurance"
             Duration = "30-60 minutes"
-            Tasks = @(
+            Tasks    = @(
                 "Run linting and type checks",
                 "Test functionality manually",
                 "Verify responsive design",
                 "Check accessibility compliance"
             )
-            Status = "Pending"
+            Status   = "Pending"
         }
         
         # Phase 4: Documentation and Deployment
         $plan.Phases += @{
-            Name = "Documentation and Deployment"
+            Name     = "Documentation and Deployment"
             Duration = "15-30 minutes"
-            Tasks = @(
+            Tasks    = @(
                 "Update relevant documentation",
                 "Commit changes with descriptive message",
                 "Push to repository",
                 "Comment on issue with implementation details"
             )
-            Status = "Pending"
+            Status   = "Pending"
         }
         
         # Add deliverables based on analysis
@@ -523,20 +532,21 @@ function Generate-ImplementationPlan {
         
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Plan Generation"
-            Status = "Success"
-            Details = "Generated implementation plan with $($plan.Phases.Count) phases"
+            Action    = "Plan Generation"
+            Status    = "Success"
+            Details   = "Generated implementation plan with $($plan.Phases.Count) phases"
         }
         
         return $true
         
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Plan generation failed: $($_.Exception.Message)" "Red"
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Plan Generation"
-            Status = "Failed"
-            Details = $_.Exception.Message
+            Action    = "Plan Generation"
+            Status    = "Failed"
+            Details   = $_.Exception.Message
         }
         return $false
     }
@@ -547,13 +557,13 @@ function Execute-Implementation {
     
     try {
         $implementation = @{
-            Status = "In Progress"
-            CurrentPhase = 0
+            Status         = "In Progress"
+            CurrentPhase   = 0
             CompletedTasks = @()
-            CreatedFiles = @()
-            ModifiedFiles = @()
-            Errors = @()
-            Warnings = @()
+            CreatedFiles   = @()
+            ModifiedFiles  = @()
+            Errors         = @()
+            Warnings       = @()
         }
         
         # Execute each phase
@@ -573,12 +583,14 @@ function Execute-Implementation {
                     if ($taskResult.Success) {
                         $implementation.CompletedTasks += $task
                         Write-ColorOutput "      ✅ Completed" "Green"
-                    } else {
+                    }
+                    else {
                         $errorMessage = "$task" + ": " + $taskResult.Error
                         $implementation.Errors += $errorMessage
                         Write-ColorOutput "      ❌ Failed: $($taskResult.Error)" "Red"
                     }
-                } else {
+                }
+                else {
                     Write-ColorOutput "      [DRY RUN] Would execute: $task" "Yellow"
                     $implementation.CompletedTasks += $task
                 }
@@ -599,20 +611,21 @@ function Execute-Implementation {
         
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Execution"
-            Status = "Success"
-            Details = "Completed implementation with $($implementation.CompletedTasks.Count) tasks"
+            Action    = "Implementation Execution"
+            Status    = "Success"
+            Details   = "Completed implementation with $($implementation.CompletedTasks.Count) tasks"
         }
         
         return $true
         
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Implementation execution failed: $($_.Exception.Message)" "Red"
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Execution"
-            Status = "Failed"
-            Details = $_.Exception.Message
+            Action    = "Implementation Execution"
+            Status    = "Failed"
+            Details   = $_.Exception.Message
         }
         return $false
     }
@@ -633,12 +646,14 @@ function Invoke-ImplementationTask {
                 # Get issue type and create appropriate branch name following convention: {type}/{issue-number}-{title-slug}
                 $issueType = if ($global:implementationState.Analysis.IssueType) { 
                     $global:implementationState.Analysis.IssueType 
-                } else { 
+                }
+                else { 
                     "Feature" 
                 }
                 $issueTitle = if ($global:implementationState.Analysis.Requirements.Title) {
                     $global:implementationState.Analysis.Requirements.Title
-                } else {
+                }
+                else {
                     "issue-$IssueNumber"
                 }
                 
@@ -655,7 +670,8 @@ function Invoke-ImplementationTask {
                     # Branch exists, verify it's on remote for auto-detection
                     Ensure-BranchLinkedToIssue -IssueNumber $IssueNumber -BranchName $branchName
                     return @{ Success = $true; Output = "Branch already exists: $branchName" }
-                } else {
+                }
+                else {
                     # Create new branch
                     git checkout -b $branchName
                     
@@ -689,7 +705,8 @@ function Invoke-ImplementationTask {
                 $lintResult = npm run lint 2>&1
                 if ($LASTEXITCODE -eq 0) {
                     return @{ Success = $true; Output = "Linting passed" }
-                } else {
+                }
+                else {
                     return @{ Success = $false; Error = "Linting failed: $lintResult" }
                 }
             }
@@ -709,7 +726,8 @@ function Invoke-ImplementationTask {
                 # Get issue type and create appropriate commit prefix
                 $issueType = if ($global:implementationState.Analysis.IssueType) { 
                     $global:implementationState.Analysis.IssueType 
-                } else { 
+                }
+                else { 
                     "Feature" 
                 }
                 $commitPrefix = Get-CommitPrefixFromIssueType -IssueType $issueType
@@ -722,12 +740,14 @@ function Invoke-ImplementationTask {
                 # Get issue type and create appropriate branch name following convention
                 $issueType = if ($global:implementationState.Analysis.IssueType) { 
                     $global:implementationState.Analysis.IssueType 
-                } else { 
+                }
+                else { 
                     "Feature" 
                 }
                 $issueTitle = if ($global:implementationState.Analysis.Requirements.Title) {
                     $global:implementationState.Analysis.Requirements.Title
-                } else {
+                }
+                else {
                     "issue-$IssueNumber"
                 }
                 
@@ -759,7 +779,7 @@ $($global:implementationState.Plan.Deliverables -join "`n")
 2. Test the functionality
 3. Merge the pull request when ready
 
-**Generated by**: Portfolio OS Automation System
+**Generated by**: Workant Automation System
 "@
                 
                 gh issue comment $IssueNumber --body $comment
@@ -769,7 +789,8 @@ $($global:implementationState.Plan.Deliverables -join "`n")
                 return @{ Success = $true; Output = "Task executed: $Task" }
             }
         }
-    } catch {
+    }
+    catch {
         return @{ Success = $false; Error = $_.Exception.Message }
     }
 }
@@ -779,17 +800,17 @@ function Validate-Implementation {
     
     try {
         $validation = @{
-            Status = "In Progress"
-            Checks = @()
-            Passed = 0
-            Failed = 0
+            Status   = "In Progress"
+            Checks   = @()
+            Passed   = 0
+            Failed   = 0
             Warnings = 0
         }
         
         # Check 1: Code quality
         $validation.Checks += @{
-            Name = "Code Quality"
-            Status = "Running"
+            Name    = "Code Quality"
+            Status  = "Running"
             Details = "Checking linting and type safety"
         }
         
@@ -798,12 +819,14 @@ function Validate-Implementation {
             if ($LASTEXITCODE -eq 0) {
                 $validation.Checks[-1].Status = "Passed"
                 $validation.Passed++
-            } else {
+            }
+            else {
                 $validation.Checks[-1].Status = "Failed"
                 $validation.Checks[-1].Details = $lintResult
                 $validation.Failed++
             }
-        } catch {
+        }
+        catch {
             $validation.Checks[-1].Status = "Warning"
             $validation.Checks[-1].Details = "Could not run linting: $($_.Exception.Message)"
             $validation.Warnings++
@@ -812,8 +835,8 @@ function Validate-Implementation {
         # Check 2: Tests
         if ($GenerateTests) {
             $validation.Checks += @{
-                Name = "Test Coverage"
-                Status = "Running"
+                Name    = "Test Coverage"
+                Status  = "Running"
                 Details = "Checking test coverage"
             }
             
@@ -822,12 +845,14 @@ function Validate-Implementation {
                 if ($LASTEXITCODE -eq 0) {
                     $validation.Checks[-1].Status = "Passed"
                     $validation.Passed++
-                } else {
+                }
+                else {
                     $validation.Checks[-1].Status = "Warning"
                     $validation.Checks[-1].Details = "Tests may need attention"
                     $validation.Warnings++
                 }
-            } catch {
+            }
+            catch {
                 $validation.Checks[-1].Status = "Warning"
                 $validation.Checks[-1].Details = "Could not run tests: $($_.Exception.Message)"
                 $validation.Warnings++
@@ -837,8 +862,8 @@ function Validate-Implementation {
         # Check 3: Documentation
         if ($UpdateDocumentation) {
             $validation.Checks += @{
-                Name = "Documentation"
-                Status = "Passed"
+                Name    = "Documentation"
+                Status  = "Passed"
                 Details = "Documentation updated"
             }
             $validation.Passed++
@@ -846,8 +871,8 @@ function Validate-Implementation {
         
         # Check 4: Git status
         $validation.Checks += @{
-            Name = "Git Status"
-            Status = "Running"
+            Name    = "Git Status"
+            Status  = "Running"
             Details = "Checking git status"
         }
         
@@ -857,12 +882,14 @@ function Validate-Implementation {
                 $validation.Checks[-1].Status = "Warning"
                 $validation.Checks[-1].Details = "Uncommitted changes detected"
                 $validation.Warnings++
-            } else {
+            }
+            else {
                 $validation.Checks[-1].Status = "Passed"
                 $validation.Checks[-1].Details = "All changes committed"
                 $validation.Passed++
             }
-        } catch {
+        }
+        catch {
             $validation.Checks[-1].Status = "Warning"
             $validation.Checks[-1].Details = "Could not check git status"
             $validation.Warnings++
@@ -871,7 +898,8 @@ function Validate-Implementation {
         # Determine overall validation status
         if ($validation.Failed -eq 0) {
             $validation.Status = if ($validation.Warnings -eq 0) { "Passed" } else { "Passed with Warnings" }
-        } else {
+        }
+        else {
             $validation.Status = "Failed"
         }
         
@@ -896,20 +924,21 @@ function Validate-Implementation {
         
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Validation"
-            Status = if ($validation.Status -eq "Passed") { "Success" } else { "Warning" }
-            Details = "Validation $($validation.Status.ToLower()): $($validation.Passed) passed, $($validation.Failed) failed, $($validation.Warnings) warnings"
+            Action    = "Implementation Validation"
+            Status    = if ($validation.Status -eq "Passed") { "Success" } else { "Warning" }
+            Details   = "Validation $($validation.Status.ToLower()): $($validation.Passed) passed, $($validation.Failed) failed, $($validation.Warnings) warnings"
         }
         
         return ($validation.Status -ne "Failed")
         
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Validation failed: $($_.Exception.Message)" "Red"
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Validation"
-            Status = "Failed"
-            Details = $_.Exception.Message
+            Action    = "Implementation Validation"
+            Status    = "Failed"
+            Details   = $_.Exception.Message
         }
         return $false
     }
@@ -927,22 +956,23 @@ function Complete-Implementation {
                 Write-ColorOutput "  📊 Updating project status..." "Gray"
                 # Update-ProjectStatus -ProjectItemId $IssueNumber -Status "Done"
                 Write-ColorOutput "    ✅ Project status updated" "Green"
-            } catch {
+            }
+            catch {
                 Write-ColorOutput "    ⚠️  Could not update project status: $($_.Exception.Message)" "Yellow"
             }
         }
         
         # Generate completion report
         $completionReport = @{
-            IssueNumber = $IssueNumber
-            Title = $global:implementationState.Analysis.Requirements.Title
-            Status = "Completed"
-            StartTime = $global:implementationState.StartTime
-            EndTime = Get-Date
-            Duration = (Get-Date) - $global:implementationState.StartTime
-            Steps = $global:implementationState.Steps
-            FilesModified = $global:implementationState.Implementation.ModifiedFiles
-            FilesCreated = $global:implementationState.Implementation.CreatedFiles
+            IssueNumber       = $IssueNumber
+            Title             = $global:implementationState.Analysis.Requirements.Title
+            Status            = "Completed"
+            StartTime         = $global:implementationState.StartTime
+            EndTime           = Get-Date
+            Duration          = (Get-Date) - $global:implementationState.StartTime
+            Steps             = $global:implementationState.Steps
+            FilesModified     = $global:implementationState.Implementation.ModifiedFiles
+            FilesCreated      = $global:implementationState.Implementation.CreatedFiles
             ValidationResults = $global:implementationState.Validation
         }
         
@@ -959,7 +989,8 @@ function Complete-Implementation {
                 Write-ColorOutput "  📊 Updating metrics..." "Gray"
                 # This would trigger metrics collection
                 Write-ColorOutput "    ✅ Metrics updated" "Green"
-            } catch {
+            }
+            catch {
                 Write-ColorOutput "    ⚠️  Could not update metrics: $($_.Exception.Message)" "Yellow"
             }
         }
@@ -972,20 +1003,21 @@ function Complete-Implementation {
         
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Completion"
-            Status = "Success"
-            Details = "Implementation completed successfully"
+            Action    = "Implementation Completion"
+            Status    = "Success"
+            Details   = "Implementation completed successfully"
         }
         
         return $true
         
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ❌ Completion failed: $($_.Exception.Message)" "Red"
         $global:implementationState.Steps += @{
             Timestamp = Get-Date
-            Action = "Implementation Completion"
-            Status = "Failed"
-            Details = $_.Exception.Message
+            Action    = "Implementation Completion"
+            Status    = "Failed"
+            Details   = $_.Exception.Message
         }
         return $false
     }
@@ -1106,7 +1138,8 @@ try {
     
     Write-Host "`n✅ Issue implementation system completed" -ForegroundColor Green
     
-} catch {
+}
+catch {
     Write-Error "An error occurred in implementation system: $($_.Exception.Message)"
     exit 1
 }

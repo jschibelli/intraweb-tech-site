@@ -1,6 +1,6 @@
 # Monitoring System
 
-This directory contains comprehensive monitoring and analytics tools for the Portfolio OS project, providing real-time insights into system performance, automation metrics, and operational health.
+This directory contains comprehensive monitoring and analytics tools for the Workant project, providing real-time insights into system performance, automation metrics, and operational health.
 
 ## 📁 Structure
 

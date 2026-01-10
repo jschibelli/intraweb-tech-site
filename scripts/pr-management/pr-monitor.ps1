@@ -1,24 +1,24 @@
-# PR Monitoring System for Portfolio OS
+# PR Monitoring System for Workant
 # Usage: .\pr-monitor.ps1 [-WatchMode] [-Interval <SECONDS>] [-Filter <FILTER>]
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$WatchMode,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$Interval = 60,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("open", "draft", "merged", "closed", "all")]
     [string]$Filter = "open",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ExportTo,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$ShowDetails,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$IncludeCRGPT
 )
 
@@ -28,13 +28,14 @@ $utilsPath = Join-Path (Split-Path -Parent $scriptPath) "core-utilities\github-u
 
 if (Test-Path $utilsPath) {
     . $utilsPath
-} else {
+}
+else {
     Write-Warning "GitHub utilities not found at $utilsPath"
 }
 
 function Show-PRMonitorHeader {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "`n🔍 PORTFOLIO OS PR MONITOR" -ForegroundColor Cyan
+    Write-Host "`n🔍 WORKANT PR MONITOR" -ForegroundColor Cyan
     Write-Host "=========================" -ForegroundColor Cyan
     Write-Host "Last Updated: $timestamp" -ForegroundColor Gray
     Write-Host "Filter: $Filter" -ForegroundColor Gray
@@ -48,7 +49,7 @@ function Get-PRSummary {
     param([string]$State = "open")
     
     try {
-        $prs = gh pr list --state $State --json number,title,headRefName,baseRefName,author,createdAt,updatedAt,labels,reviewDecision,isDraft,additions,deletions,changedFiles
+        $prs = gh pr list --state $State --json number, title, headRefName, baseRefName, author, createdAt, updatedAt, labels, reviewDecision, isDraft, additions, deletions, changedFiles
         return $prs | ConvertFrom-Json
     }
     catch {
@@ -111,7 +112,8 @@ function Show-PRDetails {
                     Write-Host "    • $commentPreview..." -ForegroundColor Gray
                 }
             }
-        } else {
+        }
+        else {
             Write-Host "  CR-GPT Comments: None" -ForegroundColor Green
         }
     }
@@ -165,32 +167,32 @@ function Export-PRReport {
     
     $report = @{
         GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        Filter = $Filter
-        TotalPRs = $PRs.Count
-        Summary = @{
-            Approved = ($PRs | Where-Object { $_.reviewDecision -eq "APPROVED" }).Count
+        Filter      = $Filter
+        TotalPRs    = $PRs.Count
+        Summary     = @{
+            Approved         = ($PRs | Where-Object { $_.reviewDecision -eq "APPROVED" }).Count
             ChangesRequested = ($PRs | Where-Object { $_.reviewDecision -eq "CHANGES_REQUESTED" }).Count
-            ReviewRequired = ($PRs | Where-Object { $_.reviewDecision -eq "REVIEW_REQUIRED" }).Count
-            Drafts = ($PRs | Where-Object { $_.isDraft }).Count
+            ReviewRequired   = ($PRs | Where-Object { $_.reviewDecision -eq "REVIEW_REQUIRED" }).Count
+            Drafts           = ($PRs | Where-Object { $_.isDraft }).Count
         }
-        Changes = @{
+        Changes     = @{
             TotalAdditions = ($PRs | Measure-Object -Property additions -Sum).Sum
             TotalDeletions = ($PRs | Measure-Object -Property deletions -Sum).Sum
-            TotalFiles = ($PRs | Measure-Object -Property changedFiles -Sum).Sum
+            TotalFiles     = ($PRs | Measure-Object -Property changedFiles -Sum).Sum
         }
-        PRs = $PRs | ForEach-Object {
+        PRs         = $PRs | ForEach-Object {
             @{
-                Number = $_.number
-                Title = $_.title
-                Author = $_.author.login
-                Status = $_.reviewDecision
-                IsDraft = $_.isDraft
+                Number    = $_.number
+                Title     = $_.title
+                Author    = $_.author.login
+                Status    = $_.reviewDecision
+                IsDraft   = $_.isDraft
                 CreatedAt = $_.createdAt
                 UpdatedAt = $_.updatedAt
-                Changes = @{
+                Changes   = @{
                     Additions = $_.additions
                     Deletions = $_.deletions
-                    Files = $_.changedFiles
+                    Files     = $_.changedFiles
                 }
             }
         }
@@ -255,7 +257,8 @@ function Start-PRWatchMode {
 try {
     if ($WatchMode) {
         Start-PRWatchMode -IntervalSeconds $Interval
-    } else {
+    }
+    else {
         Show-PRMonitorHeader
         
         $prs = Get-PRSummary -State $Filter

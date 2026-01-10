@@ -1,21 +1,21 @@
-# Performance Analysis System for Portfolio OS
+# Performance Analysis System for Workant
 # Usage: .\performance-analyzer.ps1 [-Analysis <TYPE>] [-Duration <MINUTES>] [-ExportTo <FILE>]
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("system", "scripts", "api", "git", "comprehensive")]
     [string]$Analysis = "system",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [int]$Duration = 5,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$ExportTo,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$RealTime,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$Detailed
 )
 
@@ -30,13 +30,13 @@ if (-not (Test-Path $performanceDataPath)) {
 
 # Global performance counters
 $global:performanceCounters = @{
-    CPU = @()
-    Memory = @()
-    Disk = @()
+    CPU     = @()
+    Memory  = @()
+    Disk    = @()
     Network = @()
     Scripts = @()
-    API = @()
-    Git = @()
+    API     = @()
+    Git     = @()
 }
 
 function Get-SystemPerformance {
@@ -44,10 +44,10 @@ function Get-SystemPerformance {
     
     $systemData = @{
         Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        CPU = @{}
-        Memory = @{}
-        Disk = @{}
-        Network = @{}
+        CPU       = @{}
+        Memory    = @{}
+        Disk      = @{}
+        Network   = @{}
         Processes = @()
     }
     
@@ -55,18 +55,18 @@ function Get-SystemPerformance {
         # CPU Performance
         $cpuCounters = Get-Counter -Counter "\Processor(_Total)\% Processor Time", "\Processor(_Total)\% User Time", "\Processor(_Total)\% Privileged Time" -SampleInterval 1 -MaxSamples 1
         $systemData.CPU = @{
-            TotalUsage = [Math]::Round($cpuCounters.CounterSamples[0].CookedValue, 2)
-            UserTime = [Math]::Round($cpuCounters.CounterSamples[1].CookedValue, 2)
+            TotalUsage     = [Math]::Round($cpuCounters.CounterSamples[0].CookedValue, 2)
+            UserTime       = [Math]::Round($cpuCounters.CounterSamples[1].CookedValue, 2)
             PrivilegedTime = [Math]::Round($cpuCounters.CounterSamples[2].CookedValue, 2)
-            CoreCount = (Get-WmiObject -Class Win32_Processor).NumberOfCores
+            CoreCount      = (Get-WmiObject -Class Win32_Processor).NumberOfCores
         }
         
         # Memory Performance
         $memoryInfo = Get-WmiObject -Class Win32_OperatingSystem
         $systemData.Memory = @{
-            TotalGB = [Math]::Round($memoryInfo.TotalVisibleMemorySize / 1MB, 2)
-            FreeGB = [Math]::Round($memoryInfo.FreePhysicalMemory / 1MB, 2)
-            UsedGB = [Math]::Round(($memoryInfo.TotalVisibleMemorySize - $memoryInfo.FreePhysicalMemory) / 1MB, 2)
+            TotalGB      = [Math]::Round($memoryInfo.TotalVisibleMemorySize / 1MB, 2)
+            FreeGB       = [Math]::Round($memoryInfo.FreePhysicalMemory / 1MB, 2)
+            UsedGB       = [Math]::Round(($memoryInfo.TotalVisibleMemorySize - $memoryInfo.FreePhysicalMemory) / 1MB, 2)
             UsagePercent = [Math]::Round((($memoryInfo.TotalVisibleMemorySize - $memoryInfo.FreePhysicalMemory) / $memoryInfo.TotalVisibleMemorySize) * 100, 2)
         }
         
@@ -75,12 +75,12 @@ function Get-SystemPerformance {
         $diskInfo = Get-WmiObject -Class Win32_LogicalDisk | Where-Object { $_.DeviceID -eq "C:" }
         
         $systemData.Disk = @{
-            ReadMBps = [Math]::Round($diskCounters.CounterSamples[0].CookedValue / 1MB, 2)
-            WriteMBps = [Math]::Round($diskCounters.CounterSamples[1].CookedValue / 1MB, 2)
+            ReadMBps        = [Math]::Round($diskCounters.CounterSamples[0].CookedValue / 1MB, 2)
+            WriteMBps       = [Math]::Round($diskCounters.CounterSamples[1].CookedValue / 1MB, 2)
             DiskTimePercent = [Math]::Round($diskCounters.CounterSamples[2].CookedValue, 2)
-            TotalGB = [Math]::Round($diskInfo.Size / 1GB, 2)
-            FreeGB = [Math]::Round($diskInfo.FreeSpace / 1GB, 2)
-            UsedGB = [Math]::Round(($diskInfo.Size - $diskInfo.FreeSpace) / 1GB, 2)
+            TotalGB         = [Math]::Round($diskInfo.Size / 1GB, 2)
+            FreeGB          = [Math]::Round($diskInfo.FreeSpace / 1GB, 2)
+            UsedGB          = [Math]::Round(($diskInfo.Size - $diskInfo.FreeSpace) / 1GB, 2)
         }
         
         # Network Performance (if available)
@@ -88,7 +88,7 @@ function Get-SystemPerformance {
             $networkCounters = Get-Counter -Counter "\Network Interface(*)\Bytes Received/sec", "\Network Interface(*)\Bytes Sent/sec" -SampleInterval 1 -MaxSamples 1
             $systemData.Network = @{
                 ReceivedMBps = [Math]::Round(($networkCounters.CounterSamples | Where-Object { $_.InstanceName -ne "_Total" } | Measure-Object CookedValue -Sum).Sum / 1MB, 2)
-                SentMBps = [Math]::Round(($networkCounters.CounterSamples | Where-Object { $_.InstanceName -ne "_Total" } | Measure-Object CookedValue -Sum).Sum / 1MB, 2)
+                SentMBps     = [Math]::Round(($networkCounters.CounterSamples | Where-Object { $_.InstanceName -ne "_Total" } | Measure-Object CookedValue -Sum).Sum / 1MB, 2)
             }
         }
         catch {
@@ -99,9 +99,9 @@ function Get-SystemPerformance {
         $topProcesses = Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, CPU, WorkingSet, Id
         $systemData.Processes = $topProcesses | ForEach-Object {
             @{
-                Name = $_.Name
-                CPU = $_.CPU
-                MemoryMB = [Math]::Round($_.WorkingSet / 1MB, 2)
+                Name      = $_.Name
+                CPU       = $_.CPU
+                MemoryMB  = [Math]::Round($_.WorkingSet / 1MB, 2)
                 ProcessId = $_.Id
             }
         }
@@ -119,10 +119,10 @@ function Get-ScriptPerformance {
     Write-Host "📜 Analyzing Script Performance..." -ForegroundColor Yellow
     
     $scriptData = @{
-        Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        Scripts = @()
+        Timestamp      = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        Scripts        = @()
         ExecutionTimes = @()
-        ErrorRates = @{}
+        ErrorRates     = @{}
     }
     
     try {
@@ -132,11 +132,11 @@ function Get-ScriptPerformance {
         
         foreach ($script in $scripts) {
             $scriptInfo = @{
-                Name = $script.Name
-                Path = $script.FullName
-                SizeKB = [Math]::Round($script.Length / 1KB, 2)
+                Name         = $script.Name
+                Path         = $script.FullName
+                SizeKB       = [Math]::Round($script.Length / 1KB, 2)
                 LastModified = $script.LastWriteTime
-                LineCount = (Get-Content $script.FullName).Count
+                LineCount    = (Get-Content $script.FullName).Count
             }
             
             # Check for performance-related patterns
@@ -183,10 +183,10 @@ function Get-APIPerformance {
     Write-Host "🌐 Testing API Performance..." -ForegroundColor Yellow
     
     $apiData = @{
-        Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        GitHubAPI = @{}
+        Timestamp     = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        GitHubAPI     = @{}
         ResponseTimes = @()
-        SuccessRates = @{}
+        SuccessRates  = @{}
     }
     
     try {
@@ -202,8 +202,8 @@ function Get-APIPerformance {
                 
                 $apiData.GitHubAPI[$endpoint] = @{
                     ResponseTimeMs = [Math]::Round($responseTime, 2)
-                    Success = $true
-                    StatusCode = 200
+                    Success        = $true
+                    StatusCode     = 200
                 }
                 
                 $apiData.ResponseTimes += $responseTime
@@ -214,9 +214,9 @@ function Get-APIPerformance {
                 
                 $apiData.GitHubAPI[$endpoint] = @{
                     ResponseTimeMs = [Math]::Round($responseTime, 2)
-                    Success = $false
-                    Error = $_.Exception.Message
-                    StatusCode = 500
+                    Success        = $false
+                    Error          = $_.Exception.Message
+                    StatusCode     = 500
                 }
             }
         }
@@ -244,17 +244,17 @@ function Get-GitPerformance {
     Write-Host "📚 Analyzing Git Performance..." -ForegroundColor Yellow
     
     $gitData = @{
-        Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        Timestamp  = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         Operations = @{}
         Repository = @{}
-        Branches = @{}
+        Branches   = @{}
     }
     
     try {
         # Test common git operations
         $operations = @{
             "status" = { git status --porcelain }
-            "log" = { git log --oneline --max-count=10 }
+            "log"    = { git log --oneline --max-count=10 }
             "branch" = { git branch -a }
             "remote" = { git remote -v }
         }
@@ -268,8 +268,8 @@ function Get-GitPerformance {
                 
                 $gitData.Operations[$operation.Key] = @{
                     ExecutionTimeMs = [Math]::Round($executionTime, 2)
-                    Success = $true
-                    OutputLines = $output.Count
+                    Success         = $true
+                    OutputLines     = $output.Count
                 }
             }
             catch {
@@ -278,8 +278,8 @@ function Get-GitPerformance {
                 
                 $gitData.Operations[$operation.Key] = @{
                     ExecutionTimeMs = [Math]::Round($executionTime, 2)
-                    Success = $false
-                    Error = $_.Exception.Message
+                    Success         = $false
+                    Error           = $_.Exception.Message
                 }
             }
         }
@@ -289,7 +289,7 @@ function Get-GitPerformance {
             BranchCount = (git branch -a).Count
             RemoteCount = (git remote).Count
             CommitCount = (git rev-list --count HEAD)
-            LastCommit = git log -1 --format="%H %s"
+            LastCommit  = git log -1 --format="%H %s"
         }
         
         Write-Host "✅ Git performance analysis completed" -ForegroundColor Green
@@ -377,11 +377,11 @@ function Export-PerformanceData {
     )
     
     $report = @{
-        ReportType = "Performance Analysis"
+        ReportType  = "Performance Analysis"
         GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        Data = $PerformanceData
-        Summary = @{
-            SystemHealth = if ($PerformanceData.System.CPU.TotalUsage -lt 80 -and $PerformanceData.System.Memory.UsagePercent -lt 80) { "Good" } else { "Needs Attention" }
+        Data        = $PerformanceData
+        Summary     = @{
+            SystemHealth   = if ($PerformanceData.System.CPU.TotalUsage -lt 80 -and $PerformanceData.System.Memory.UsagePercent -lt 80) { "Good" } else { "Needs Attention" }
             APIPerformance = if ($PerformanceData.API.SuccessRates.GitHubAPI -gt 95) { "Excellent" } elseif ($PerformanceData.API.SuccessRates.GitHubAPI -gt 90) { "Good" } else { "Poor" }
             GitPerformance = if (($PerformanceData.Git.Operations.Values | Where-Object { $_.Success }).Count -eq $PerformanceData.Git.Operations.Count) { "Excellent" } else { "Issues Detected" }
         }

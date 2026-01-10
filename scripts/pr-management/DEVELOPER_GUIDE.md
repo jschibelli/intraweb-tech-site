@@ -15,7 +15,7 @@
 
 ## 🎯 Overview
 
-The Portfolio OS PR Management System is an enterprise-grade automation suite designed to streamline pull request workflows, automate code review processes, manage CR-GPT bot interactions, and optimize development team productivity. It provides intelligent PR analysis, automated configuration, agent assignment, and comprehensive monitoring capabilities.
+The Workant PR Management System is an enterprise-grade automation suite designed to streamline pull request workflows, automate code review processes, manage CR-GPT bot interactions, and optimize development team productivity. It provides intelligent PR analysis, automated configuration, agent assignment, and comprehensive monitoring capabilities.
 
 ### Key Features
 - **AI-Powered PR Analysis**: Intelligent analysis of PR content and CR-GPT feedback
