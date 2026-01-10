@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { Brain } from "lucide-react";
-import { useState } from "react";
+
 import { TeamProcess } from "./team-process";
 
 const team = [
@@ -44,22 +44,20 @@ const team = [
 ];
 
 export default function TeamPage() {
-  const [showAgentModal, setShowAgentModal] = useState(false);
-  const openAgentModal = () => setShowAgentModal(true);
-  const closeAgentModal = () => setShowAgentModal(false);
+
 
   return (
     <main className="bg-gray-900 text-white min-h-screen">
       {/* Team Hero Section */}
       <section className="relative overflow-hidden text-white pt-16 pb-12 md:pt-24 md:pb-20" style={{ backgroundColor: '#0a2236', backgroundImage: 'url(/pentagon-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: '80px 80px' }}>
         {/* Top inside shadow */}
-        <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 16px 32px -8px #0008'}} />
+        <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 16px 32px -8px #0008' }} />
         {/* Bottom inside shadow */}
-        <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 -16px 32px -8px #0008'}} />
+        <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 -16px 32px -8px #0008' }} />
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">Meet the IntraWeb Team</h1>
           <p className="text-lg md:text-2xl font-body mb-8 text-white/90">
-            We're a hybrid team of expert professionals and AI-powered agents, collaborating to deliver cutting-edge digital experiences.<br />
+            We&apos;re a hybrid team of expert professionals and AI-powered agents, collaborating to deliver cutting-edge digital experiences.<br />
             Every AI agent is built with purpose and precision, and every human lead ensures our solutions stay aligned with your goals.
           </p>
         </div>
@@ -106,7 +104,7 @@ export default function TeamPage() {
       <section className="text-center mt-20 py-12 bg-gradient-to-r from-[#0a2236] to-[#181f2a]">
         <div className="max-w-2xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-white mb-2">Want to collaborate with our hybrid team?</h2>
-          <p className="text-gray-300 mb-4">We're ready to build, scale, and launch—together.</p>
+          <p className="text-gray-300 mb-4">We&apos;re ready to build, scale, and launch—together.</p>
           <a href="/contact" className="inline-block px-8 py-3 rounded bg-teal-500 hover:bg-orange-500 text-white font-semibold text-lg shadow transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
             Get In Touch
           </a>

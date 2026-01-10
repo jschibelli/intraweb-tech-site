@@ -1,7 +1,7 @@
 "use client";
 import { CheckCircle, Search, Pen, Code, Rocket, LifeBuoy, User } from "lucide-react";
-import { motion } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+
+import { useEffect, useState } from "react";
 
 const steps = [
   {
@@ -78,7 +78,7 @@ export default function ProcessClient({ project }: ProcessClientProps) {
       clientCenterY + radius * Math.sin(angle),
     ];
   });
-  const polygonPointsStr = processCenters.map(([x, y]) => `${x},${y}`).join(' ');
+
 
   function getEdgePoint(cx: number, cy: number, px: number, py: number, cardSize: number) {
     const dx = px - cx;

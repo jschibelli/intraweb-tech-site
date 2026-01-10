@@ -2,7 +2,7 @@
 
 import { Project } from "@/types/project";
 import { motion } from "framer-motion";
-import { Line } from "react-chartjs-2";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -86,7 +86,7 @@ export default function ResultsHighlights({ project }: ResultsHighlightsProps) {
             <p className="text-lg text-teal-100 max-w-2xl mx-auto mb-2">{project.resultsSummary}</p>
           )}
           <p className="text-lg text-teal-100 max-w-2xl mx-auto">
-            Key metrics and outcomes that demonstrate the project's success
+            Key metrics and outcomes that demonstrate the project&apos;s success
           </p>
         </div>
 

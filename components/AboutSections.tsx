@@ -3,8 +3,7 @@
 import { FaCompass, FaEye, FaCheck, FaBook } from "react-icons/fa";
 
 const brandTeal = "#1cc6b7";
-const brandNavy = "#0a2236";
-const brandNavyLight = "#13293d";
+
 
 const values = [
   {

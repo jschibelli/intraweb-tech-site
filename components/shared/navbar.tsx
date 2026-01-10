@@ -18,7 +18,7 @@ const navLinks = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>("Home");
+  const [, setActiveSection] = useState<string>("Home");
   const pathname = usePathname();
   const isHome = pathname === "/";
 
@@ -50,22 +50,7 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
 
-  // Helper for smooth scroll
-  const handleSmoothScroll = (e: React.MouseEvent, href: string) => {
-    e.preventDefault();
-    if (href === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setActiveSection("Home");
-    } else {
-      const id = href.replace("#", "");
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-        setActiveSection(id.charAt(0).toUpperCase() + id.slice(1));
-      }
-    }
-    setMenuOpen(false);
-  };
+
 
   return (
     <header className={`sticky top-0 z-50 transition-colors duration-300 ${isHome ? (scrolled ? "bg-gray-900/95 shadow-md" : "bg-transparent") : "bg-gray-900 shadow-md"} text-white`}>
@@ -74,8 +59,8 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2 text-lg font-heading font-bold">
           <span className="sr-only">IntraWeb Technologies</span>
           {/* Replace with SVG logo if available */}
-          
-            <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4" />
+
+          <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4" />
         </Link>
         {/* Desktop Nav */}
         <ul className="hidden md:flex items-center gap-8 font-body">

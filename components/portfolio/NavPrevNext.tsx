@@ -2,7 +2,7 @@
 
 import { Project } from "@/types/project";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 
 interface NavPrevNextProps {
   project: Project;

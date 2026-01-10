@@ -10,7 +10,7 @@ interface ProcessTimelineProps {
 
 export default function ProcessTimeline({ project }: ProcessTimelineProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
 
   return (
     <section className="py-16 md:py-24">

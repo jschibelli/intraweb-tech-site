@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Linkedin, Github, Facebook } from "lucide-react";
 
 export function Footer() {
@@ -25,7 +26,7 @@ export function Footer() {
       } else {
         setMessage("Subscription failed. Please try again.");
       }
-    } catch (error) {
+    } catch {
       setMessage("An error occurred. Please try again.");
     }
   };
@@ -37,7 +38,7 @@ export function Footer() {
         <div className="flex flex-col items-center space-y-6">
           {/* Logo and Tagline */}
           <div className="text-center">
-            <img src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" className="mx-auto mb-2 w-32 h-auto" />
+            <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={128} height={40} className="mx-auto mb-2 w-32 h-auto" />
             <p className="text-sm font-medium">Empowering Digital Innovation</p>
           </div>
 
@@ -54,23 +55,23 @@ export function Footer() {
 
           {/* Social Icons */}
           <div className="flex justify-center space-x-6">
-            <a 
-              href="https://linkedin.com" 
-              aria-label="LinkedIn" 
+            <a
+              href="https://linkedin.com"
+              aria-label="LinkedIn"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Linkedin size={24} />
             </a>
-            <a 
-              href="https://facebook.com" 
-              aria-label="Facebook" 
+            <a
+              href="https://facebook.com"
+              aria-label="Facebook"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Facebook size={24} />
             </a>
-            <a 
-              href="https://threads.net" 
-              aria-label="Threads" 
+            <a
+              href="https://threads.net"
+              aria-label="Threads"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Mail size={24} />
@@ -87,9 +88,10 @@ export function Footer() {
                 placeholder="Your email"
                 className="flex-1 p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 required
+                suppressHydrationWarning
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700"
               >
                 Subscribe
@@ -103,27 +105,27 @@ export function Footer() {
           <div className="text-xs text-center space-y-2">
             <p>&copy; {new Date().getFullYear()} IntraWeb Technologies</p>
             <div className="space-x-4">
-              <Link 
-                href="/privacy-policy" 
+              <Link
+                href="/privacy-policy"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Privacy Policy
               </Link>
-              <Link 
-                href="/terms-of-service" 
+              <Link
+                href="/terms-of-service"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Terms of Service
               </Link>
-              <Link 
-                href="/accessibility" 
+              <Link
+                href="/accessibility"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Accessibility
               </Link>
             </div>
             <p className="text-gray-400">
-              Data Subject Requests: <a 
+              Data Subject Requests: <a
                 href="mailto:contact@intrawebtech.com"
                 className="hover:text-orange-500"
               >
@@ -140,7 +142,7 @@ export function Footer() {
           <div className="flex flex-wrap justify-between">
             {/* Column 1 */}
             <div className="w-full md:w-1/4 mb-6 md:mb-0">
-              <img src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" className="mb-2 w-32 h-auto" />
+              <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={128} height={40} className="mb-2 w-32 h-auto" />
               <p className="text-sm">Innovate. Build. Empower.</p>
               <p className="text-xs">We are committed to delivering innovative<br />solutions that empower businesses worldwide.</p>
             </div>
@@ -174,6 +176,7 @@ export function Footer() {
                   placeholder="Your email"
                   className="p-2 rounded bg-gray-800 text-white"
                   required
+                  suppressHydrationWarning
                 />
                 <input type="text" id="honeypot" className="hidden" />
                 <button type="submit" className="p-2 bg-orange-500 text-white rounded hover:bg-orange-600">Subscribe</button>
@@ -193,7 +196,7 @@ export function Footer() {
             <Link href="/terms-of-service" className="hover:text-orange-500">Terms of Service</Link> |{' '}
             <Link href="/accessibility" className="hover:text-orange-500">Accessibility</Link>
             <p className="text-gray-400 mt-2">
-              Data Subject Requests: <a 
+              Data Subject Requests: <a
                 href="mailto:contact@intrawebtech.com"
                 className="hover:text-orange-500"
               >

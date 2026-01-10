@@ -1,5 +1,3 @@
-import { Project } from "@/types/project";
-import Link from "next/link";
 import projectsData from "@/data/projects.json";
 import ProjectCard from "@/components/portfolio/ProjectCard";
 

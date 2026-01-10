@@ -34,7 +34,7 @@ export default function TermsOfService() {
           <section className="mb-10">
             <h2>Disclaimers</h2>
             <ul>
-              <li>The site is provided on an "as is" and "as available" basis.</li>
+              <li>The site is provided on an &quot;as is&quot; and &quot;as available&quot; basis.</li>
               <li>We do not warrant that the site will be error-free or uninterrupted.</li>
               <li>We are not responsible for the accuracy, reliability, or completeness of any content.</li>
             </ul>
