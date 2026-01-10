@@ -7,39 +7,17 @@ import { TeamProcess } from "./team-process";
 const team = [
   {
     name: "John Schibelli",
-    title: "Founder / CEO",
+    title: "Principal Software Engineer",
     image: "/john_schibelli.jpg",
     bio: "John provides strategic vision, product direction, and final approvals for all projects. He is passionate about building innovative solutions that drive business growth.",
+    isAi: false,
   },
   {
-    name: "Alex Reyes",
-    title: "Project Manager",
+    name: "Chris Weston",
+    title: "Senior Software Engineer",
     image: "/alex_reyes.png",
-    bio: "Alex coordinates cross-functional teams, manages timelines, and ensures seamless task execution from start to finish.",
-  },
-  {
-    name: "Nico Alvarez",
-    title: "Frontend Lead",
-    image: "/nico.png",
-    bio: "Nico leads UI implementation, component architecture, and ensures responsive, accessible interfaces across all platforms.",
-  },
-  {
-    name: "Eli Noor",
-    title: "Backend Lead",
-    image: "/eli-noor.png",
-    bio: "Eli designs robust databases, develops API endpoints, and handles authentication and multi-tenant logic.",
-  },
-  {
-    name: "Aria Das",
-    title: "AI/ML Lead",
-    image: "/Aria_das.png",
-    bio: "Aria integrates custom AI models, manages token state logic, and develops agent workflows for intelligent automation.",
-  },
-  {
-    name: "Sophie Tran",
-    title: "UX/UI Lead",
-    image: "/sophie_tran.png",
-    bio: "Sophie crafts visual design, UX flows, and Figma mockups, ensuring every product is beautiful and user-friendly.",
+    bio: "Chris coordinates cross-functional teams, manages timelines, and ensures seamless task execution from start to finish.",
+    isAi: false, // Assuming Chris is a human team member based on the name change context
   },
 ];
 
@@ -64,9 +42,9 @@ export default function TeamPage() {
       </section>
       {/* Team Section */}
       <section className="max-w-6xl mx-auto px-4 pt-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="flex flex-wrap justify-center gap-10">
           {team.map((member) => (
-            <div key={member.name} className="bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-700 relative overflow-visible">
+            <div key={member.name} className="w-full max-w-sm bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-700 relative overflow-visible">
               <div className="relative w-40 h-40 mb-6 rounded-full overflow-visible flex items-center justify-center">
                 <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-teal-400 bg-gray-700">
                   <Image
@@ -79,7 +57,7 @@ export default function TeamPage() {
                     unoptimized
                   />
                 </div>
-                {member.name !== "John Schibelli" && (
+                {member.isAi && (
                   <span
                     className="absolute bg-teal-700 border rounded-full p-1 flex items-center justify-center shadow-lg group"
                     style={{ right: '5px', bottom: 0, width: 44, height: 44, borderColor: '#2dd4bf', borderWidth: 1 }}
