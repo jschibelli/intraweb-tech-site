@@ -7,8 +7,6 @@ interface HeroContent {
   heading: string;
   subheading: string;
   cta: { label: string; href: string };
-  announcement: { label: string; href: string };
-  clientLogos: { src: string; alt: string }[];
 }
 
 export default function Hero() {
@@ -25,9 +23,9 @@ export default function Hero() {
   return (
     <section className="relative overflow-hidden text-white pt-16 pb-12 md:pt-24 md:pb-20" style={{ backgroundColor: '#0a2236', backgroundImage: 'url(/circuit-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>
       {/* Top inside shadow */}
-      <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 16px 32px -8px #0008'}} />
+      <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 16px 32px -8px #0008' }} />
       {/* Bottom inside shadow */}
-      <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 -16px 32px -8px #0008'}} />
+      <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 -16px 32px -8px #0008' }} />
       {/* Framer Motion animated background */}
       <motion.div
         className="absolute inset-0 z-0"
@@ -47,13 +45,6 @@ export default function Hero() {
         />
       </motion.div>
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center px-4">
-        {/* Announcement */}
-        <Link
-          href={content.announcement.href}
-          className="inline-block mb-4 px-4 py-1 rounded-full bg-teal-500/80 text-gray-900 font-semibold text-sm hover:bg-orange-500 hover:text-white transition-colors"
-        >
-          {content.announcement.label}
-        </Link>
         {/* Heading */}
         <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">
           {content.heading}
@@ -64,15 +55,11 @@ export default function Hero() {
         </p>
         {/* CTA */}
         <a
-          href="https://synaplyai.intrawebtech.com"
-          target="_blank"
-          rel="noopener noreferrer"
+          href={content.cta.href}
           className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg shadow hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
         >
-          Get Started
+          {content.cta.label}
         </a>
-        {/* Client Logos */}
-        {/* Removed client logos grid for a cleaner Hero section */}
       </div>
     </section>
   );

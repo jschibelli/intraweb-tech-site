@@ -21,8 +21,8 @@ export default function FAQ() {
   return (
     <section id="faq" className="bg-gray-900 py-16 md:py-24">
       <div className="max-w-3xl mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-teal-400 text-left md:text-center">Frequently Asked Questions</h2>
-        <p className="text-lg md:text-2xl font-body mb-6 text-teal-100 text-left md:text-center">Find answers to common questions about our services, process, and more.</p>
+        <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-teal-400 text-left md:text-center">Start with a Diagnostic</h2>
+        <p className="text-lg md:text-2xl font-body mb-6 text-teal-100 text-left md:text-center">If you're dealing with coordination drag or operational friction slowing your organization down, we should talk.</p>
       </div>
       <div className="max-w-5xl mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8">
@@ -49,10 +49,10 @@ export default function FAQ() {
         </div>
         <div className="flex justify-center mt-10">
           <Link
-            href="/faq"
+            href="#contact"
             className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
-            Still have questions?
+            Request a Diagnostic
           </Link>
         </div>
       </div>

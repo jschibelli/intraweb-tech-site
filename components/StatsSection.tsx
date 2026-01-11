@@ -8,27 +8,27 @@ import { motion } from "framer-motion"
 const stats = [
   {
     icon: Gauge,
-    metric: "98%",
-    description: "Average client satisfaction score across all projects",
-    category: "Client Satisfaction"
+    metric: "Fewer Handoffs",
+    description: "Work moves through the organization with fewer manual handoffs and explicit transitions",
+    category: "Workflow Design"
   },
   {
     icon: Rocket,
-    metric: "3.2x",
-    description: "Average increase in conversion rates after implementation",
-    category: "Performance"
+    metric: "Less Coordination",
+    description: "Fewer decisions require meetings or escalations. Teams spend less time coordinating and more time executing",
+    category: "Operational Efficiency"
   },
   {
     icon: BarChart3,
-    metric: "45%",
-    description: "Average growth in organic traffic within 6 months",
-    category: "Growth"
+    metric: "Supported Automation",
+    description: "Automation supports the workflow instead of fighting it. Tools reduce friction rather than create new dependencies",
+    category: "Smart Tooling"
   },
   {
     icon: ShieldCheck,
-    metric: "100%",
-    description: "Projects delivered on time and within budget",
-    category: "Reliability"
+    metric: "Easier to Run",
+    description: "The business becomes easier to run—not because people work harder, but because the system carries more of the load",
+    category: "Sustained Improvement"
   }
 ]
 
@@ -39,7 +39,7 @@ export function StatsSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-gray-700 to-gray-700/95" />
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-      
+
       <div className="max-w-5xl mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -48,10 +48,10 @@ export function StatsSection() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-center mb-4 text-teal-400">
-            Real Numbers, Real Growth
+            What Changes in Practice
           </h2>
           <p className="font-sans text-lg md:text-xl text-center mb-12 max-w-2xl mx-auto text-teal-100">
-            Our clients don't just get websites—they get measurable business results.
+            The goal isn't transformation theater. It's day-to-day work that runs with less friction, less risk, and fewer surprises.
           </p>
         </motion.div>
 
@@ -64,7 +64,7 @@ export function StatsSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <div 
+              <div
                 className="flex flex-col p-8 rounded-xl shadow-lg bg-gray-800 border border-gray-700 border-t-4 border-teal-500 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
               >
                 <div className="flex items-center gap-4 mb-4">

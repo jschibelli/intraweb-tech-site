@@ -29,7 +29,7 @@ export default function Process() {
   return (
     <section id="process" className="bg-gray-900 py-16 md:py-24">
       <div className="max-w-5xl mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-10 text-white">Our Process</h2>
+        <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-10 text-white">How We Work</h2>
         <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-0 md:gap-10 px-6 md:px-12">
           {steps.map((step, i) => {
             const Icon = iconMap[step.icon];
