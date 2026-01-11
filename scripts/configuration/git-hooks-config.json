@@ -1,0 +1,31 @@
+{
+  "enabled": true,
+  "projectKey": "",
+  "statusTransitions": {
+    "onCheckout": {
+      "from": ["Backlog", "Ready"],
+      "to": "In progress"
+    },
+    "onCommit": {
+      "from": ["Backlog"],
+      "to": "In progress"
+    },
+    "onPRCreate": {
+      "from": ["In progress"],
+      "to": "In review"
+    },
+    "onPRMerge": {
+      "from": ["Ready", "In review"],
+      "to": "Done"
+    }
+  },
+  "branchPatterns": [
+    "issue-{number}-*",
+    "feature/{number}-*",
+    "bugfix/{number}-*",
+    "hotfix/{number}-*",
+    "chore/{number}-*"
+  ],
+  "logLevel": "silent"
+}
+
