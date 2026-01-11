@@ -1,19 +1,8 @@
 {
-  "heading": "Empowering Digital Innovation",
-  "subheading": "Custom web solutions for ambitious businesses. We design, build, and scale high-performance digital products.",
+  "heading": "Redesign how work moves. Implement automation. Stay until it sticks.",
+  "subheading": "For growing organizations where coordination drag, manual handoffs, and informal workflows are slowing everything down.",
   "cta": {
-    "label": "Get Started",
+    "label": "Request a Diagnostic",
     "href": "#contact"
-  },
-  "announcement": {
-    "label": "Introducing SynaplyAI",
-    "href": "#synaplyai"
-  },
-  "clientLogos": [
-    { "src": "/globe.svg", "alt": "Client 1" },
-    { "src": "/file.svg", "alt": "Client 2" },
-    { "src": "/window.svg", "alt": "Client 3" },
-    { "src": "/next.svg", "alt": "Client 4" },
-    { "src": "/vercel.svg", "alt": "Client 5" }
-  ]
-} 
+  }
+}

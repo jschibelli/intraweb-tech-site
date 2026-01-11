@@ -1,27 +1,17 @@
 [
   {
-    "title": "Discovery",
-    "description": "We learn about your business, goals, and users to define project requirements.",
+    "title": "Phase 1: Diagnostic",
+    "description": "Structured assessment of workflows, coordination points, and automation opportunities. You get a written roadmap prioritizing what's worth fixing first.",
     "icon": "Search"
   },
   {
-    "title": "Design",
-    "description": "We create wireframes and high-fidelity designs for a seamless user experience.",
-    "icon": "Pen"
-  },
-  {
-    "title": "Development",
-    "description": "Our engineers build robust, scalable solutions using modern technologies.",
+    "title": "Phase 2: Implementation",
+    "description": "Roadmap items implemented incrementally. We redesign workflows before automating, so changes reduce friction instead of digitizing problems.",
     "icon": "Code"
   },
   {
-    "title": "Launch",
-    "description": "We deploy, monitor, and optimize your product for a successful launch.",
-    "icon": "Rocket"
-  },
-  {
-    "title": "Support",
-    "description": "Ongoing support and improvements to ensure your continued success.",
+    "title": "Phase 3: Ongoing Partnership",
+    "description": "Structured engagement focused on adoption and refinement. We stay embedded to monitor performance, resolve friction, and ensure improvements stick.",
     "icon": "LifeBuoy"
   }
-] 
+]

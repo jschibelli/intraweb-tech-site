@@ -30,10 +30,6 @@ export default function SynaplyAI() {
         </svg>
       </div>
       <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Sparkles size={32} className="text-yellow-300" />
-          <span className="text-lg font-semibold text-yellow-200">AI Feature</span>
-        </div>
         <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">{content.heading}</h2>
         <p className="text-lg font-body mb-8 text-white/90">{content.description}</p>
         <ul className="mb-8 space-y-3 text-left max-w-xl mx-auto">
@@ -45,27 +41,18 @@ export default function SynaplyAI() {
           ))}
         </ul>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {content.ctas.map((cta, i) =>
-            cta.label === 'Learn More' ? (
-              <a
-                key={i}
-                href="https://synaplyai.intrawebtech.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`px-8 py-3 rounded font-semibold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 bg-yellow-300 text-gray-900 hover:bg-white`}
-              >
-                {cta.label}
-              </a>
-            ) : (
-              <Link
-                key={i}
-                href={cta.href}
-                className={`px-8 py-3 rounded font-semibold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 border-2 border-white text-white hover:bg-white hover:text-gray-900`}
-              >
-                {cta.label}
-              </Link>
-            )
-          )}
+          {content.ctas.map((cta, i) => (
+            <Link
+              key={i}
+              href={cta.href}
+              className={`px-8 py-3 rounded font-semibold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${i === 0
+                ? 'bg-yellow-300 text-gray-900 hover:bg-white'
+                : 'border-2 border-white text-white hover:bg-white hover:text-gray-900'
+                }`}
+            >
+              {cta.label}
+            </Link>
+          ))}
         </div>
       </div>
     </section>

@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 interface AboutContent {
   heading: string;
-  tagline: string;
   description: string;
-  bullets: string[];
   ctas: { label: string; href: string }[];
 }
 
@@ -24,9 +21,9 @@ export default function About() {
   return (
     <section id="about" className="relative bg-[#0a2236] py-16 md:py-24 overflow-hidden" style={{ backgroundImage: 'url(/hexagon-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>
       {/* Top inside shadow */}
-      <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 16px 32px -8px #0008'}} />
+      <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 16px 32px -8px #0008' }} />
       {/* Bottom inside shadow */}
-      <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 -16px 32px -8px #0008'}} />
+      <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{ boxShadow: 'inset 0 -16px 32px -8px #0008' }} />
       {/* SVG Wave Top */}
       <div className="absolute top-0 left-0 w-full -z-10" aria-hidden="true">
         <svg viewBox="0 0 1440 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-32 md:h-40">
@@ -40,24 +37,22 @@ export default function About() {
         </svg>
       </div>
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-3xl text-teal-400 md:text-4xl font-heading font-bold mb-2">{content.heading}</h2>
-        <p className="text-lg text-white font-semibold mb-4">{content.tagline}</p>
-        <p className="text-gray-300 font-body mb-8">{content.description}</p>
-        <ul className="text-left max-w-xl mx-auto mb-8 space-y-2">
-          {content.bullets.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 text-gray-200">
-              <span className="mt-1 w-2 h-2 rounded-full bg-teal-400 inline-block" />
-              <span>{item}</span>
-            </li>
+        <h2 className="text-3xl text-teal-400 md:text-4xl font-heading font-bold mb-6">{content.heading}</h2>
+        <div className="text-gray-300 font-body mb-8 space-y-4">
+          {content.description.split('\n\n').map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
           ))}
-        </ul>
+        </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/team"
-            className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-          >
-            Meet Our Team
-          </Link>
+          {content.ctas.map((cta, i) => (
+            <a
+              key={i}
+              href={cta.href}
+              className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            >
+              {cta.label}
+            </a>
+          ))}
         </div>
       </div>
     </section>

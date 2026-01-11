@@ -1,15 +1,10 @@
 {
-  "heading": "Your partner in digital transformation",
-  "tagline": "Engineering Your Digital Advantage",
-  "description": "We are a team of passionate engineers, designers, and strategists dedicated to building high-impact web solutions for ambitious businesses.",
-  "bullets": [
-    "20+ years of experience across industries",
-    "Full-service: strategy, design, development, support",
-    "Client-first, transparent process",
-    "Cutting-edge tech, proven results"
-  ],
+  "heading": "About",
+  "description": "IntraWeb Technologies is led by John Gerard Schibelli, a senior software engineer with extensive experience in automation, systems design, and operational tooling.\n\nJohn has spent years embedded in organizations redesigning how work moves through teams, implementing automation that actually gets used, and building systems that reduce coordination overhead without creating new dependencies.\n\nThis firm exists because most operational improvements fail not from bad ideas, but from abandoned execution. IntraWeb's model is designed to prevent that—by staying engaged long enough to make changes stick.",
   "ctas": [
-    { "label": "Meet the Team", "href": "#team" },
-    { "label": "Contact Us", "href": "#contact" }
+    {
+      "label": "Request a Diagnostic",
+      "href": "#contact"
+    }
   ]
-} 
+}

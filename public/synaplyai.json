@@ -1,14 +1,20 @@
 {
-  "heading": "Introducing SynaplyAI",
-  "description": "AI-powered automation and insights for your business workflows. Unlock new levels of efficiency and innovation.",
+  "heading": "Start with a Paid Diagnostic",
+  "description": "We don't hand you a report and walk away. We stay engaged long enough to make improvements stick.",
   "features": [
-    "Automate repetitive tasks with smart workflows",
-    "Real-time analytics and actionable insights",
-    "Seamless integration with your existing tools",
-    "Enterprise-grade security and compliance"
+    "Structured assessment of workflows, coordination points, and automation opportunities",
+    "Written roadmap that prioritizes high-impact improvements",
+    "Clear scope definition: what's worth fixing first and how we'd approach implementation",
+    "No sales theater—just clarity on what the work would solve"
   ],
   "ctas": [
-    { "label": "Learn More", "href": "#synaplyai-details" },
-    { "label": "Request a Demo", "href": "#contact" }
+    {
+      "label": "Request a Diagnostic",
+      "href": "#contact"
+    },
+    {
+      "label": "Email Us",
+      "href": "mailto:contact@intrawebtech.com"
+    }
   ]
-} 
+}

@@ -1,22 +1,22 @@
 [
   {
-    "title": "Web App Development",
-    "description": "Robust, scalable web applications tailored to your business goals.",
+    "title": "Operationally Stable But Inefficient",
+    "description": "Your business runs, but workflows are chaotic, manual handoffs slow everything down, and too much depends on specific people being available.",
     "icon": "Code"
   },
   {
-    "title": "UI/UX Design",
-    "description": "Intuitive, beautiful interfaces that delight users and drive results.",
+    "title": "Willing to Redesign, Not Just Automate",
+    "description": "You understand that automating a bad process just makes it fail faster. You value partnership over quick fixes.",
     "icon": "Palette"
   },
   {
-    "title": "Cloud & DevOps",
-    "description": "Modern cloud infrastructure and automation for performance and reliability.",
+    "title": "Not in Crisis Mode",
+    "description": "We're not set up for emergency rescues. Those situations require a different kind of intervention.",
     "icon": "Cloud"
   },
   {
-    "title": "AI Solutions",
-    "description": "Leverage artificial intelligence to automate, analyze, and innovate your business processes.",
+    "title": "Not Development in Isolation",
+    "description": "We build custom software—but only when it's part of a broader operational roadmap and adoption plan. We don't ship code without taking responsibility for how it's used.",
     "icon": "Sparkles"
   }
-] 
+]
