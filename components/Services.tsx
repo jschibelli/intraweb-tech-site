@@ -55,7 +55,7 @@ export default function Services() {
         </div>
         <div className="flex justify-center">
           <Link
-            href="#contact"
+            href="/contact"
             className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
             Request a Diagnostic

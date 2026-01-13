@@ -54,23 +54,23 @@ export function Footer() {
 
           {/* Social Icons */}
           <div className="flex justify-center space-x-6">
-            <a 
-              href="https://linkedin.com" 
-              aria-label="LinkedIn" 
+            <a
+              href="https://linkedin.com"
+              aria-label="LinkedIn"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Linkedin size={24} />
             </a>
-            <a 
-              href="https://facebook.com" 
-              aria-label="Facebook" 
+            <a
+              href="https://facebook.com"
+              aria-label="Facebook"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Facebook size={24} />
             </a>
-            <a 
-              href="https://threads.net" 
-              aria-label="Threads" 
+            <a
+              href="https://threads.net"
+              aria-label="Threads"
               className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
             >
               <Mail size={24} />
@@ -88,8 +88,8 @@ export function Footer() {
                 className="flex-1 p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 required
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700"
               >
                 Subscribe
@@ -103,27 +103,27 @@ export function Footer() {
           <div className="text-xs text-center space-y-2">
             <p>&copy; {new Date().getFullYear()} IntraWeb Technologies</p>
             <div className="space-x-4">
-              <Link 
-                href="/privacy-policy" 
+              <Link
+                href="/privacy-policy"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Privacy Policy
               </Link>
-              <Link 
-                href="/terms-of-service" 
+              <Link
+                href="/terms-of-service"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Terms of Service
               </Link>
-              <Link 
-                href="/accessibility" 
+              <Link
+                href="/accessibility"
                 className="hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-700 rounded"
               >
                 Accessibility
               </Link>
             </div>
             <p className="text-gray-400">
-              Data Subject Requests: <a 
+              Data Subject Requests: <a
                 href="mailto:contact@intrawebtech.com"
                 className="hover:text-orange-500"
               >
@@ -150,7 +150,7 @@ export function Footer() {
               <nav className="flex flex-col space-y-1">
                 <Link href="/services" className="hover:text-orange-500">Services</Link>
                 {/* <Link href="/work" className="hover:text-orange-500">Work</Link> */}
-                <Link href="/process" className="hover:text-orange-500">Process</Link>
+                {/* <Link href="/process" className="hover:text-orange-500">Process</Link> */}
                 <Link href="/about" className="hover:text-orange-500">About</Link>
                 <Link href="/team" className="hover:text-orange-500">Team</Link>
                 <Link href="/careers" className="hover:text-orange-500">Careers</Link>
@@ -193,7 +193,7 @@ export function Footer() {
             <Link href="/terms-of-service" className="hover:text-orange-500">Terms of Service</Link> |{' '}
             <Link href="/accessibility" className="hover:text-orange-500">Accessibility</Link>
             <p className="text-gray-400 mt-2">
-              Data Subject Requests: <a 
+              Data Subject Requests: <a
                 href="mailto:contact@intrawebtech.com"
                 className="hover:text-orange-500"
               >
