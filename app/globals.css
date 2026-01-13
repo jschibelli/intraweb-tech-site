@@ -8,13 +8,6 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -83,9 +76,45 @@ html {
   font-weight: 400;
   color: #e0e0e0;
   margin: 0;
-  max-width: 680px;
+  max-width: 640px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Transition Landmark: Set-Apart Line */
+.set-apart-section {
+  padding: 8vh 5vw;
+  background: #0a2236;
+}
+
+.set-apart-content {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.set-apart-line {
+  font-size: 1.25rem;
+  line-height: 2.0;
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Decision Landmark: Visual Break Before Fork */
+.decision-landmark {
+  height: 1px;
+  background: #13293d;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+/* Visual Rest: Horizontal Rule After Fork */
+.visual-rest {
+  height: 1px;
+  background: #13293d;
+  max-width: 200px;
+  margin: 0 auto;
 }
 
 /* Section 2: Identity Through Exclusion */
