@@ -3,13 +3,13 @@ import React from "react";
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#0a2236]">
-      <div className="mx-auto max-w-[800px] px-6 pt-16 pb-24 md:pt-24 md:pb-32 text-[17px] md:text-[18px] leading-[1.75] text-[#e0e0e0] font-sans">
-        <h1 className="text-3xl md:text-4xl font-medium text-white font-heading mb-16 md:mb-24">
+      <div className="mx-auto max-w-[800px] px-6 pt-12 pb-16 md:pt-16 md:pb-20 text-[17px] md:text-[18px] leading-[1.75] text-[#e0e0e0] font-sans">
+        <h1 className="text-3xl md:text-4xl font-medium text-white font-heading mb-10 md:mb-12">
           About IntraWeb Technologies
         </h1>
 
         {/* Section 1: Institutional Position */}
-        <section className="space-y-6 mb-16 md:mb-24">
+        <section className="space-y-4 mb-10 md:mb-12">
           <p>
             IntraWeb Technologies is a technology firm organized around two distinct operational tracks: AI Transformation and AI Engineering.
           </p>
@@ -22,13 +22,13 @@ export default function AboutPage() {
           <p>This is not a service menu. It is an operational filter.</p>
         </section>
 
-        <div className="border-t border-[#13293d] mb-16 md:mb-24" />
+        <div className="border-t border-[#13293d] mb-10 md:mb-12" />
 
         {/* Section 2: Structural Logic */}
-        <section className="space-y-8 mb-16 md:mb-24">
+        <section className="space-y-6 mb-10 md:mb-12">
           <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Structural Logic</h2>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <p className="font-medium text-white">Why the fork exists:</p>
             <p>
               Most firms treat AI as a capability layer that can be applied uniformly across strategy and implementation. This creates misalignment.
@@ -70,10 +70,10 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <div className="border-t border-[#13293d] mb-16 md:mb-24" />
+        <div className="border-t border-[#13293d] mb-10 md:mb-12" />
 
         {/* Section 3: Belief System */}
-        <section className="space-y-8 mb-16 md:mb-24">
+        <section className="space-y-6 mb-10 md:mb-12">
           <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Belief System</h2>
 
           <div className="space-y-6">
@@ -108,7 +108,7 @@ export default function AboutPage() {
         <div className="border-t border-[#13293d] mb-16 md:mb-24" />
 
         {/* Section 4: Engagement Boundary */}
-        <section className="space-y-8 mb-16 md:mb-24">
+        <section className="space-y-6 mb-10 md:mb-12">
           <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Engagement Boundary</h2>
 
           <div className="space-y-6">
@@ -153,10 +153,10 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <div className="border-t border-[#13293d] mb-16 md:mb-24" />
+        <div className="border-t border-[#13293d] mb-10 md:mb-12" />
 
         {/* Section 5: Working Relationship */}
-        <section className="space-y-8">
+        <section className="space-y-6">
           <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Working Relationship</h2>
 
           <div className="space-y-6">
