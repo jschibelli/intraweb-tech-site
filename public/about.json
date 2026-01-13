@@ -4,7 +4,7 @@
   "ctas": [
     {
       "label": "Request a Diagnostic",
-      "href": "#contact"
+      "href": "/contact"
     }
   ]
 }
