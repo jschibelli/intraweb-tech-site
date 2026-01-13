@@ -14,9 +14,9 @@ export default function Home() {
             Most organizations still lack the structure to use it well.
           </h1>
           <p className="hero-sub">
-            AI capability isn't the constraint anymore. Priorities drift, implementation fragments,
-            and accountability spreads across functions that don't converge. We work with firms that
-            need institutional answers, not more pilots.
+            AI capability isn't the constraint. Priorities drift, implementation fragments,
+            and accountability spreads across functions that don't converge. We work with
+            firms that need institutional answers, not more pilots.
           </p>
         </div>
       </section>
@@ -38,6 +38,18 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {/* Transition Landmark: Set-Apart Line */}
+      <section className="set-apart-section">
+        <div className="set-apart-content">
+          <p className="set-apart-line">
+            The question is not whether to use AI. The question is which problem you need to solve first.
+          </p>
+        </div>
+      </section>
+
+      {/* Decision Landmark: Visual Break Before Fork */}
+      <div className="decision-landmark" />
 
       {/* Section 3: The Fork (Critical Element) */}
       <section className="fork-section">
@@ -73,6 +85,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Visual Rest: Horizontal Rule After Fork */}
+      <div className="visual-rest" />
 
       {/* Section 4: Integrated Logic */}
       <section className="logic-section">

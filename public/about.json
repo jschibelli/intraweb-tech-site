@@ -1,10 +1,10 @@
 {
   "heading": "About",
-  "description": "IntraWeb Technologies is led by John Gerard Schibelli, a senior software engineer with extensive experience in automation, systems design, and operational tooling.\n\nJohn has spent years embedded in organizations redesigning how work moves through teams, implementing automation that actually gets used, and building systems that reduce coordination overhead without creating new dependencies.\n\nThis firm exists because most operational improvements fail not from bad ideas, but from abandoned execution. IntraWeb's model is designed to prevent that—by staying engaged long enough to make changes stick.",
+  "description": "IntraWeb Technologies is led by John Schibelli, a senior software engineer with extensive experience in automation, systems design, and operational tooling.\n\nJohn has spent years embedded in organizations redesigning how work moves through teams, implementing automation that actually gets used, and building systems that reduce coordination overhead without creating new dependencies.\n\nThis firm exists because most operational improvements fail not from bad ideas, but from abandoned execution. IntraWeb's model is designed to prevent that—by staying engaged long enough to make changes stick.",
   "ctas": [
     {
       "label": "Request a Diagnostic",
-      "href": "#contact"
+      "href": "/contact"
     }
   ]
 }
