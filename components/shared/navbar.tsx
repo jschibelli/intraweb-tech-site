@@ -7,12 +7,15 @@ import Image from 'next/image';
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Our Team", href: "/team" },
-  { name: "Process", href: "/process" },
-  { name: "Services", href: "/services" },
+  { name: "AI Transformation", href: "/ai-transformation" },
+  { name: "AI Engineering", href: "/ai-engineering" },
+  { name: "About Us", href: "/about" },
+  // { name: "Get Started", href: "/contact" },
+  // { name: "Our Team", href: "/team" },
+  // { name: "Process", href: "/process" },
+  // { name: "Services", href: "/services" },
   // { name: "Work", href: "/portfolio" },
-  { name: "FAQ", href: "/faq" },
+  // { name: "FAQ", href: "/faq" },
 ];
 
 export default function Navbar() {
@@ -68,14 +71,14 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`sticky top-0 z-50 transition-colors duration-300 ${isHome ? (scrolled ? "bg-gray-900/95 shadow-md" : "bg-transparent") : "bg-gray-900 shadow-md"} text-white`}>
+    <header className="sticky top-0 z-50 bg-gray-900 shadow-md text-white">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-lg font-heading font-bold">
           <span className="sr-only">IntraWeb Technologies</span>
           {/* Replace with SVG logo if available */}
-          
-            <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4" />
+
+          <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4" />
         </Link>
         {/* Desktop Nav */}
         <ul className="hidden md:flex items-center gap-8 font-body">
@@ -91,7 +94,7 @@ export default function Navbar() {
           ))}
           <li>
             <Link href="/contact" className="ml-4 px-5 py-2 rounded bg-orange-500 text-white font-semibold hover:bg-teal-500 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-              Contact Us
+              Get Started
             </Link>
           </li>
         </ul>
@@ -106,7 +109,7 @@ export default function Navbar() {
       </nav>
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className={`md:hidden ${isHome ? (scrolled ? "bg-gray-900/95" : "bg-transparent") : "bg-gray-900"} px-4 pb-4`}>
+        <div className="md:hidden bg-gray-900 px-4 pb-4">
           <ul className="flex flex-col gap-4 font-body">
             {navLinks.map((link) => (
               <li key={link.name}>
@@ -125,7 +128,7 @@ export default function Navbar() {
                 className="block py-2 px-2 rounded bg-orange-500 text-white font-semibold hover:bg-teal-500 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                 onClick={() => setMenuOpen(false)}
               >
-                Contact Us
+                Get Started
               </Link>
             </li>
           </ul>

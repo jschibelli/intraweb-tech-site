@@ -2,30 +2,30 @@
 
 import { Card, CardContent, CardHeader } from "./ui/card"
 import { Button } from "./ui/Button"
-import { Gauge, Rocket, BarChart3, ShieldCheck } from "lucide-react"
+import { ArrowRight, Minimize2, Zap, ToggleRight } from "lucide-react"
 import { motion } from "framer-motion"
 
 const stats = [
   {
-    icon: Gauge,
+    icon: ArrowRight,
     metric: "Fewer Handoffs",
     description: "Work moves through the organization with fewer manual handoffs and explicit transitions",
     category: "Workflow Design"
   },
   {
-    icon: Rocket,
+    icon: Minimize2,
     metric: "Less Coordination",
     description: "Fewer decisions require meetings or escalations. Teams spend less time coordinating and more time executing",
     category: "Operational Efficiency"
   },
   {
-    icon: BarChart3,
+    icon: Zap,
     metric: "Supported Automation",
     description: "Automation supports the workflow instead of fighting it. Tools reduce friction rather than create new dependencies",
     category: "Smart Tooling"
   },
   {
-    icon: ShieldCheck,
+    icon: ToggleRight,
     metric: "Easier to Run",
     description: "The business becomes easier to run—not because people work harder, but because the system carries more of the load",
     category: "Sustained Improvement"
