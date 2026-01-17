@@ -43,18 +43,6 @@ export async function POST(request: NextRequest) {
 
     const numericRevenue = revenueToNumber[revenue] || 0;
 
-    // Fail-safe: Append all details to the main message so nothing is lost if custom fields fail
-    const robustMessage = `
-${description}
-
----
-Additional Form Data:
-Reason: ${reasonLabels[reason] || reason} (ID: ${reason})
-Decision Maker: ${decisionMaker}
-Revenue Range: ${revenue}
-Website: ${website || "Not provided"}
-    `.trim();
-
     // 1. Send Email via Resend
     const emailContent = `
       New Contact Form Submission:
@@ -95,7 +83,7 @@ Website: ${website || "Not provided"}
           { name: "reason_for_call", value: reason }, // Trying raw ID
           { name: "decision_maker", value: decisionMaker },
           { name: "annualrevenue", value: numericRevenue.toString() }, // Must be stringified number
-          { name: "message", value: robustMessage },
+          { name: "message", value: description }, // Clean user message only
           // Only include website if it exists
           ...(website ? [{ name: "website", value: website }] : []),
         ],
