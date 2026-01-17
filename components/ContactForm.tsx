@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export function ContactForm() {
-  const [form, setForm] = useState({ name: '', email: '', message: '', honeypot: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', message: '', honeypot: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export function ContactForm() {
 
     if (form.honeypot) return; // Bot detected
 
-    if (!form.name || !form.email || !form.message) {
+    if (!form.firstName || !form.lastName || !form.email || !form.message) {
       setError('All fields are required.');
       return;
     }
@@ -34,7 +34,7 @@ export function ContactForm() {
     setLoading(false);
     if (res.ok) {
       setSuccess(true);
-      setForm({ name: '', email: '', message: '', honeypot: '' });
+      setForm({ firstName: '', lastName: '', email: '', message: '', honeypot: '' });
     } else {
       setError('Something went wrong. Please try again.');
     }
@@ -43,9 +43,15 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4">
       <input type="text" name="honeypot" value={form.honeypot} onChange={handleChange} className="hidden" tabIndex={-1} autoComplete="off" />
-      <div>
-        <label htmlFor="name" className="block font-semibold">Name</label>
-        <input id="name" name="name" type="text" value={form.name} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label htmlFor="firstName" className="block font-semibold">First Name</label>
+          <input id="firstName" name="firstName" type="text" value={form.firstName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
+        <div className="flex-1">
+          <label htmlFor="lastName" className="block font-semibold">Last Name</label>
+          <input id="lastName" name="lastName" type="text" value={form.lastName} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+        </div>
       </div>
       <div>
         <label htmlFor="email" className="block font-semibold">Email</label>
