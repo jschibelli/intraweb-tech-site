@@ -24,6 +24,8 @@ export function CookieConsentBanner() {
     console.log('Has consent:', hasConsent);
     if (!hasConsent) {
       setShowBanner(true);
+    } else {
+      setShowBanner(false);
     }
   }, []);
 

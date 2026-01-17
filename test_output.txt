@@ -1,0 +1,44 @@
+
+> nextjs@0.1.0 test:unit
+> jest tests/unit/components/ContactForm.test.tsx
+
+FAIL tests/unit/components/ContactForm.test.tsx
+  ContactForm
+    ΓêÜ renders all form fields (119 ms)
+    ├ù submits form successfully (3 ms)
+    ├ù handles submission error (1 ms)
+    Γùï skipped shows validation error when fields are empty
+
+  ΓùÅ ContactForm ΓÇ║ submits form successfully
+
+    TypeError: _userevent.default.setup(...) is not a function
+
+      29 |
+      30 |     it('submits form successfully', async () => {
+    > 31 |         const user = userEvent.setup()
+         |                                     ^
+      32 |             (global.fetch as jest.Mock).mockResolvedValueOnce({
+      33 |                 ok: true,
+      34 |                 json: async () => ({})
+
+      at Object.<anonymous> (tests/unit/components/ContactForm.test.tsx:31:37)
+
+  ΓùÅ ContactForm ΓÇ║ handles submission error
+
+    TypeError: _userevent.default.setup(...) is not a function
+
+      52 |
+      53 |     it('handles submission error', async () => {
+    > 54 |         const user = userEvent.setup()
+         |                                     ^
+      55 |             (global.fetch as jest.Mock).mockResolvedValueOnce({
+      56 |                 ok: false
+      57 |             })
+
+      at Object.<anonymous> (tests/unit/components/ContactForm.test.tsx:54:37)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 skipped, 1 passed, 4 total
+Snapshots:   0 total
+Time:        2.022 s
+Ran all test suites matching /tests\\unit\\components\\ContactForm.test.tsx/i.
