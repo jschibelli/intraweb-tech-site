@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Engineering - IntraWeb Technologies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Roboto', Arial, Helvetica, sans-serif;
+      background: #0a2236;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+    }
+    
+    /* Container */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    .wide-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* Sections */
+    section {
+      padding: 80px 0;
+    }
+    
+    @media (min-width: 768px) {
+      section {
+        padding: 120px 0;
+      }
+    }
+    
+    /* Backgrounds */
+    .bg-primary {
+      background: #0a2236;
+    }
+    
+    .bg-alternate {
+      background: #13293d;
+    }
+    
+    .bg-lighter {
+      background: #0d2b42;
+    }
+    
+    /* Typography */
+    .page-title {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.2;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2rem;
+    }
+    
+    .section-title {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 3rem;
+    }
+    
+    .subsection-title {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+    
+    .lead-text {
+      font-size: clamp(1.125rem, 2vw, 1.375rem);
+      line-height: 1.7;
+      color: #e0e0e0;
+      margin-bottom: 3rem;
+    }
+    
+    .body-text {
+      font-size: 1.0625rem;
+      line-height: 1.75;
+      color: #e0e0e0;
+      margin-bottom: 1.5rem;
+    }
+    
+    .text-muted {
+      color: #d0d0d0;
+    }
+    
+    /* Accent Elements */
+    .negation-block {
+      padding: 1.5rem;
+      background: #0a2236;
+      border-left: 3px solid #14b8a6;
+      margin-bottom: 3rem;
+    }
+    
+    .negation-block p {
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.6;
+      color: #ffffff;
+      margin: 0;
+    }
+    
+    .horizontal-rule {
+      height: 1px;
+      background: #13293d;
+      max-width: 200px;
+      margin: 0 auto;
+      border: none;
+    }
+    
+    /* Cards */
+    .capability-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    @media (min-width: 768px) {
+      .capability-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .capability-card {
+      background: #0a2236;
+      border: 1px solid #13293d;
+      padding: 2rem;
+      border-radius: 4px;
+    }
+    
+    .card-number {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: 0.875rem;
+      color: #14b8a6;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .card-title {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1rem;
+    }
+    
+    .card-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .card-list li {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #d0d0d0;
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .card-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.7em;
+      width: 6px;
+      height: 6px;
+      background: #14b8a6;
+      border-radius: 50%;
+    }
+    
+    /* Tech Stack */
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+    
+    .tech-badge {
+      padding: 0.5rem 1rem;
+      background: #13293d;
+      color: #14b8a6;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 4px;
+      border: 1px solid #1a3a52;
+    }
+    
+    /* Two Column Layout */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      margin-top: 3rem;
+    }
+    
+    @media (min-width: 768px) {
+      .two-col-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    /* Proof Points */
+    .proof-point {
+      border-left: 3px solid #14b8a6;
+      padding-left: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .proof-label {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: 0.875rem;
+      color: #14b8a6;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .proof-description {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e0e0e0;
+      margin-bottom: 1rem;
+    }
+    
+    .proof-status {
+      font-size: 0.875rem;
+      color: #14b8a6;
+      font-weight: 500;
+    }
+    
+    /* FAQ */
+    .faq-item {
+      margin-bottom: 2.5rem;
+    }
+    
+    .faq-question {
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      font-size: 0.875rem;
+      color: #14b8a6;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .faq-answer {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e0e0e0;
+    }
+    
+    /* Primary Button */
+    .btn-primary {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #fb923c;
+      color: #0a2236;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      border: 2px solid #fb923c;
+    }
+    
+    .btn-primary:hover {
+      background: #14b8a6;
+      color: #ffffff;
+      border-color: #14b8a6;
+    }
+    
+    /* Spacing Utilities */
+    .mb-1 { margin-bottom: 0.5rem; }
+    .mb-2 { margin-bottom: 1rem; }
+    .mb-3 { margin-bottom: 1.5rem; }
+    .mb-4 { margin-bottom: 2rem; }
+    .mb-5 { margin-bottom: 3rem; }
+    
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mt-3 { margin-top: 1.5rem; }
+    .mt-4 { margin-top: 2rem; }
+    .mt-5 { margin-top: 3rem; }
+    
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero Section -->
+  <section class="bg-primary" style="position: relative; overflow: hidden;">
+    <!-- Pentagon pattern background -->
+    <div style="position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: url('data:image/svg+xml,%3Csvg width=%2280%22 height=%2280%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M40 10 L60 30 L52 52 L28 52 L20 30 Z%22 stroke=%22%2314b8a6%22 stroke-width=%220.5%22 fill=%22none%22 opacity=%220.15%22/%3E%3C/svg%3E'); background-repeat: repeat; background-size: 80px 80px;"></div>
+    <!-- Top shadow -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 64px; pointer-events: none; box-shadow: inset 0 16px 32px -8px rgba(0,0,0,0.5); z-index: 1;"></div>
+    <!-- Bottom shadow -->
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 64px; pointer-events: none; box-shadow: inset 0 -16px 32px -8px rgba(0,0,0,0.5); z-index: 1;"></div>
+    <div class="container" style="position: relative; z-index: 2;">
+      <h1 class="page-title">Systems Architecture for Institutional AI</h1>
+      <p class="lead-text">
+        Most transformation firms stop at recommendations. We execute the technical architecture required to integrate AI into institutional systems—whether that work stems from our diagnostic engagements or your internal requirements.
+      </p>
+      <div class="negation-block">
+        <p>
+          This is not a development shop. We do not provide staff augmentation, offshore capacity, or feature-based contracting. We own architectural outcomes, not delivery tickets.
+        </p>
+      </div>
+      <a href="/contact" class="btn-primary">Discuss Engineering Requirements</a>
+    </div>
+  </section>
+
+  <!-- Boundaries Section -->
+  <section class="bg-alternate">
+    <div class="container">
+      <h2 class="section-title">Boundaries</h2>
+      
+      <div class="capability-grid">
+        <div>
+          <div class="card-number">EXCLUDED</div>
+          <p class="subsection-title">The MVP Mentality</p>
+          <p class="body-text" style="font-size: 1rem;">We do not build prototypes for internal validation. We build systems designed for institutional durability and long-term maintenance.</p>
+        </div>
+        <div>
+          <div class="card-number">EXCLUDED</div>
+          <p class="subsection-title">Feature-Level Contracting</p>
+          <p class="body-text" style="font-size: 1rem;">We do not accept engagements defined by UI/UX feature lists. We solve architectural bottlenecks and integration logic.</p>
+        </div>
+        <div>
+          <div class="card-number">EXCLUDED</div>
+          <p class="subsection-title">Static Implementation</p>
+          <p class="body-text" style="font-size: 1rem;">We do not deliver code that lacks a governance framework. Every engineering output includes a technical maintenance and evolution plan.</p>
+        </div>
+      </div>
+      
+      <p class="body-text mt-5">
+        Organizations that treat AI as a feature-set create technical debt. Institutional AI requires systems that survive team turnover and model evolution. We maintain these boundaries to protect architectural integrity.
+      </p>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div style="padding: 0;">
+    <hr class="horizontal-rule">
+  </div>
+
+  <!-- When AI Engineering Applies -->
+  <section class="bg-primary">
+    <div class="container">
+      <h2 class="section-title">When AI Engineering Applies</h2>
+      
+      <div style="margin-bottom: 2rem;">
+        <p class="subsection-title">You have technical leadership but lack AI-specific architectural judgment.</p>
+        <p class="body-text">
+          Your internal teams can execute. What you need is the design logic for integrating AI into institutional systems without creating ungoverned endpoints or compliance gaps.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 2rem;">
+        <p class="subsection-title">You require systems that survive organizational change.</p>
+        <p class="body-text">
+          This is not MVP development. AI Engineering applies when the cost of architectural failure exceeds the cost of deliberate design.
+        </p>
+      </div>
+      
+      <div>
+        <p class="subsection-title">You need implementation that doesn't require continuous vendor dependency.</p>
+        <p class="body-text">
+          We build systems your teams can maintain. Transition is designed into the engagement structure, not treated as a handoff event.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical Capabilities Section -->
+  <section class="bg-primary">
+    <div class="wide-container">
+      <h2 class="section-title">Technical Capabilities</h2>
+      
+      <div class="capability-grid">
+        <div class="capability-card">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 48px; height: 48px; background: #14b8a6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0a2236; flex-shrink: 0;">01</div>
+            <h3 class="card-title" style="margin: 0;">Integration Architecture</h3>
+          </div>
+          <p class="body-text" style="font-size: 0.95rem; margin-bottom: 1rem; color: #d0d0d0;">
+            We do not "connect apps." We design the middle-tier logic that allows LLMs to interact safely with legacy databases and proprietary data silos without compromising security protocols.
+          </p>
+          <ul class="card-list">
+            <li>API orchestration and governance</li>
+            <li>MCP server implementation</li>
+            <li>Secure data pipeline design</li>
+            <li>Legacy system modernization</li>
+          </ul>
+        </div>
+
+        <div class="capability-card">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 48px; height: 48px; background: #14b8a6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0a2236; flex-shrink: 0;">02</div>
+            <h3 class="card-title" style="margin: 0;">Automation Engineering</h3>
+          </div>
+          <p class="body-text" style="font-size: 0.95rem; margin-bottom: 1rem; color: #d0d0d0;">
+            This is not about script writing. We build automation infrastructure that monitors agent behavior, surfaces failure modes early, and maintains operational visibility within your existing CI/CD pipelines.
+          </p>
+          <ul class="card-list">
+            <li>Workflow automation architecture</li>
+            <li>Agent monitoring systems</li>
+            <li>Process orchestration (n8n)</li>
+            <li>CI/CD integration logic</li>
+          </ul>
+        </div>
+
+        <div class="capability-card">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 48px; height: 48px; background: #14b8a6; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0a2236; flex-shrink: 0;">03</div>
+            <h3 class="card-title" style="margin: 0;">Platform Development</h3>
+          </div>
+          <p class="body-text" style="font-size: 0.95rem; margin-bottom: 1rem; color: #d0d0d0;">
+            We do not build stand-alone applications. We develop the foundational platforms that allow your internal engineering teams to deploy and manage AI capabilities across multiple business units.
+          </p>
+          <ul class="card-list">
+            <li>Multi-tenant platform architecture</li>
+            <li>Database design (Postgres, Prisma)</li>
+            <li>Authentication infrastructure</li>
+            <li>Model deployment frameworks</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div style="padding: 0;">
+    <hr class="horizontal-rule">
+  </div>
+
+  <!-- Engagement Model Section -->
+  <section class="bg-primary">
+    <div class="container">
+      <h2 class="section-title">Engagement Model</h2>
+      
+      <!-- Visual Flow Diagram -->
+      <div style="margin-bottom: 3rem; padding: 2rem; background: rgba(20, 184, 166, 0.05); border: 1px solid rgba(20, 184, 166, 0.2); border-radius: 4px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: center;">
+          <div style="text-align: center;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 1rem; background: #14b8a6; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0a2236" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div style="font-size: 0.875rem; font-weight: 600; color: #14b8a6; margin-bottom: 0.5rem;">Technical Audit</div>
+            <div style="font-size: 0.875rem; color: #d0d0d0;">Infrastructure assessment</div>
+          </div>
+          
+          <div style="text-align: center; color: #14b8a6; font-size: 1.5rem; font-weight: 700;">→</div>
+          
+          <div style="text-align: center;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 1rem; background: #14b8a6; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0a2236" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </div>
+            <div style="font-size: 0.875rem; font-weight: 600; color: #14b8a6; margin-bottom: 0.5rem;">Architecture Design</div>
+            <div style="font-size: 0.875rem; color: #d0d0d0;">Integration planning</div>
+          </div>
+          
+          <div style="text-align: center; color: #14b8a6; font-size: 1.5rem; font-weight: 700;">→</div>
+          
+          <div style="text-align: center;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 1rem; background: #14b8a6; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0a2236" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div style="font-size: 0.875rem; font-weight: 600; color: #14b8a6; margin-bottom: 0.5rem;">Systemic Delivery</div>
+            <div style="font-size: 0.875rem; color: #d0d0d0;">Operational resilience</div>
+          </div>
+        </div>
+      </div>
+      
+      <p class="body-text">
+        We function as an extension of technical leadership, not additional headcount. Engagements begin with infrastructure audit to identify integration surface area, security constraints, and architectural gaps.
+      </p>
+      <p class="body-text">
+        Unlike agencies, we do not work in isolation. We operate within your stack, using your version control and security standards, while providing the architectural judgment your internal teams may lack.
+      </p>
+      <p class="body-text">
+        Accountability is measured by system stability, integration success, and architectural adherence. We do not report on "story points" or "velocity." We report on systemic readiness and operational resilience.
+      </p>
+    </div>
+  </section>
+
+  <!-- Technical Evidence Section -->
+  <section class="bg-alternate">
+    <div class="container">
+      <h2 class="section-title">Technical Evidence</h2>
+      
+      <div class="two-col-grid">
+        <div class="proof-point">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="9" x2="15" y2="9"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <div class="proof-label" style="margin: 0;">Workant Platform</div>
+          </div>
+          <p class="proof-description">
+            Workant represents a structural solve for workforce management. We moved beyond simple LLM wrappers to build a retrieval-augmented generation (RAG) system that prioritizes data privacy and auditability.
+          </p>
+          <p class="proof-status">Status: Active development, production usage</p>
+        </div>
+
+        <div class="proof-point">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            <div class="proof-label" style="margin: 0;">Client Infrastructure</div>
+          </div>
+          <p class="proof-description">
+            For organizations with high-security constraints, we deploy local-first AI architectures. This removes dependency on third-party API availability and keeps proprietary data within the institutional firewall.
+          </p>
+          <p class="proof-status">Deployment: On-premise, air-gapped environments</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div style="padding: 0;">
+    <hr class="horizontal-rule">
+  </div>
+
+  <!-- FAQ Section -->
+  <section class="bg-primary">
+    <div class="container">
+      <h2 class="section-title">Technical FAQ</h2>
+      
+      <div class="two-col-grid">
+        <div>
+          <div class="faq-item">
+            <div class="faq-question">How do you handle the transition from your team to our internal engineers?</div>
+            <p class="faq-answer">
+              We don't "hand over" code. We build the documentation and governance frameworks alongside your team. Transition is a continuous process of technical knowledge transfer.
+            </p>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">Do you sign SLAs for the performance of third-party models?</div>
+            <p class="faq-answer">
+              No. We sign SLAs for the architecture we build around those models. We design systems to be model-agnostic so your infrastructure survives vendor shifts.
+            </p>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">How do you justify the cost over a standard staff augmentation firm?</div>
+            <p class="faq-answer">
+              Staff augmentation increases headcount. IntraWeb increases technical judgment. We reduce the long-term cost of technical debt by preventing architectural drift before it begins.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div class="faq-item">
+            <div class="faq-question">What is the typical surface area of an engineering engagement?</div>
+            <p class="faq-answer">
+              We focus on the high-friction boundaries: API orchestration, data pipeline integrity, and secure model deployment. We leave frontend UI development to your internal product teams.
+            </p>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">Can we hire you for a single sprint to build a proof-of-concept?</div>
+            <p class="faq-answer">
+              No. Proof-of-concept work belongs to marketing. Our engagements require a minimum timeline sufficient to ensure the system is institutionally viable.
+            </p>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">Who owns the intellectual property?</div>
+            <p class="faq-answer">
+              The organization. We build proprietary assets, not leased services. All architecture and logic remain institutional property upon completion.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div style="padding: 0;">
+    <hr class="horizontal-rule">
+  </div>
+
+  <!-- CTA Section -->
+  <section class="bg-lighter">
+    <div class="container" style="text-align: center;">
+      <h2 class="section-title" style="font-size: clamp(1.75rem, 3.5vw, 2.5rem); margin-bottom: 1.5rem;">
+        Ready to discuss technical requirements?
+      </h2>
+      <p class="body-text text-muted" style="margin-bottom: 2rem;">
+        Engineering conversations begin with specificity. Bring your constraints.
+      </p>
+      <a href="/contact" class="btn-primary">Initiate Conversation</a>
+    </div>
+  </section>
+
+</body>
+</html>

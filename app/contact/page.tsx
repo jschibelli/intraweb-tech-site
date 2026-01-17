@@ -1,6 +1,5 @@
 "use client";
 import ContactForm from "@/components/shared/contact-form";
-import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -22,48 +21,9 @@ export default function ContactPage() {
 
       {/* Contact Section */}
       <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-2xl font-heading font-bold mb-8">Contact Information</h2>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <Mail className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <a href="mailto:info@intrawebtech.com" className="text-gray-300 hover:text-teal-400 transition-colors">
-                      info@intrawebtech.com
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <Phone className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <a href="tel:+18622079004" className="text-gray-300 hover:text-teal-400 transition-colors">
-                      (862) 207-9004
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <MapPin className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Location</h3>
-                    <p className="text-gray-300">
-                      Towaco, New Jersey
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <div>
-              <h2 className="text-2xl font-heading font-bold mb-8">Send us a Message</h2>
-              <ContactForm />
-            </div>
-          </div>
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl font-heading font-bold mb-8 text-center">Send us a Message</h2>
+          <ContactForm />
         </div>
       </section>
     </main>
