@@ -7,7 +7,7 @@ import AboutProfileCard from "@/components/AboutProfileCard";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#0a2236]">
+    <main className="min-h-screen bg-[#0a2236]">
       <div className="mx-auto max-w-[800px] px-6 pt-12 pb-16 md:pt-16 md:pb-20 text-[17px] md:text-[18px] leading-[1.75] text-[#e0e0e0] font-sans">
         <h1 className="text-3xl md:text-4xl font-medium text-white font-heading mb-10 md:mb-12">
           About IntraWeb Technologies
@@ -154,6 +154,6 @@ export default function AboutPage() {
         {/* Profile Section */}
         <AboutProfileCard />
       </div>
-    </div>
+    </main>
   );
 }
