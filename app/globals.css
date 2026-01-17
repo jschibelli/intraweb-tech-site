@@ -661,3 +661,482 @@ html {
 .ai-eng-mt-5 {
   margin-top: 3rem;
 }
+
+/* ========================================
+   CAREERS PAGE STYLES
+   ======================================== */
+
+/* Container */
+.careers-hero,
+.careers-section {
+  padding: 80px 0;
+}
+
+@media (min-width: 768px) {
+
+  .careers-hero,
+  .careers-section {
+    padding: 120px 0;
+  }
+}
+
+.careers-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.careers-wide-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Backgrounds */
+.careers-bg-primary {
+  background: #0a2236;
+}
+
+.careers-bg-alternate {
+  background: #0d2b42;
+}
+
+/* Hero Section */
+.careers-hero {
+  position: relative;
+  overflow: hidden;
+  background: #0a2236;
+}
+
+.careers-hero-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('data:image/svg+xml,%3Csvg width=%2280%22 height=%2280%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M40 10 L60 30 L52 52 L28 52 L20 30 Z%22 stroke=%22%2314b8a6%22 stroke-width=%220.5%22 fill=%22none%22 opacity=%220.15%22/%3E%3C/svg%3E');
+  background-repeat: repeat;
+  background-size: 80px 80px;
+}
+
+.careers-hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Typography */
+.careers-page-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+}
+
+.careers-section-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2rem;
+}
+
+.careers-subsection-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.careers-lead-text {
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  line-height: 1.7;
+  color: #e0e0e0;
+  margin-bottom: 2rem;
+}
+
+.careers-body-text {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+/* Job Cards Grid */
+.careers-jobs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .careers-jobs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.careers-job-card {
+  background: #13293d;
+  border: 1px solid #1e3a5f;
+  padding: 2rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: block;
+}
+
+.careers-job-card:hover {
+  border-color: #14b8a6;
+  transform: translateY(-2px);
+}
+
+.careers-job-card-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.careers-job-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.careers-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.careers-badge-location {
+  background: rgba(20, 184, 166, 0.15);
+  color: #14b8a6;
+}
+
+.careers-badge-compensation {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+}
+
+.careers-badge-type {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d0d0d0;
+}
+
+.careers-job-card-description {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #d0d0d0;
+  margin-bottom: 1rem;
+}
+
+.careers-job-card-link {
+  font-size: 0.9375rem;
+  color: #14b8a6;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.careers-job-card-link::after {
+  content: "→";
+}
+
+/* Requirements Lists */
+.careers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.careers-list li {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #d0d0d0;
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.careers-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  background: #14b8a6;
+  border-radius: 50%;
+}
+
+.careers-list-required li::before {
+  background: #14b8a6;
+}
+
+.careers-list-preferred li::before {
+  background: #fb923c;
+}
+
+.careers-list-bonus li::before {
+  background: #6b7280;
+}
+
+/* Hiring Process Steps */
+.careers-process-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.careers-process-step {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.careers-process-number {
+  width: 40px;
+  height: 40px;
+  background: #14b8a6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a2236;
+  flex-shrink: 0;
+}
+
+.careers-process-content {
+  flex: 1;
+}
+
+.careers-process-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.careers-process-description {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #d0d0d0;
+}
+
+/* Benefits Grid */
+.careers-benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .careers-benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.careers-benefit-category {
+  background: #13293d;
+  border: 1px solid #1e3a5f;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.careers-benefit-title {
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #14b8a6;
+  margin-bottom: 1rem;
+}
+
+/* Day-to-Day Reality */
+.careers-reality-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 640px) {
+  .careers-reality-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.careers-reality-item {
+  background: rgba(20, 184, 166, 0.05);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+  padding: 1.25rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.careers-reality-percent {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #14b8a6;
+  margin-bottom: 0.5rem;
+}
+
+.careers-reality-label {
+  font-size: 0.875rem;
+  color: #d0d0d0;
+  line-height: 1.4;
+}
+
+/* Success Metrics */
+.careers-success-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  border-left: 3px solid #14b8a6;
+  padding-left: 1.5rem;
+}
+
+.careers-success-list li {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #e0e0e0;
+  margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+.careers-btn-primary {
+  display: inline-block;
+  padding: 14px 32px;
+  background: #fb923c;
+  color: #0a2236;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: 2px solid #fb923c;
+}
+
+.careers-btn-primary:hover {
+  background: #14b8a6;
+  color: #ffffff;
+  border-color: #14b8a6;
+}
+
+.careers-btn-secondary {
+  display: inline-block;
+  padding: 12px 24px;
+  background: transparent;
+  color: #14b8a6;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 4px;
+  border: 1px solid #14b8a6;
+  transition: all 0.2s ease;
+}
+
+.careers-btn-secondary:hover {
+  background: #14b8a6;
+  color: #0a2236;
+}
+
+/* Apply Section */
+.careers-apply-box {
+  background: #13293d;
+  border: 1px solid #1e3a5f;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.careers-apply-email {
+  font-size: 1.25rem;
+  color: #fb923c;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.careers-apply-email:hover {
+  text-decoration: underline;
+}
+
+/* Back Link */
+.careers-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: #14b8a6;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: color 0.2s ease;
+}
+
+.careers-back-link:hover {
+  color: #fb923c;
+}
+
+.careers-back-link::before {
+  content: "←";
+}
+
+/* Horizontal Rule */
+.careers-hr {
+  height: 1px;
+  background: #1e3a5f;
+  border: none;
+  margin: 3rem 0;
+}
+
+/* Tech Stack Tags */
+.careers-tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.careers-tech-tag {
+  background: rgba(20, 184, 166, 0.15);
+  color: #14b8a6;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Philosophy Items */
+.careers-philosophy-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+
+.careers-philosophy-list li {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+  padding-left: 0;
+}
+
+.careers-philosophy-list li strong {
+  color: #14b8a6;
+  font-weight: 600;
+}

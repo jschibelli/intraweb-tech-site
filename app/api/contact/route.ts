@@ -7,10 +7,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const formSchema = z.object({
   name: z.string().min(2),
+  website: z.string().optional(),
+  reason: z.enum(["ai-transformation", "ai-engineer", "education", "reselling"]),
   email: z.string().email(),
-  company: z.string().optional(),
-  service: z.string().optional(),
-  message: z.string().min(10),
+  decisionMaker: z.string().min(1),
+  revenue: z.string().min(1),
+  description: z.string().min(20),
 });
 
 export async function POST(request: NextRequest) {
@@ -18,18 +20,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = formSchema.parse(body);
 
-    const { name, email, company, service, message } = validatedData;
+    const { name, website, reason, email, decisionMaker, revenue, description } = validatedData;
+
+    const reasonLabels: Record<string, string> = {
+      "ai-transformation": "AI Transformation",
+      "ai-engineer": "Developing custom AI solutions / AI Engineer",
+      "education": "Educating your team on AI",
+      "reselling": "Re-selling/white-label your solutions",
+    };
 
     const emailContent = `
       New Contact Form Submission:
       
       Name: ${name}
       Email: ${email}
-      ${company ? `Company: ${company}` : ""}
-      ${service ? `Service Interested In: ${service}` : ""}
+      ${website ? `Website: ${website}` : ""}
+      Reason for Call: ${reasonLabels[reason] || reason}
+      Decision Maker: ${decisionMaker}
+      Annual Revenue: ${revenue}
       
-      Message:
-      ${message}
+      Description:
+      ${description}
     `;
 
     await resend.emails.send({
@@ -46,7 +57,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Contact form error:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: "Invalid form data", errors: error.errors },

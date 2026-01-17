@@ -1,0 +1,16 @@
+
+> nextjs@0.1.0 test:unit
+> jest tests/unit/components/ContactForm.test.tsx
+
+PASS tests/unit/components/ContactForm.test.tsx
+  ContactForm
+    ΓêÜ renders all form fields (137 ms)
+    ΓêÜ submits form successfully (771 ms)
+    ΓêÜ handles submission error (796 ms)
+    Γùï skipped shows validation error when fields are empty
+
+Test Suites: 1 passed, 1 total
+Tests:       1 skipped, 3 passed, 4 total
+Snapshots:   0 total
+Time:        3.499 s
+Ran all test suites matching /tests\\unit\\components\\ContactForm.test.tsx/i.
