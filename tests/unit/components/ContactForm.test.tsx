@@ -13,7 +13,8 @@ describe('ContactForm', () => {
     it('renders all form fields', () => {
         render(<ContactForm />)
 
-        expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
         expect(screen.getByLabelText(/message/i)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument()
@@ -35,7 +36,8 @@ describe('ContactForm', () => {
 
         render(<ContactForm />)
 
-        await userEvent.type(screen.getByLabelText(/name/i), 'John Doe')
+        await userEvent.type(screen.getByLabelText(/first name/i), 'John')
+        await userEvent.type(screen.getByLabelText(/last name/i), 'Doe')
         await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com')
         await userEvent.type(screen.getByLabelText(/message/i), 'Hello world')
 
@@ -46,7 +48,8 @@ describe('ContactForm', () => {
             expect(screen.getByText(/Thank you!/i)).toBeInTheDocument()
         })
 
-        expect(screen.getByLabelText(/name/i)).toHaveValue('')
+        expect(screen.getByLabelText(/first name/i)).toHaveValue('')
+        expect(screen.getByLabelText(/last name/i)).toHaveValue('')
     })
 
     it('handles submission error', async () => {
@@ -56,7 +59,8 @@ describe('ContactForm', () => {
 
         render(<ContactForm />)
 
-        await userEvent.type(screen.getByLabelText(/name/i), 'John Doe')
+        await userEvent.type(screen.getByLabelText(/first name/i), 'John')
+        await userEvent.type(screen.getByLabelText(/last name/i), 'Doe')
         await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com')
         await userEvent.type(screen.getByLabelText(/message/i), 'Hello world')
 

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,7 +8,8 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
   website: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
   reason: z.enum(["ai-transformation", "ai-engineer", "education", "reselling"], {
     required_error: "Please select a reason for the call",
@@ -38,6 +40,7 @@ const revenueOptions = [
 ];
 
 export default function ContactForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
@@ -67,17 +70,13 @@ export default function ContactForm() {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-      setSubmitStatus({
-        type: "success",
-        message: "Thank you for your submission! We'll get back to you soon.",
-      });
-      reset();
+      // Redirect to thank you page on success
+      router.push("/thank-you");
     } catch (error) {
       setSubmitStatus({
         type: "error",
         message: "Failed to send message. Please try again later.",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -101,23 +100,24 @@ export default function ContactForm() {
           Ready to transform your business?
         </h2>
         <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-          From operational diagnosis to production deployment, we'll help you scale profitably with AI infrastructure
+          Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
         </p>
+
       </div>
 
       {/* Value Props */}
       <div className="space-y-2 text-gray-300">
         <p className="flex items-start">
           <span className="text-teal-400 mr-2">→</span>
-          <span>See how businesses identify 7-8 figures in optimization potential</span>
+          <span>Identify and resolve the structural bottlenecks limiting your AI adoption</span>
         </p>
         <p className="flex items-start">
           <span className="text-teal-400 mr-2">→</span>
-          <span>Get access to AI engineering teams that ship in weeks, not months</span>
+          <span>Bypass recruitment cycles with immediate access to senior AI systems engineers</span>
         </p>
         <p className="flex items-start">
           <span className="text-teal-400 mr-2">→</span>
-          <span>Build custom infrastructure based on your workflows and bottlenecks</span>
+          <span>Ship robust, custom infrastructure tailored to your specific operational reality</span>
         </p>
       </div>
 
@@ -134,21 +134,38 @@ export default function ContactForm() {
           </div>
         )}
 
-        {/* Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-1">
-            Name <span className="text-red-400">*</span>
-          </label>
-          <input
-            {...register("name")}
-            type="text"
-            id="name"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            placeholder="Your full name"
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>
-          )}
+        {/* Name Fields */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1">
+              First Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              {...register("firstName")}
+              type="text"
+              id="firstName"
+              className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="First Name"
+            />
+            {errors.firstName && (
+              <p className="mt-1 text-sm text-red-400">{errors.firstName.message}</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1">
+              Last Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              {...register("lastName")}
+              type="text"
+              id="lastName"
+              className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="Last Name"
+            />
+            {errors.lastName && (
+              <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
+            )}
+          </div>
         </div>
 
         {/* Website */}
