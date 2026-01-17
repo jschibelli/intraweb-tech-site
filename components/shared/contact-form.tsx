@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,6 +40,7 @@ const revenueOptions = [
 ];
 
 export default function ContactForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
@@ -68,17 +70,13 @@ export default function ContactForm() {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-      setSubmitStatus({
-        type: "success",
-        message: "Thank you for your submission! We'll get back to you soon.",
-      });
-      reset();
+      // Redirect to thank you page on success
+      router.push("/thank-you");
     } catch (error) {
       setSubmitStatus({
         type: "error",
         message: "Failed to send message. Please try again later.",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
