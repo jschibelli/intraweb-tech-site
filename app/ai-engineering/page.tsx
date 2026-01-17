@@ -1,15 +1,47 @@
+import AIEngineeringHero from "../../components/AIEngineeringHero";
+import AIEngineeringBoundaries from "../../components/AIEngineeringBoundaries";
+import AIEngineeringWhenApplies from "../../components/AIEngineeringWhenApplies";
+import AIEngineeringCapabilities from "../../components/AIEngineeringCapabilities";
+import AIEngineeringEngagement from "../../components/AIEngineeringEngagement";
+import AIEngineeringEvidence from "../../components/AIEngineeringEvidence";
+import AIEngineeringFAQ from "../../components/AIEngineeringFAQ";
+import AIEngineeringCTA from "../../components/AIEngineeringCTA";
+
 export default function AIEngineeringPage() {
     return (
-        <main className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#0a2236' }}>
-            <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-4xl font-bold mb-6 text-white">AI Engineering</h1>
-                <p className="text-xl mb-8" style={{ color: '#d0d0d0' }}>
-                    Hands-on system design and implementation. Automation, architecture, durability.
-                </p>
-                <p style={{ color: '#14b8a6' }}>
-                    Content coming soon.
-                </p>
+        <main>
+            <AIEngineeringHero />
+            <AIEngineeringBoundaries />
+
+            {/* Divider */}
+            <div style={{ padding: 0 }}>
+                <hr className="ai-eng-horizontal-rule" />
             </div>
+
+            <AIEngineeringWhenApplies />
+            <AIEngineeringCapabilities />
+
+            {/* Divider */}
+            <div style={{ padding: 0 }}>
+                <hr className="ai-eng-horizontal-rule" />
+            </div>
+
+            <AIEngineeringEngagement />
+            <AIEngineeringEvidence />
+
+            {/* Divider */}
+            <div style={{ padding: 0 }}>
+                <hr className="ai-eng-horizontal-rule" />
+            </div>
+
+            <AIEngineeringFAQ />
+
+            {/* Divider */}
+            <div style={{ padding: 0 }}>
+                <hr className="ai-eng-horizontal-rule" />
+            </div>
+
+            <AIEngineeringCTA />
         </main>
     );
 }
