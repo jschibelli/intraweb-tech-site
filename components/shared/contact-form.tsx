@@ -72,10 +72,11 @@ export default function ContactForm() {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-      // Show success message
-      setSubmitStatus({ type: "success", message: "Thank you!" });
-      reset();
-      setIsSubmitting(false);
+      // Redirect to thank you page on success
+      router.push("/thank-you");
+      // No need to reset form or state as we are redirecting
+      // reset(); 
+      // setIsSubmitting(false); 
     } catch (error) {
       setSubmitStatus({
         type: "error",

@@ -5,9 +5,17 @@ import { ContactForm } from '@/components/ContactForm'
 // Mock fetch
 global.fetch = jest.fn()
 
+const mockPush = jest.fn()
+jest.mock('next/navigation', () => ({
+    useRouter: () => ({
+        push: mockPush
+    })
+}))
+
 describe('ContactForm', () => {
     beforeEach(() => {
         (global.fetch as jest.Mock).mockReset()
+        mockPush.mockReset()
     })
 
     it('renders all form fields', () => {
@@ -58,12 +66,11 @@ describe('ContactForm', () => {
 
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalled()
-            expect(screen.getByText(/Thank you!/i)).toBeInTheDocument()
+            // Expect redirect instead of inline message
+            expect(mockPush).toHaveBeenCalledWith('/thank-you')
         })
 
-        // Form should be reset
-        expect(screen.getByLabelText(/first name/i)).toHaveValue('')
-        expect(screen.getByLabelText(/message/i)).toHaveValue('')
+        // Form reset check removed as component unmounts/redirects
     })
 
     it('handles submission error', async () => {
