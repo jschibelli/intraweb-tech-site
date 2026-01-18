@@ -61,6 +61,10 @@ const customJestConfig = {
 
     // Restore mocks between tests
     restoreMocks: true,
+    // Add transform to handle TS/TSX via babel-jest
+    transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

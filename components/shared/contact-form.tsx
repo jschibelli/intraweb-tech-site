@@ -15,7 +15,9 @@ const formSchema = z.object({
     required_error: "Please select a reason for the call",
   }),
   email: z.string().email("Please enter a valid email address"),
-  decisionMaker: z.string().min(1, "Please answer this question"),
+  decisionMaker: z.enum(["Yes", "No"], {
+    required_error: "Please select if you are the decision maker",
+  }),
   revenue: z.string().min(1, "Please select your annual revenue"),
   description: z.string().min(20, "Please provide at least 20 characters of detail"),
 });
@@ -70,12 +72,14 @@ export default function ContactForm() {
       if (!response.ok) {
         throw new Error("Failed to send message");
       }
-      // Redirect to thank you page on success
-      router.push("/thank-you");
+      // Show success message
+      setSubmitStatus({ type: "success", message: "Thank you!" });
+      reset();
+      setIsSubmitting(false);
     } catch (error) {
       setSubmitStatus({
         type: "error",
-        message: "Failed to send message. Please try again later.",
+        message: "Something went wrong",
       });
       setIsSubmitting(false);
     }
@@ -231,15 +235,17 @@ export default function ContactForm() {
         {/* Decision Maker */}
         <div>
           <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1">
-            Are you the only decision maker? If no, please invite anybody else who may be in charge of making decision. <span className="text-red-400">*</span>
+            Are you the only decision maker? <span className="text-red-400">*</span>
           </label>
-          <input
+          <select
             {...register("decisionMaker")}
-            type="text"
             id="decisionMaker"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            placeholder="Yes, I'm the only decision maker / No, please include..."
-          />
+            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          >
+            <option value="">Select...</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
           {errors.decisionMaker && (
             <p className="mt-1 text-sm text-red-400">{errors.decisionMaker.message}</p>
           )}
@@ -270,7 +276,7 @@ export default function ContactForm() {
         {/* Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-200 mb-1">
-            Please describe what you're looking for - please provide as much detail as possible <span className="text-red-400">*</span>
+            Message <span className="text-red-400">*</span>
           </label>
           <textarea
             {...register("description")}
@@ -296,7 +302,7 @@ export default function ContactForm() {
               Submitting...
             </>
           ) : (
-            "Submit Request"
+            "Send Message"
           )}
         </button>
       </form>

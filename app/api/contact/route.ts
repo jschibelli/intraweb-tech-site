@@ -80,18 +80,19 @@ export async function POST(request: NextRequest) {
           { name: "email", value: email },
           { name: "firstname", value: firstName },
           { name: "lastname", value: lastName },
-          { name: "reason_for_call", value: reason }, // Trying raw ID
+          { name: "website", value: website || "" },
+          { name: "reason_for_call", value: reason },
           { name: "decision_maker", value: decisionMaker },
-          { name: "annualrevenue", value: numericRevenue.toString() }, // Must be stringified number
-          { name: "message", value: description }, // Clean user message only
-          // Only include website if it exists
-          ...(website ? [{ name: "website", value: website }] : []),
+          { name: "annualrevenue", value: numericRevenue.toString() },
+          { name: "message", value: description },
         ],
         context: {
           pageUri: request.headers.get("referer") || "",
-          pageName: "Contact Page",
+          pageName: "Diagnostic Intake Form",
         },
       };
+
+      console.log("Sending to HubSpot:", JSON.stringify(hubspotData, null, 2));
 
       hubspotPromise = fetch(hubspotUrl, {
         method: "POST",
@@ -104,9 +105,12 @@ export async function POST(request: NextRequest) {
           if (!res.ok) {
             const errorBody = await res.text();
             console.error("HubSpot Submission Failed:", res.status, errorBody);
+            console.error("Payload was:", JSON.stringify(hubspotData, null, 2));
             // We don't throw here to avoid failing the whole request if only HubSpot fails
           } else {
+            const successBody = await res.text();
             console.log("HubSpot Submission Successful");
+            console.log("HubSpot Response:", successBody);
           }
         })
         .catch((err) => {
@@ -116,10 +120,106 @@ export async function POST(request: NextRequest) {
       console.warn("HubSpot credentials missing or incomplete. Skipping HubSpot submission.");
     }
 
+    // 3. Update/create contact via Contacts API
+    const hubspotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
+    let contactsApiPromise = Promise.resolve();
+
+    if (hubspotAccessToken) {
+      const contactsApiUrl = `https://api.hubapi.com/crm/v3/objects/contacts`;
+
+      // Map frontend reason values to HubSpot's exact dropdown internal values
+      const reasonMapping: Record<string, string> = {
+        "ai-transformation": "AI Transformation",
+        "ai-engineer": "Developing custom AI solutions / AI Engineer",
+        "education": "Educating your team on AI",
+        "reselling": "Re-selling/white-label your solutions",
+      };
+
+      // Ensure boolean string for Yes/No fields if they are HubSpot Boolean checkboxes
+      // const decisionMakerBoolean = decisionMaker === "Yes" ? "true" : "false"; // REVERTED: Error log confirms it expects Yes/No
+
+      const contactData = {
+        properties: {
+          email,
+          firstname: firstName,
+          lastname: lastName,
+          website: website || "",
+          reason_for_call: reasonMapping[reason] || reason,
+          decision_maker: decisionMaker, // Send as-is ("Yes" / "No")
+          annualrevenue: numericRevenue.toString(),
+          message: description, // Try keeping this, but we'll also add a note
+        },
+      };
+
+      console.log("Creating/updating contact via Contacts API:", JSON.stringify(contactData, null, 2));
+
+      contactsApiPromise = fetch(contactsApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${hubspotAccessToken}`,
+        },
+        body: JSON.stringify(contactData),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            // If contact exists (409), we should update it.
+            // For now, let's log the error.
+            if (res.status === 409) {
+              console.log("Contact already exists, attempting to log a note/activity...");
+              // In a full implementation, we'd search for the contact ID by email here.
+              // For now, just log success that we reached here.
+            }
+            const errorBody = await res.text();
+            console.error("HubSpot Contacts API Failed:", res.status, errorBody);
+            throw new Error(`HubSpot Contact Create Failed: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(async (contactResult) => {
+          if (contactResult && contactResult.id) {
+            console.log("HubSpot Contact Created:", contactResult.id);
+
+            // 4. Create a Note for the "Message" description
+            // This ensures the message is saved even if the 'message' property doesn't exist
+            const notesUrl = `https://api.hubapi.com/crm/v3/objects/notes`;
+            const noteData = {
+              properties: {
+                hs_timestamp: new Date().toISOString(),
+                hs_note_body: description
+              },
+              associations: [
+                {
+                  to: { id: contactResult.id },
+                  types: [
+                    { associationCategory: "HUBSPOT_DEFINED", associationTypeId: 202 } // 202 = Note to Contact
+                  ]
+                }
+              ]
+            };
+
+            await fetch(notesUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${hubspotAccessToken}`
+              },
+              body: JSON.stringify(noteData)
+            }).then(res => {
+              if (res.ok) console.log("HubSpot Note Created successfully");
+              else res.text().then(t => console.error("HubSpot Note Failed:", t));
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("HubSpot Contacts API Error:", err);
+        });
+    }
+
     // Await both (or at least start them)
     // We await them so we can return success only if email succeeds, 
     // but we generally want to return reasonably quickly.
-    await Promise.all([emailPromise, hubspotPromise]);
+    await Promise.all([emailPromise, hubspotPromise, contactsApiPromise]);
 
     return NextResponse.json(
       { message: "Message sent successfully" },
