@@ -129,10 +129,10 @@ export async function POST(request: NextRequest) {
 
       // Map frontend reason values to HubSpot's exact dropdown internal values
       const reasonMapping: Record<string, string> = {
-        "ai-transformation": "AI Transformation",
-        "ai-engineer": "Developing custom AI solutions / AI Engineer",
-        "education": "Educating your team on AI",
-        "reselling": "Re-selling/white-label your solutions",
+        "ai-transformation": "ai-transformation",
+        "ai-engineer": "ai-engineer",
+        "education": "ai-education",
+        "reselling": "reselling", // Best guess fallback
       };
 
       // Ensure boolean string for Yes/No fields if they are HubSpot Boolean checkboxes
