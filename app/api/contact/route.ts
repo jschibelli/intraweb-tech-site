@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
           decision_maker: decisionMaker, // Send as-is ("Yes" / "No")
           annualrevenue: numericRevenue.toString(),
           message: description, // Try keeping this, but we'll also add a note
+          hs_lead_status: "NEW", // Set Lead Status to "New"
         },
       };
 
