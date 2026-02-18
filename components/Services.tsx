@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, Compass, Shield, Network } from "lucide-react";
+import { Code, Sparkles, Cloud, Palette } from "lucide-react";
 import { motion } from "framer-motion";
 
 const iconMap = {
-  TrendingUp: TrendingUp,
-  Compass: Compass,
-  Shield: Shield,
-  Network: Network,
+  Code,
+  Sparkles,
+  Cloud,
+  Palette,
 };
 
 type Service = {
@@ -33,7 +33,7 @@ export default function Services() {
         {/* <p className="text-lg md:text-xl text-teal-100 text-left md:text-center mb-6">Comprehensive technology solutions to drive your business forward</p> */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {services.map((service, i) => {
-            const Icon = iconMap[service.icon];
+            const Icon = iconMap[service.icon] ?? Code;
             return (
               <motion.div
                 key={service.title}
