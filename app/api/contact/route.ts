@@ -54,6 +54,19 @@ export async function POST(request: NextRequest) {
     const reasonLabel = reasonLabels[reasonForCall] || reasonForCall;
     const revenueLabel = revenueLabels[annualRevenue] || annualRevenue;
 
+    // Map value keys to estimated integer for HubSpot 'annualrevenue'
+    const revenueToNumber: Record<string, number> = {
+      "less-than-100k": 50000,
+      "100k-500k": 250000,
+      "500k-1m": 750000,
+      "1m-5m": 2500000,
+      "5m-10m": 7500000,
+      "10m-plus": 10000000,
+      "prefer-not": 0,
+    };
+    const numericRevenue = revenueToNumber[annualRevenue] || 0;
+
+    // 1. Send Email via Resend
     const emailContent = `
 New Contact Form Submission:
 
@@ -69,13 +82,171 @@ Message:
 ${message}
 `;
 
-    await resend.emails.send({
+    const emailPromise = resend.emails.send({
       from: "IntraWeb Contact Form <contact@intrawebtech.com>",
       to: process.env.CONTACT_EMAIL || "contact@intrawebtech.com",
       subject: "New Contact Form Submission",
       text: emailContent,
       replyTo: email,
     });
+
+    // 2. Submit to HubSpot Forms API (for attribution)
+    const hubspotPortalId = process.env.NEXT_PUBLIC_HUBSPOT_ID;
+    const hubspotFormGuid = process.env.HUBSPOT_FORM_GUID;
+
+    let hubspotPromise = Promise.resolve();
+
+    if (hubspotPortalId && hubspotFormGuid && hubspotFormGuid !== "TODO_FILL_THIS") {
+      const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormGuid}`;
+
+      const hubspotData = {
+        fields: [
+          { name: "email", value: email },
+          { name: "firstname", value: firstName },
+          { name: "lastname", value: lastName },
+          { name: "website", value: website || "" },
+          { name: "reason_for_call", value: reasonForCall },
+          { name: "decision_maker", value: decisionMaker },
+          { name: "annualrevenue", value: numericRevenue.toString() },
+          { name: "message", value: message },
+        ],
+        context: {
+          pageUri: request.headers.get("referer") || "",
+          pageName: "IntraWeb Website",
+        },
+      };
+
+      console.log("Sending to HubSpot Forms API:", JSON.stringify(hubspotData, null, 2));
+
+      hubspotPromise = fetch(hubspotUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(hubspotData),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorBody = await res.text();
+            console.error("HubSpot Forms API Failed:", res.status, errorBody);
+          } else {
+            console.log("HubSpot Forms API Successful");
+          }
+        })
+        .catch((err) => {
+          console.error("HubSpot Forms API Error:", err);
+        });
+    }
+
+    // 3. Create/Update contact via Contacts API
+    const hubspotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
+    let contactsApiPromise = Promise.resolve();
+
+    if (hubspotAccessToken) {
+      const reasonMapping: Record<string, string> = {
+        "ai-transformation": "ai-transformation",
+        "custom-ai-engineer": "ai-engineer",
+        "educating-team": "ai-education",
+        "reselling-white-label": "reselling",
+      };
+
+      const contactData = {
+        properties: {
+          email,
+          firstname: firstName,
+          lastname: lastName,
+          website: website || "",
+          reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
+          decision_maker: decisionMaker,
+          annualrevenue: numericRevenue.toString(),
+          message,
+        },
+      };
+
+      console.log("Creating/updating contact via Contacts API");
+
+      contactsApiPromise = fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${hubspotAccessToken}`,
+        },
+        body: JSON.stringify(contactData),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            // If contact exists (409), update it using email as identifier
+            if (res.status === 409) {
+              console.log("Contact already exists, updating by email...");
+
+              // Update using email as the identifier (no search API needed)
+              const updateUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`;
+              const updateResponse = await fetch(updateUrl, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${hubspotAccessToken}`,
+                },
+                body: JSON.stringify(contactData),
+              });
+
+              if (!updateResponse.ok) {
+                const updateError = await updateResponse.text();
+                console.error("Failed to update contact:", updateError);
+                return null;
+              }
+
+              const updateResult = await updateResponse.json();
+              console.log("HubSpot Contact Updated:", email);
+              return updateResult;
+            }
+
+            const errorBody = await res.text();
+            console.error("HubSpot Contacts API Failed:", res.status, errorBody);
+            return null;
+          }
+          return res.json();
+        })
+        .then(async (contactResult) => {
+          if (contactResult && contactResult.id) {
+            console.log("Processing contact:", contactResult.id);
+
+            // Create a Note for the message
+            const notesUrl = `https://api.hubapi.com/crm/v3/objects/notes`;
+            const noteData = {
+              properties: {
+                hs_timestamp: new Date().toISOString(),
+                hs_note_body: message
+              },
+              associations: [
+                {
+                  to: { id: contactResult.id },
+                  types: [
+                    { associationCategory: "HUBSPOT_DEFINED", associationTypeId: 202 }
+                  ]
+                }
+              ]
+            };
+
+            await fetch(notesUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${hubspotAccessToken}`
+              },
+              body: JSON.stringify(noteData)
+            }).then(res => {
+              if (res.ok) console.log("HubSpot Note Created");
+              else res.text().then(t => console.error("HubSpot Note Failed:", t));
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("HubSpot Contacts API Error:", err);
+        });
+    }
+
+    await Promise.all([emailPromise, hubspotPromise, contactsApiPromise]);
 
     return NextResponse.json(
       { message: "Message sent successfully" },

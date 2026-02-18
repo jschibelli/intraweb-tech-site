@@ -1,0 +1,42 @@
+
+> nextjs@0.1.0 test:unit
+> jest tests/unit/app
+
+FAIL tests/unit/app/about/page.test.tsx
+  ΓùÅ Test suite failed to run
+
+    Cannot find module '../../utils/test-utils' from 'tests/unit/app/about/page.test.tsx'
+
+      13 |         render(<AboutPage />)
+      14 |         expect(screen.getByTestId('about-client-mock')).toBeInTheDocument()
+    > 15 |     })
+         |       ^
+      16 | })
+      17 |
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.<anonymous> (tests/unit/app/about/page.test.tsx:15:20)
+
+FAIL tests/unit/app/careers/page.test.tsx
+  ΓùÅ Test suite failed to run
+
+    Cannot find module '../../utils/test-utils' from 'tests/unit/app/careers/page.test.tsx'
+
+      4 | describe('Careers Page', () => {
+      5 |     it('renders the main heading', () => {
+    > 6 |         render(<CareersPage />)
+        |                    ^
+      7 |         expect(screen.getByRole('heading', { name: /Join Our Team/i })).toBeInTheDocument()
+      8 |     })
+      9 |
+
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/resolver.js:427:11)
+      at Object.<anonymous> (tests/unit/app/careers/page.test.tsx:6:20)
+
+PASS tests/unit/app/page.test.tsx
+
+Test Suites: 2 failed, 1 passed, 3 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        3.426 s
+Ran all test suites matching /tests\\unit\\app/i.

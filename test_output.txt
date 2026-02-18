@@ -1,0 +1,982 @@
+
+> nextjs@0.1.0 test
+> npm run test:unit && npm run test:e2e tests/unit/components/ContactForm.test.tsx
+
+
+> nextjs@0.1.0 test:unit
+> jest
+
+PASS tests/unit/app/terms-of-service/page.test.tsx
+PASS tests/unit/components/FAQ.test.tsx
+PASS tests/unit/components/Footer.test.tsx
+PASS tests/unit/components/NavBar.test.tsx
+PASS tests/unit/components/AboutProfileCard.test.tsx
+  ΓùÅ Console
+
+    console.error
+      Received `true` for a non-boolean attribute `fill`.
+      
+      If you want to write it to the DOM, pass a string instead: fill="true" or fill={value.toString()}.
+
+      20 |     // )
+      21 |
+    > 22 |     return render(ui, { ...options })
+         |                  ^
+      23 | }
+      24 |
+      25 | // Re-export everything
+
+      at validateProperty (node_modules/react-dom/cjs/react-dom-client.development.js:3078:27)
+      at warnUnknownProperties (node_modules/react-dom/cjs/react-dom-client.development.js:3154:9)
+      at validatePropertiesInDevelopment (node_modules/react-dom/cjs/react-dom-client.development.js:17117:9)
+      at setInitialProperties (node_modules/react-dom/cjs/react-dom-client.development.js:17741:7)
+      at completeWork (node_modules/react-dom/cjs/react-dom-client.development.js:11391:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at completeUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15268:19)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15149:11)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14956:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14936:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14419:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at customRender (tests/utils/test-utils.tsx:22:18)
+      at Object.<anonymous> (tests/unit/components/AboutProfileCard.test.tsx:6:15)
+
+    console.error
+      Received `true` for a non-boolean attribute `priority`.
+      
+      If you want to write it to the DOM, pass a string instead: priority="true" or priority={value.toString()}.
+
+      20 |     // )
+      21 |
+    > 22 |     return render(ui, { ...options })
+         |                  ^
+      23 | }
+      24 |
+      25 | // Re-export everything
+
+      at validateProperty (node_modules/react-dom/cjs/react-dom-client.development.js:3078:27)
+      at warnUnknownProperties (node_modules/react-dom/cjs/react-dom-client.development.js:3154:9)
+      at validatePropertiesInDevelopment (node_modules/react-dom/cjs/react-dom-client.development.js:17117:9)
+      at setInitialProperties (node_modules/react-dom/cjs/react-dom-client.development.js:17741:7)
+      at completeWork (node_modules/react-dom/cjs/react-dom-client.development.js:11391:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at completeUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15268:19)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15149:11)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14956:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14936:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14419:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:47:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:190:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:292:10)
+      at customRender (tests/utils/test-utils.tsx:22:18)
+      at Object.<anonymous> (tests/unit/components/AboutProfileCard.test.tsx:6:15)
+
+PASS tests/unit/components/CookieConsentBanner.test.tsx
+  ΓùÅ Console
+
+    console.log
+      CookieConsentBanner mounted
+
+      at log (components/CookieConsentBanner.tsx:22:13)
+
+    console.log
+      Has consent: true
+
+      at log (components/CookieConsentBanner.tsx:24:13)
+
+    console.log
+      CookieConsentBanner mounted
+
+      at log (components/CookieConsentBanner.tsx:22:13)
+
+    console.log
+      Has consent: undefined
+
+      at log (components/CookieConsentBanner.tsx:24:13)
+
+    console.log
+      CookieConsentBanner mounted
+
+      at log (components/CookieConsentBanner.tsx:22:13)
+
+    console.log
+      Has consent: undefined
+
+      at log (components/CookieConsentBanner.tsx:24:13)
+
+    console.log
+      Accept all clicked
+
+      at log (components/CookieConsentBanner.tsx:33:13)
+
+    console.log
+      Saving consent: { necessary: true, analytics: true, marketing: true }
+
+      at log (components/CookieConsentBanner.tsx:54:13)
+
+    console.log
+      Loading scripts with consent: { necessary: true, analytics: true, marketing: true }
+
+      at log (components/CookieConsentBanner.tsx:61:13)
+
+    console.log
+      Loading HubSpot script
+
+      at log (components/CookieConsentBanner.tsx:71:15)
+
+    console.log
+      CookieConsentBanner mounted
+
+      at log (components/CookieConsentBanner.tsx:22:13)
+
+    console.log
+      Has consent: undefined
+
+      at log (components/CookieConsentBanner.tsx:24:13)
+
+    console.log
+      CookieConsentBanner mounted
+
+      at log (components/CookieConsentBanner.tsx:22:13)
+
+    console.log
+      Has consent: undefined
+
+      at log (components/CookieConsentBanner.tsx:24:13)
+
+    console.log
+      Save preferences clicked
+
+      at log (components/CookieConsentBanner.tsx:46:13)
+
+    console.log
+      Saving consent: { necessary: true, analytics: true, marketing: false }
+
+      at log (components/CookieConsentBanner.tsx:54:13)
+
+    console.log
+      Loading scripts with consent: { necessary: true, analytics: true, marketing: false }
+
+      at log (components/CookieConsentBanner.tsx:61:13)
+
+PASS tests/unit/app/privacy-policy/page.test.tsx
+PASS tests/unit/app/careers/page.test.tsx
+PASS tests/unit/components/Hero.test.tsx
+PASS tests/unit/app/page.test.tsx
+PASS tests/unit/components/MismatchCallout.test.tsx
+PASS tests/unit/components/AboutForkDiagram.test.tsx
+PASS tests/unit/components/AboutEngagementComparison.test.tsx
+PASS tests/unit/components/AIEngineeringHero.test.tsx
+PASS tests/unit/components/ErrorBoundary.test.tsx
+PASS tests/unit/app/about/page.test.tsx
+FAIL tests/unit/components/ContactForm.test.tsx (6.74 s)
+  ΓùÅ ContactForm ΓÇ║ submits form successfully
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    Ignored nodes: comments, script, style
+    <html>
+      <head />
+      <body>
+        <div>
+          <div
+            class="space-y-8"
+          >
+            <div
+              class="flex justify-center"
+            >
+              <img
+                alt="IntraWeb Technologies"
+                class="h-14 w-auto"
+                height="60"
+                src="/intraweb-logo-white.png"
+                width="240"
+              />
+            </div>
+            <div
+              class="text-center space-y-4"
+            >
+              <h2
+                class="text-3xl md:text-4xl font-heading font-bold"
+              >
+                Ready to transform your business?
+              </h2>
+              <p
+                class="text-lg text-gray-300 max-w-3xl mx-auto"
+              >
+                Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
+              </p>
+            </div>
+            <div
+              class="space-y-2 text-gray-300"
+            >
+              <p
+                class="flex items-start"
+              >
+                <span
+                  class="text-teal-400 mr-2"
+                >
+                  ΓåÆ
+                </span>
+                <span>
+                  Identify and resolve the structural bottlenecks limiting your AI adoption
+                </span>
+              </p>
+              <p
+                class="flex items-start"
+              >
+                <span
+                  class="text-teal-400 mr-2"
+                >
+                  ΓåÆ
+                </span>
+                <span>
+                  Bypass recruitment cycles with immediate access to senior AI systems engineers
+                </span>
+              </p>
+              <p
+                class="flex items-start"
+              >
+                <span
+                  class="text-teal-400 mr-2"
+                >
+                  ΓåÆ
+                </span>
+                <span>
+                  Ship robust, custom infrastructure tailored to your specific operational reality
+                </span>
+              </p>
+            </div>
+            <form
+              class="space-y-6"
+            >
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-200 mb-1"
+                    for="firstName"
+                  >
+                    First Name 
+                    <span
+                      class="text-red-400"
+                    >
+                      *
+                    </span>
+                  </label>
+                  <input
+                    class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    id="firstName"
+                    name="firstName"
+                    placeholder="First Name"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-200 mb-1"
+                    for="lastName"
+                  >
+                    Last Name 
+                    <span
+                      class="text-red-400"
+                    >
+                      *
+                    </span>
+                  </label>
+                  <input
+                    class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Last Name"
+                    type="text"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="website"
+                >
+                  Please provide your website 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="website"
+                  name="website"
+                  placeholder="https://yourcompany.com"
+                  type="url"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-2"
+                  for="reason"
+                >
+                  Which best describes the reason for the call? 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <div
+                  class="space-y-3"
+                >
+                  <label
+                    class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                  >
+                    <input
+                      class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                      name="reason"
+                      type="radio"
+                      value="ai-transformation"
+                    />
+                    <span
+                      class="text-white"
+                    >
+                      AI Transformation
+                    </span>
+                  </label>
+                  <label
+                    class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                  >
+                    <input
+                      class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                      name="reason"
+                      type="radio"
+                      value="ai-engineer"
+                    />
+                    <span
+                      class="text-white"
+                    >
+                      Developing custom AI solutions / AI Engineer
+                    </span>
+                  </label>
+                  <label
+                    class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                  >
+                    <input
+                      class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                      name="reason"
+                      type="radio"
+                      value="education"
+                    />
+                    <span
+                      class="text-white"
+                    >
+                      Educating your team on AI
+                    </span>
+                  </label>
+                  <label
+                    class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                  >
+                    <input
+                      class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                      name="reason"
+                      type="radio"
+                      value="reselling"
+                    />
+                    <span
+                      class="text-white"
+                    >
+                      Re-selling/white-label your solutions
+                    </span>
+                  </label>
+                </div>
+                <p
+                  class="mt-1 text-sm text-red-400"
+                >
+                  Expected 'ai-transformation' | 'ai-engineer' | 'education' | 'reselling', received null
+                </p>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="email"
+                >
+                  What is your email? 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="email"
+                  name="email"
+                  placeholder="your.email@company.com"
+                  type="email"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="decisionMaker"
+                >
+                  Are you the only decision maker? 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <select
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="decisionMaker"
+                  name="decisionMaker"
+                >
+                  <option
+                    value=""
+                  >
+                    Select...
+                  </option>
+                  <option
+                    value="Yes"
+                  >
+                    Yes
+                  </option>
+                  <option
+                    value="No"
+                  >
+                    No
+                  </option>
+                </select>
+                <p
+                  class="mt-1 text-sm text-red-400"
+                >
+                  Invalid enum value. Expected 'Yes' | 'No', received ''
+                </p>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="revenue"
+                >
+                  Annual Revenue 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <select
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="revenue"
+                  name="revenue"
+                >
+                  <option
+                    value=""
+                  >
+                    Select revenue range
+                  </option>
+                  <option
+                    value="Less than $100K"
+                  >
+                    Less than $100K
+                  </option>
+                  <option
+                    value="$100K - $500K"
+                  >
+                    $100K - $500K
+                  </option>
+                  <option
+                    value="$500K - $1M"
+                  >
+                    $500K - $1M
+                  </option>
+                  <option
+                    value="$1M - $5M"
+                  >
+                    $1M - $5M
+                  </option>
+                  <option
+                    value="$5M - $10M"
+                  >
+                    $5M - $10M
+                  </option>
+                  <option
+                    value="$10M+"
+                  >
+                    $10M+
+                  </option>
+                  <option
+                    value="Prefer not to say"
+                  >
+                    Prefer not to say
+                  </option>
+                </select>
+                <p
+                  class="mt-1 text-sm text-red-400"
+                >
+                  Please select your annual revenue
+                </p>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="description"
+                >
+                  Message 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <textarea
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="description"
+                  name="description"
+                  placeholder="Tell us about your business challenges, goals, and what you're hoping to achieve with AI..."
+                  rows="6"
+                />
+                <p
+                  class="mt-1 text-sm text-red-400"
+                >
+                  Please provide at least 20 characters of detail
+                </p>
+              </div>
+              <button
+                class="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                type="submit"
+              >
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </body>
+    </html>
+
+      45 |
+      46 |         await waitFor(() => {
+    > 47 |             expect(global.fetch).toHaveBeenCalled()
+         |                                  ^
+      48 |             expect(screen.getByText(/Thank you!/i)).toBeInTheDocument()
+      49 |         })
+      50 |
+
+      at toHaveBeenCalled (tests/unit/components/ContactForm.test.tsx:47:34)
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ΓùÅ ContactForm ΓÇ║ handles submission error
+
+    Unable to find an element with the text: /Something went wrong/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    <body>
+      <div>
+        <div
+          class="space-y-8"
+        >
+          <div
+            class="flex justify-center"
+          >
+            <img
+              alt="IntraWeb Technologies"
+              class="h-14 w-auto"
+              height="60"
+              src="/intraweb-logo-white.png"
+              width="240"
+            />
+          </div>
+          <div
+            class="text-center space-y-4"
+          >
+            <h2
+              class="text-3xl md:text-4xl font-heading font-bold"
+            >
+              Ready to transform your business?
+            </h2>
+            <p
+              class="text-lg text-gray-300 max-w-3xl mx-auto"
+            >
+              Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
+            </p>
+          </div>
+          <div
+            class="space-y-2 text-gray-300"
+          >
+            <p
+              class="flex items-start"
+            >
+              <span
+                class="text-teal-400 mr-2"
+              >
+                ΓåÆ
+              </span>
+              <span>
+                Identify and resolve the structural bottlenecks limiting your AI adoption
+              </span>
+            </p>
+            <p
+              class="flex items-start"
+            >
+              <span
+                class="text-teal-400 mr-2"
+              >
+                ΓåÆ
+              </span>
+              <span>
+                Bypass recruitment cycles with immediate access to senior AI systems engineers
+              </span>
+            </p>
+            <p
+              class="flex items-start"
+            >
+              <span
+                class="text-teal-400 mr-2"
+              >
+                ΓåÆ
+              </span>
+              <span>
+                Ship robust, custom infrastructure tailored to your specific operational reality
+              </span>
+            </p>
+          </div>
+          <form
+            class="space-y-6"
+          >
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="firstName"
+                >
+                  First Name 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="firstName"
+                  name="firstName"
+                  placeholder="First Name"
+                  type="text"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-200 mb-1"
+                  for="lastName"
+                >
+                  Last Name 
+                  <span
+                    class="text-red-400"
+                  >
+                    *
+                  </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  id="lastName"
+                  name="lastName"
+                  placeholder="Last Name"
+                  type="text"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-1"
+                for="website"
+              >
+                Please provide your website 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <input
+                class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                id="website"
+                name="website"
+                placeholder="https://yourcompany.com"
+                type="url"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-2"
+                for="reason"
+              >
+                Which best describes the reason for the call? 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <div
+                class="space-y-3"
+              >
+                <label
+                  class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                >
+                  <input
+                    class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                    name="reason"
+                    type="radio"
+                    value="ai-transformation"
+                  />
+                  <span
+                    class="text-white"
+                  >
+                    AI Transformation
+                  </span>
+                </label>
+                <label
+                  class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                >
+                  <input
+                    class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                    name="reason"
+                    type="radio"
+                    value="ai-engineer"
+                  />
+                  <span
+                    class="text-white"
+                  >
+                    Developing custom AI solutions / AI Engineer
+                  </span>
+                </label>
+                <label
+                  class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                >
+                  <input
+                    class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                    name="reason"
+                    type="radio"
+                    value="education"
+                  />
+                  <span
+                    class="text-white"
+                  >
+                    Educating your team on AI
+                  </span>
+                </label>
+                <label
+                  class="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
+                >
+                  <input
+                    class="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
+                    name="reason"
+                    type="radio"
+                    value="reselling"
+                  />
+                  <span
+                    class="text-white"
+                  >
+                    Re-selling/white-label your solutions
+                  </span>
+                </label>
+              </div>
+              <p
+                class="mt-1 text-sm text-red-400"
+              >
+                Expected 'ai-transformation' | 'ai-engineer' | 'education' | 'reselling', received null
+              </p>
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-1"
+                for="email"
+              >
+                What is your email? 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <input
+                class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                id="email"
+                name="email"
+                placeholder="your.email@company.com"
+                type="email"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-1"
+                for="decisionMaker"
+              >
+                Are you the only decision maker? 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <select
+                class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                id="decisionMaker"
+                name="decisionMaker"
+              >
+                <option
+                  value=""
+                >
+                  Select...
+                </option>
+                <option
+                  value="Yes"
+                >
+                  Yes
+                </option>
+                <option
+                  value="No"
+                >
+                  No
+                </option>
+              </select>
+              <p
+                class="mt-1 text-sm text-red-400"
+              >
+                Invalid enum value. Expected 'Yes' | 'No', received ''
+              </p>
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-1"
+                for="revenue"
+              >
+                Annual Revenue 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <select
+                class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                id="revenue"
+                name="revenue"
+              >
+                <option
+                  value=""
+                >
+                  Select revenue range
+                </option>
+                <option
+                  value="Less than $100K"
+                >
+                  Less than $100K
+                </option>
+                <option
+                  value="$100K - $500K"
+                >
+                  $100K - $500K
+                </option>
+                <option
+                  value="$500K - $1M"
+                >
+                  $500K - $1M
+                </option>
+                <option
+                  value="$1M - $5M"
+                >
+                  $1M - $5M
+                </option>
+                <option
+                  value="$5M - $10M"
+                >
+                  $5M - $10M
+                </option>
+                <option
+                  value="$10M+"
+                >
+                  $10M+
+                </option>
+                <option
+                  value="Prefer not to say"
+                >
+                  Prefer not to say
+                </option>
+              </select>
+              <p
+                class="mt-1 text-sm text-red-400"
+              >
+                Please select your annual revenue
+              </p>
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-200 mb-1"
+                for="description"
+              >
+                Message 
+                <span
+                  class="text-red-400"
+                >
+                  *
+                </span>
+              </label>
+              <textarea
+                class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                id="description"
+                name="description"
+                placeholder="Tell us about your business challenges, goals, and what you're hoping to achieve with AI..."
+                rows="6"
+              />
+              <p
+                class="mt-1 text-sm text-red-400"
+              >
+                Please provide at least 20 characters of detail
+              </p>
+            </div>
+            <button
+              class="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              type="submit"
+            >
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </body>
+
+      67 |         await userEvent.click(screen.getByRole('button', { name: /send message/i }))
+      68 |
+    > 69 |         await waitFor(() => {
+         |                      ^
+      70 |             expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument()
+      71 |         })
+      72 |     })
+
+      at waitForWrapper (node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+      at Object.<anonymous> (tests/unit/components/ContactForm.test.tsx:69:22)
+
+Test Suites: 1 failed, 16 passed, 17 total
+Tests:       2 failed, 1 skipped, 51 passed, 54 total
+Snapshots:   0 total
+Time:        9.861 s
+Ran all test suites.

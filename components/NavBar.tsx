@@ -9,9 +9,9 @@ export function NavBar() {
       </Link>
       <Link href="/" className="focus:outline-brand-primary">Home</Link>
       {/* <Link href="/work" className="focus:outline-brand-primary">Work</Link> */}
-      <Link href="/process" className="focus:outline-brand-primary">Process</Link>
+      {/* <Link href="/process" className="focus:outline-brand-primary">Process</Link> */}
       <Link href="/about" className="focus:outline-brand-primary">About</Link>
-      <Link href="/faq" className="focus:outline-brand-primary">FAQ</Link>
+      {/* <Link href="/faq" className="focus:outline-brand-primary">FAQ</Link> */}
     </nav>
   );
 } 

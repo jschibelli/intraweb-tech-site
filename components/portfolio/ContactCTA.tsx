@@ -28,12 +28,12 @@ export default function ContactCTA() {
             >
               Contact Us
             </Link>
-            <Link
+            {/* <Link
               href="/process"
               className="inline-flex items-center justify-center px-8 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               Learn More About Our Process
-            </Link>
+            </Link> */}
           </div>
         </motion.div>
       </div>

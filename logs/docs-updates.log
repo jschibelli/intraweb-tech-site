@@ -1,0 +1,4 @@
+README update suggested for PR #10
+Title: chore: complete homepage copy swap ΓÇô updated hero, process, testimoniΓÇª
+Files touched: components/About.tsx, components/FAQ.tsx, components/Hero.tsx, components/Process.tsx, components/Services.tsx, components/StatsSection.tsx, components/SynaplyAI.tsx, components/Testimonials.tsx, public/about.json, public/faq.json, public/hero.json, public/process.json, public/services.json, public/sitemap-0.xml, public/synaplyai.json, public/testimonials.json
+Notes: Ensure documentation reflects code changes.

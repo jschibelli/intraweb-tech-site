@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,6 +48,7 @@ const inputStyles =
   "w-full px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent";
 
 export default function ContactForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
@@ -106,7 +108,6 @@ export default function ContactForm() {
         type: "error",
         message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -124,7 +125,7 @@ export default function ContactForm() {
           {submitStatus.message}
         </div>
       )}
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1.5">
           First Name <span className="text-red-400">*</span>
@@ -157,6 +158,7 @@ export default function ContactForm() {
         {errors.lastName && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
         )}
+      </div>
       </div>
 
       <div>

@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Code, Palette, Cloud, Sparkles } from "lucide-react";
+import { TrendingUp, Compass, Shield, Network } from "lucide-react";
 import { motion } from "framer-motion";
 
 const iconMap = {
-  Code: Code,
-  Palette: Palette,
-  Cloud: Cloud,
-  Sparkles: Sparkles,
+  TrendingUp: TrendingUp,
+  Compass: Compass,
+  Shield: Shield,
+  Network: Network,
 };
 
 type Service = {
