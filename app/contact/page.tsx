@@ -13,10 +13,10 @@ export default function ContactPage() {
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-500 opacity-20 rounded-full blur-3xl" />
             <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-orange-500 opacity-20 rounded-full blur-3xl" />
           </div>
-          <div className="page-hero-content max-w-5xl mx-auto px-4 text-center">
+          <div className="page-hero-content max-w-5xl mx-auto px-4 text-left sm:text-center">
             <h1 className="page-hero-heading">Ready to transform your business?</h1>
             <p className="page-hero-subheading font-body mb-4">Request a diagnostic</p>
-            <p className="text-base md:text-lg text-white/80 max-w-3xl mx-auto">
+            <p className="text-base md:text-lg text-white/80 max-w-3xl mx-auto sm:text-center">
               Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
             </p>
           </div>

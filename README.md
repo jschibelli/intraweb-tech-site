@@ -170,6 +170,9 @@ This project includes several compliance features to ensure GDPR, CCPA, and acce
 - Stores consent preferences in cookies
 - Supports granular control over analytics and marketing cookies
 
+### SEO compliance check
+Run the SEO compliance check (metadata, canonical, FAQ schema, sitemap) with the app serving: `npm run seo:check`. Uses `BASE_URL=http://localhost:3000` by default; set `BASE_URL` to a deployed URL to validate production.
+
 ### Cookie Audit Tool
 Run the cookie audit tool to identify third-party scripts that require consent:
 ```bash

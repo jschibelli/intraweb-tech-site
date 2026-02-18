@@ -18,12 +18,19 @@ const bentoStyles: Record<number, string> = {
 
 export default function Testimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     fetch("/testimonials.json")
       .then((res) => res.json())
-      .then(setTestimonials);
+      .then((data) => {
+        setTestimonials(Array.isArray(data) ? data : []);
+        setHasFetched(true);
+      })
+      .catch(() => setHasFetched(true));
   }, []);
+
+  if (!hasFetched || testimonials.length === 0) return null;
 
   return (
     <section id="testimonials" className="relative bg-[#0a2236] py-16 md:py-24 overflow-hidden" style={{ backgroundImage: 'url(/hexagon-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>

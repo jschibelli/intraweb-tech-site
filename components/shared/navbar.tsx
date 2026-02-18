@@ -118,8 +118,8 @@ export default function Navbar() {
           
             <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4" />
         </Link>
-        {/* Desktop Nav */}
-        <ul className="hidden md:flex items-center gap-8 font-body">
+        {/* Desktop Nav (hidden on tablet and mobile) */}
+        <ul className="hidden lg:flex items-center gap-8 font-body">
           {navLinks.map((link) => (
             <li key={link.name}>
               <Link
@@ -137,18 +137,18 @@ export default function Navbar() {
             </Link>
           </li>
         </ul>
-        {/* Mobile Hamburger */}
+        {/* Mobile / Tablet menu toggle */}
         <button
-          className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="lg:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((open) => !open)}
         >
           {menuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </nav>
-      {/* Mobile Menu */}
+      {/* Mobile / Tablet Menu */}
       {menuOpen && (
-        <div className={`md:hidden ${isHome ? (scrolled ? "bg-gray-900/95" : "bg-transparent") : "bg-gray-900"} px-4 pb-4`}>
+        <div className={`lg:hidden ${isHome ? (scrolled ? "bg-gray-900/95" : "bg-transparent") : "bg-gray-900"} px-4 pb-4`}>
           <ul className="flex flex-col gap-4 font-body">
             {navLinks.map((link) => (
               <li key={link.name}>

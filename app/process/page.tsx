@@ -87,7 +87,7 @@ export default function ProcessPage() {
   return (
     <main className="bg-gray-900 text-white min-h-screen">
       <EntranceReveal>
-      <section className="page-hero bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white text-center">
+      <section className="page-hero bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white">
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
           viewBox="0 0 1200 400"
@@ -123,9 +123,9 @@ export default function ProcessPage() {
             />
           ))}
         </svg>
-        <div className="page-hero-content relative z-10 max-w-3xl mx-auto px-4">
-          <h1 className="page-hero-heading text-left md:text-center">How We Work</h1>
-          <p className="page-hero-subheading font-body mb-6 text-left md:text-center">Two-stage engagement: diagnostic followed by implementation retainer. Fixed scope, clear deliverables, no ambiguity.</p>
+        <div className="page-hero-content relative z-10 max-w-3xl mx-auto px-4 text-left sm:text-center">
+          <h1 className="page-hero-heading">How We Work</h1>
+          <p className="page-hero-subheading font-body mb-6">Two-stage engagement: diagnostic followed by implementation retainer. Fixed scope, clear deliverables, no ambiguity.</p>
         </div>
       </section>
       </EntranceReveal>

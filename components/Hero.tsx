@@ -47,7 +47,7 @@ export default function Hero() {
           transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
         />
       </motion.div>
-      <div className="page-hero-content relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center px-4">
+      <div className="page-hero-content relative z-10 max-w-4xl mx-auto flex flex-col items-start text-left sm:items-center sm:text-center px-4">
         {/* Announcement */}
         <Link
           href={content.announcement.href}

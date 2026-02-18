@@ -9,6 +9,7 @@
     "lint": "next lint",
     "lighthouse:audit": "node scripts/lighthouse-audit.js",
     "check:links": "node scripts/check-links.js",
+    "seo:check": "node scripts/seo-compliance.js",
     "analyze": "ANALYZE=true next build",
     "postbuild": "next-sitemap",
     "audit:cookies": "ts-node scripts/auditCookies.ts"

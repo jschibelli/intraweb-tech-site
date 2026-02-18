@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface AboutContent {
   heading: string;
@@ -14,8 +16,8 @@ interface AboutContent {
 const team = [
   {
     name: "John Schibelli",
-    title: "Founder / CEO",
-    image: "/john_schibelli.jpg",
+    title: "Founder & COO",
+    image: "/john_shibelli.png",
     bio: "John provides strategic vision, product direction, and final approvals for all projects. He is passionate about building innovative solutions that drive business growth.",
   },
   {
@@ -28,6 +30,11 @@ const team = [
 
 export default function About() {
   const [content, setContent] = useState<AboutContent | null>(null);
+  const [expandedName, setExpandedName] = useState<string | null>(null);
+
+  const toggleBio = (name: string) => {
+    setExpandedName((prev) => (prev === name ? null : name));
+  };
 
   useEffect(() => {
     fetch("/about.json")
@@ -70,7 +77,7 @@ export default function About() {
           A lean, senior team that ships—no layers, no hand-offs, no bloat.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto mb-10 items-start">
           {team.map((member) => (
             <div key={member.name} className="bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-700">
               <div className="w-36 h-36 mb-5 rounded-full overflow-hidden border-4 border-teal-400 bg-gray-700">
@@ -86,7 +93,41 @@ export default function About() {
               </div>
               <h4 className="text-2xl font-heading font-bold text-white mb-1">{member.name}</h4>
               <p className="text-teal-400 font-semibold text-lg mb-3">{member.title}</p>
-              <p className="text-gray-300 font-body">{member.bio}</p>
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={() => toggleBio(member.name)}
+                  className="flex items-center justify-center gap-1 w-full py-2 px-4 border border-teal-400 text-teal-400 hover:text-teal-300 hover:border-teal-300 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
+                  aria-expanded={expandedName === member.name}
+                  aria-controls={`bio-${member.name.replace(/\s+/g, "-")}`}
+                >
+                  {expandedName === member.name ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" aria-hidden />
+                      Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" aria-hidden />
+                      Read more
+                    </>
+                  )}
+                </button>
+                <AnimatePresence initial={false}>
+                  {expandedName === member.name && (
+                    <motion.div
+                      id={`bio-${member.name.replace(/\s+/g, "-")}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="text-gray-300 font-body pt-5 pb-2 text-left">{member.bio}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ))}
         </div>

@@ -36,8 +36,8 @@ export default function FAQPage() {
       />
       {/* Hero Section */}
       <EntranceReveal>
-        <section className="page-hero bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white text-center">
-          <div className="page-hero-content max-w-3xl mx-auto px-4">
+        <section className="page-hero bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white">
+          <div className="page-hero-content max-w-3xl mx-auto px-4 text-left sm:text-center">
             <h1 className="page-hero-heading">Frequently Asked Questions</h1>
             <p className="page-hero-subheading font-body mb-6">Find answers to common questions about our services, process, and more.</p>
           </div>

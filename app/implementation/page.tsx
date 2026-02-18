@@ -39,7 +39,7 @@ export default function ImplementationPage() {
     <main className="bg-gray-900 text-white min-h-screen">
       <EntranceReveal>
       <section className="page-hero" style={{ backgroundImage: "url(/circuit-pattern.svg)", backgroundRepeat: "repeat", backgroundSize: "auto" }}>
-        <div className="page-hero-content max-w-4xl mx-auto px-4 text-center">
+        <div className="page-hero-content max-w-4xl mx-auto px-4 text-left sm:text-center">
           <h1 className="page-hero-heading">Implementation That Sticks</h1>
           <p className="page-hero-subheading">You&apos;ve seen the decks. You&apos;ve approved the pilots. Now you need someone to actually build it.</p>
         </div>

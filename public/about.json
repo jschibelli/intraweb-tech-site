@@ -10,10 +10,6 @@
   ],
   "ctas": [
     {
-      "label": "Meet the Team",
-      "href": "/team"
-    },
-    {
       "label": "Start a Conversation",
       "href": "/contact"
     }

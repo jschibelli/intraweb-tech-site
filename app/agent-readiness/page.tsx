@@ -36,10 +36,10 @@ export default function AgentReadinessPage() {
     <main className="bg-gray-900 text-white min-h-screen">
       <EntranceReveal>
       <section className="page-hero" style={{ backgroundImage: "url(/circuit-pattern.svg)", backgroundRepeat: "repeat", backgroundSize: "auto" }}>
-        <div className="page-hero-content max-w-4xl mx-auto px-4 text-center">
+        <div className="page-hero-content max-w-4xl mx-auto px-4 text-left sm:text-center">
           <h1 className="page-hero-heading">Agent Readiness Assessment</h1>
           <p className="page-hero-subheading mb-4">Your organization isn&apos;t short on AI tools. It&apos;s short on the operational structure to actually use them.</p>
-          <p className="text-base md:text-lg text-white/80 max-w-2xl mx-auto">A diagnostic that maps your workflows, scores automation opportunities, and delivers a 90-day implementation roadmap. 2–3 week delivery.</p>
+          <p className="text-base md:text-lg text-white/80 max-w-2xl mx-auto sm:text-center">A diagnostic that maps your workflows, scores automation opportunities, and delivers a 90-day implementation roadmap. 2–3 week delivery.</p>
         </div>
       </section>
       </EntranceReveal>
