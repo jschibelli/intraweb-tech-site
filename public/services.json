@@ -1,22 +1,22 @@
 [
   {
-    "title": "Operationally Stable But Inefficient",
-    "description": "Your business runs, but workflows are chaotic, manual handoffs slow everything down, and too much depends on specific people being available.",
-    "icon": "TrendingUp"
+    "title": "Automated Workflow Sequences",
+    "description": "Approvals, routing, escalation—the multi-step processes that currently require manual coordination.",
+    "icon": "Code"
   },
   {
-    "title": "Willing to Redesign, Not Just Automate",
-    "description": "You understand that automating a bad process just makes it fail faster. You value partnership over quick fixes.",
-    "icon": "Compass"
+    "title": "Agent Integrations",
+    "description": "Connecting your AI tools to your systems with proper error handling and fallbacks.",
+    "icon": "Sparkles"
   },
   {
-    "title": "Not in Crisis Mode",
-    "description": "We're not set up for emergency rescues. Those situations require a different kind of intervention.",
-    "icon": "Shield"
+    "title": "Exception Handling Logic",
+    "description": "What happens when automation fails. Alerts, fallbacks, human-in-the-loop escalation.",
+    "icon": "Cloud"
   },
   {
-    "title": "Not Development in Isolation",
-    "description": "We build custom software—but only when it's part of a broader operational roadmap and adoption plan. We don't ship code without taking responsibility for how it's used.",
-    "icon": "Network"
+    "title": "Documentation & Handoff",
+    "description": "Everything written down so your team can maintain and extend it.",
+    "icon": "Palette"
   }
 ]

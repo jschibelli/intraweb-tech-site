@@ -1,8 +1,13 @@
 {
-  "heading": "Redesign how work moves. Implement automation. Stay until it sticks.",
-  "subheading": "For growing organizations where coordination drag, manual handoffs, and informal workflows are slowing everything down.",
+  "heading": "95% of AI pilots fail to deliver ROI. We fix that.",
+  "subheading": "IntraWeb helps SMBs turn AI tool adoption into operational savings and reduce coordination overhead.",
   "cta": {
-    "label": "Request a Diagnostic",
+    "label": "Start with a Diagnostic",
     "href": "/contact"
-  }
+  },
+  "announcement": {
+    "label": "AI Implementation That Actually Works",
+    "href": "/contact"
+  },
+  "clientLogos": []
 }

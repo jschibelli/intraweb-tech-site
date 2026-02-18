@@ -4,42 +4,48 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
-import Image from "next/image";
+
+const reasonOptions = [
+  { value: "", label: "Select..." },
+  { value: "ai-transformation", label: "AI Transformation" },
+  { value: "custom-ai-engineer", label: "Developing custom AI solutions / AI Engineer" },
+  { value: "educating-team", label: "Educating your team on AI" },
+  { value: "reselling-white-label", label: "Re-selling/white-label your solutions" },
+];
+
+const decisionMakerOptions = [
+  { value: "", label: "Select..." },
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
+const annualRevenueOptions = [
+  { value: "", label: "Select revenue range" },
+  { value: "less-than-100k", label: "Less than $100K" },
+  { value: "100k-500k", label: "$100K - $500K" },
+  { value: "500k-1m", label: "$500K - $1M" },
+  { value: "1m-5m", label: "$1M - $5M" },
+  { value: "5m-10m", label: "$5M - $10M" },
+  { value: "10m-plus", label: "$10M+" },
+  { value: "prefer-not", label: "Prefer not to say" },
+];
 
 const formSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  website: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
-  reason: z.enum(["ai-transformation", "ai-engineer", "education", "reselling"], {
-    required_error: "Please select a reason for the call",
-  }),
-  email: z.string().email("Please enter a valid email address"),
-  decisionMaker: z.enum(["Yes", "No"], {
-    required_error: "Please select if you are the decision maker",
-  }),
-  revenue: z.string().min(1, "Please select your annual revenue"),
-  description: z.string().min(20, "Please provide at least 20 characters of detail"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  website: z.string().min(1, "Website is required"),
+  reasonForCall: z.string().min(1, "Please select a reason"),
+  email: z.string().email("Please enter a valid email"),
+  decisionMaker: z.string().min(1, "Please select an option"),
+  annualRevenue: z.string().min(1, "Please select a revenue range"),
+  numberOfEmployees: z.string().optional(),
+  message: z.string().min(1, "Message is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-const reasonOptions = [
-  { value: "ai-transformation", label: "AI Transformation" },
-  { value: "ai-engineer", label: "Developing custom AI solutions / AI Engineer" },
-  { value: "education", label: "Educating your team on AI" },
-  { value: "reselling", label: "Re-selling/white-label your solutions" },
-];
-
-const revenueOptions = [
-  "Less than $100K",
-  "$100K - $500K",
-  "$500K - $1M",
-  "$1M - $5M",
-  "$5M - $10M",
-  "$10M+",
-  "Prefer not to say",
-];
+const inputStyles =
+  "w-full px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent";
 
 export default function ContactForm() {
   const router = useRouter();
@@ -56,6 +62,17 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      website: "",
+      reasonForCall: "",
+      email: "",
+      decisionMaker: "",
+      annualRevenue: "",
+      numberOfEmployees: "",
+      message: "",
+    },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -64,249 +81,225 @@ export default function ContactForm() {
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          website: data.website,
+          reasonForCall: data.reasonForCall,
+          email: data.email,
+          decisionMaker: data.decisionMaker,
+          annualRevenue: data.annualRevenue,
+          numberOfEmployees: data.numberOfEmployees || "",
+          message: data.message,
+        }),
       });
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || "Submission failed");
       }
-      // Redirect to thank you page on success
-      router.push("/thank-you");
-      // No need to reset form or state as we are redirecting
-      // reset(); 
-      // setIsSubmitting(false); 
+      setSubmitStatus({
+        type: "success",
+        message: "We'll review your submission within 1 business day and get back to you.",
+      });
+      reset();
     } catch (error) {
       setSubmitStatus({
         type: "error",
-        message: "Something went wrong",
+        message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
       });
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Form Logo */}
-      <div className="flex justify-center">
-        <Image
-          src="/intraweb-logo-white.png"
-          alt="IntraWeb Technologies"
-          width={240}
-          height={60}
-          className="h-14 w-auto"
-        />
-      </div>
-
-      {/* Headline */}
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl md:text-4xl font-heading font-bold">
-          Ready to transform your business?
-        </h2>
-        <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-          Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
-        </p>
-
-      </div>
-
-      {/* Value Props */}
-      <div className="space-y-2 text-gray-300">
-        <p className="flex items-start">
-          <span className="text-teal-400 mr-2">→</span>
-          <span>Identify and resolve the structural bottlenecks limiting your AI adoption</span>
-        </p>
-        <p className="flex items-start">
-          <span className="text-teal-400 mr-2">→</span>
-          <span>Bypass recruitment cycles with immediate access to senior AI systems engineers</span>
-        </p>
-        <p className="flex items-start">
-          <span className="text-teal-400 mr-2">→</span>
-          <span>Ship robust, custom infrastructure tailored to your specific operational reality</span>
-        </p>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {submitStatus && (
-          <div
-            className={`p-4 rounded-md ${submitStatus.type === "success"
-              ? "bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400"
-              : "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-              }`}
-          >
-            {submitStatus.message}
-          </div>
-        )}
-
-        {/* Name Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1">
-              First Name <span className="text-red-400">*</span>
-            </label>
-            <input
-              {...register("firstName")}
-              type="text"
-              id="firstName"
-              className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              placeholder="First Name"
-            />
-            {errors.firstName && (
-              <p className="mt-1 text-sm text-red-400">{errors.firstName.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1">
-              Last Name <span className="text-red-400">*</span>
-            </label>
-            <input
-              {...register("lastName")}
-              type="text"
-              id="lastName"
-              className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              placeholder="Last Name"
-            />
-            {errors.lastName && (
-              <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Website */}
-        <div>
-          <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1">
-            Please provide your website <span className="text-red-400">*</span>
-          </label>
-          <input
-            {...register("website")}
-            type="url"
-            id="website"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            placeholder="https://yourcompany.com"
-          />
-          {errors.website && (
-            <p className="mt-1 text-sm text-red-400">{errors.website.message}</p>
-          )}
-        </div>
-
-        {/* Reason for Call */}
-        <div>
-          <label htmlFor="reason" className="block text-sm font-medium text-gray-200 mb-2">
-            Which best describes the reason for the call? <span className="text-red-400">*</span>
-          </label>
-          <div className="space-y-3">
-            {reasonOptions.map((option) => (
-              <label
-                key={option.value}
-                className="flex items-start p-3 rounded-md bg-gray-800 border border-gray-700 hover:border-teal-500 cursor-pointer transition-colors"
-              >
-                <input
-                  {...register("reason")}
-                  type="radio"
-                  value={option.value}
-                  className="mt-1 mr-3 text-teal-500 focus:ring-teal-500"
-                />
-                <span className="text-white">{option.label}</span>
-              </label>
-            ))}
-          </div>
-          {errors.reason && (
-            <p className="mt-1 text-sm text-red-400">{errors.reason.message}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
-            What is your email? <span className="text-red-400">*</span>
-          </label>
-          <input
-            {...register("email")}
-            type="email"
-            id="email"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            placeholder="your.email@company.com"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
-          )}
-        </div>
-
-        {/* Decision Maker */}
-        <div>
-          <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1">
-            Are you the only decision maker? <span className="text-red-400">*</span>
-          </label>
-          <select
-            {...register("decisionMaker")}
-            id="decisionMaker"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          >
-            <option value="">Select...</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-          {errors.decisionMaker && (
-            <p className="mt-1 text-sm text-red-400">{errors.decisionMaker.message}</p>
-          )}
-        </div>
-
-        {/* Annual Revenue */}
-        <div>
-          <label htmlFor="revenue" className="block text-sm font-medium text-gray-200 mb-1">
-            Annual Revenue <span className="text-red-400">*</span>
-          </label>
-          <select
-            {...register("revenue")}
-            id="revenue"
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          >
-            <option value="">Select revenue range</option>
-            {revenueOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          {errors.revenue && (
-            <p className="mt-1 text-sm text-red-400">{errors.revenue.message}</p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-200 mb-1">
-            Message <span className="text-red-400">*</span>
-          </label>
-          <textarea
-            {...register("description")}
-            id="description"
-            rows={6}
-            className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            placeholder="Tell us about your business challenges, goals, and what you're hoping to achieve with AI..."
-          />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-400">{errors.description.message}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          disabled={isSubmitting}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      {submitStatus && (
+        <div
+          className={`p-4 rounded-md ${
+            submitStatus.type === "success"
+              ? "bg-teal-500/20 text-teal-300 border border-teal-500/50"
+              : "bg-red-500/20 text-red-300 border border-red-500/50"
+          }`}
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="animate-spin mr-2 h-5 w-5" />
-              Submitting...
-            </>
-          ) : (
-            "Send Message"
-          )}
-        </button>
-      </form>
-    </div>
+          {submitStatus.message}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          First Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("firstName")}
+          type="text"
+          id="firstName"
+          placeholder="Your first name"
+          className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.firstName}
+        />
+        {errors.firstName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.firstName.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Last Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("lastName")}
+          type="text"
+          id="lastName"
+          placeholder="Your last name"
+          className={`${inputStyles} ${errors.lastName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.lastName}
+        />
+        {errors.lastName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
+        )}
+      </div>
+      </div>
+
+      <div>
+        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Please provide your website <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("website")}
+          type="url"
+          id="website"
+          placeholder="https://"
+          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.website}
+        />
+        {errors.website && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="reasonForCall" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Which best describes the reason for the call? <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("reasonForCall")}
+          id="reasonForCall"
+          className={`${inputStyles} ${errors.reasonForCall ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.reasonForCall}
+        >
+          {reasonOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.reasonForCall && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.reasonForCall.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1.5">
+          What is your email? <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("email")}
+          type="email"
+          id="email"
+          placeholder="you@company.com"
+          className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.email}
+        />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.email.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Are you the only decision maker? <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("decisionMaker")}
+          id="decisionMaker"
+          className={`${inputStyles} ${errors.decisionMaker ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.decisionMaker}
+        >
+          {decisionMakerOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.decisionMaker && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.decisionMaker.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="annualRevenue" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company revenue <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("annualRevenue")}
+          id="annualRevenue"
+          className={`${inputStyles} ${errors.annualRevenue ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.annualRevenue}
+        >
+          {annualRevenueOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.annualRevenue && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.annualRevenue.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="numberOfEmployees" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company size (employees)
+        </label>
+        <input
+          {...register("numberOfEmployees")}
+          type="number"
+          id="numberOfEmployees"
+          min={0}
+          placeholder="e.g. 50"
+          className={inputStyles}
+          aria-describedby="numberOfEmployees-hint"
+        />
+        <p id="numberOfEmployees-hint" className="text-sm text-gray-400 mt-1">
+          Optional. Helps us prioritize follow-up (ICP: 10–150).
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Message <span className="text-red-400">*</span>
+        </label>
+        <textarea
+          {...register("message")}
+          id="message"
+          rows={5}
+          placeholder="Tell us about your goals and challenges..."
+          className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.message}
+        />
+        {errors.message && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.message.message}</p>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        className="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Sending..." : "Send Message"}
+      </button>
+    </form>
   );
 }

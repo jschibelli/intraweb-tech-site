@@ -8,7 +8,6 @@ export function NavBar() {
         <Image src="../public/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={40} height={40} className="mr-4" />
       </Link>
       <Link href="/" className="focus:outline-brand-primary">Home</Link>
-      <Link href="/services" className="focus:outline-brand-primary">Services</Link>
       {/* <Link href="/work" className="focus:outline-brand-primary">Work</Link> */}
       {/* <Link href="/process" className="focus:outline-brand-primary">Process</Link> */}
       <Link href="/about" className="focus:outline-brand-primary">About</Link>

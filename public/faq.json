@@ -1,22 +1,22 @@
 [
   {
-    "question": "How do we start?",
-    "answer": "We start every engagement with a paid diagnostic—a structured assessment of your workflows, bottlenecks, and automation opportunities. You get a written roadmap that prioritizes what's actually worth fixing."
+    "question": "What is the diagnostic?",
+    "answer": "The diagnostic is a 2 to 3 week engagement where we review your current workflows, identify automation opportunities, and deliver a prioritized implementation roadmap. It is a standalone service with no required long-term commitment."
   },
   {
-    "question": "What happens after the diagnostic?",
-    "answer": "You decide whether to move forward with implementation. No pressure. No sales theater. Just clarity on what the work would look like and what it would solve."
+    "question": "How long does implementation take?",
+    "answer": "Implementation runs on a 6 month minimum retainer after the diagnostic. Final scope and timeline depend on roadmap priorities, existing systems, and integration complexity."
   },
   {
-    "question": "What makes your approach different?",
-    "answer": "We don't hand you a report and walk away. We embed with your team, redesign workflows, and implement automation that actually gets used. We stay engaged long enough to make changes stick."
+    "question": "Who is IntraWeb right for?",
+    "answer": "IntraWeb is designed for operations-focused SMBs, typically with 20 to 150 employees, that need help implementing AI and workflow automation in day-to-day operations. It is generally not the right fit for one-time projects, chatbot-only requests, or very small teams."
   },
   {
-    "question": "How long do engagements typically last?",
-    "answer": "Engagements stay predictable, bounded, and tied to outcomes—not billable hours or feature creep. The diagnostic defines scope, implementation is incremental, and ongoing partnership is structured."
+    "question": "What sets you apart from consultants or dev shops?",
+    "answer": "IntraWeb focuses on implementation and operational rollout, not only strategy recommendations. The engagement includes workflow build, deployment, and iteration based on measurable business outcomes."
   },
   {
-    "question": "Ready to start?",
-    "answer": "If you're dealing with coordination drag, informal workflows, or operational friction slowing your organization down, email us at contact@intrawebtech.com to request a diagnostic."
+    "question": "How do I get started?",
+    "answer": "Submit a request through the contact form to schedule a diagnostic call. We typically respond within one business day and confirm whether the engagement is a good fit."
   }
 ]

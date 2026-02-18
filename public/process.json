@@ -1,17 +1,17 @@
 [
   {
-    "title": "Phase 1: Diagnostic",
-    "description": "Structured assessment of workflows, coordination points, and automation opportunities. You get a written roadmap prioritizing what's worth fixing first.",
+    "title": "Diagnostic",
+    "description": "We map your workflows, identify where automation makes sense, and build a prioritized roadmap.",
     "icon": "Search"
   },
   {
-    "title": "Phase 2: Implementation",
-    "description": "Roadmap items implemented incrementally. We redesign workflows before automating, so changes reduce friction instead of digitizing problems.",
+    "title": "Implementation",
+    "description": "We build and deploy the workflows—agent integrations, automation sequences, exception handling. Hands-on, not advisory.",
     "icon": "Code"
   },
   {
-    "title": "Phase 3: Ongoing Partnership",
-    "description": "Structured engagement focused on adoption and refinement. We stay embedded to monitor performance, resolve friction, and ensure improvements stick.",
+    "title": "Optimization",
+    "description": "Systems drift. We monitor, tune, and extend as your operations evolve.",
     "icon": "LifeBuoy"
   }
 ]

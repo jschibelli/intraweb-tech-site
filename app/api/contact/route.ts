@@ -8,55 +8,79 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const formSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  website: z.string().optional(),
-  reason: z.enum(["ai-transformation", "ai-engineer", "education", "reselling"]),
+  website: z.string().min(1),
+  reasonForCall: z.string().min(1),
   email: z.string().email(),
   decisionMaker: z.string().min(1),
-  revenue: z.string().min(1),
-  description: z.string().min(20),
+  annualRevenue: z.string().min(1),
+  numberOfEmployees: z.string().optional(),
+  message: z.string().min(1),
 });
+
+const reasonLabels: Record<string, string> = {
+  "ai-transformation": "AI Transformation",
+  "custom-ai-engineer": "Developing custom AI solutions / AI Engineer",
+  "educating-team": "Educating your team on AI",
+  "reselling-white-label": "Re-selling/white-label your solutions",
+};
+
+const revenueLabels: Record<string, string> = {
+  "less-than-100k": "Less than $100K",
+  "100k-500k": "$100K - $500K",
+  "500k-1m": "$500K - $1M",
+  "1m-5m": "$1M - $5M",
+  "5m-10m": "$5M - $10M",
+  "10m-plus": "$10M+",
+  "prefer-not": "Prefer not to say",
+};
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = formSchema.parse(body);
 
-    const { firstName, lastName, website, reason, email, decisionMaker, revenue, description } = validatedData;
+    const {
+      firstName,
+      lastName,
+      website,
+      reasonForCall,
+      email,
+      decisionMaker,
+      annualRevenue,
+      numberOfEmployees,
+      message,
+    } = validatedData;
 
-    const reasonLabels: Record<string, string> = {
-      "ai-transformation": "AI Transformation",
-      "ai-engineer": "Developing custom AI solutions / AI Engineer",
-      "education": "Educating your team on AI",
-      "reselling": "Re-selling/white-label your solutions",
-    };
+    const reasonLabel = reasonLabels[reasonForCall] || reasonForCall;
+    const revenueLabel = revenueLabels[annualRevenue] || annualRevenue;
 
-    // Map string ranges to estimated integer values for HubSpot's 'annualrevenue' (must be a number)
+    // Map value keys to estimated integer for HubSpot 'annualrevenue'
     const revenueToNumber: Record<string, number> = {
-      "Less than $100K": 50000,
-      "$100K - $500K": 250000,
-      "$500K - $1M": 750000,
-      "$1M - $5M": 2500000,
-      "$5M - $10M": 7500000,
-      "$10M+": 10000000,
-      "Prefer not to say": 0,
+      "less-than-100k": 50000,
+      "100k-500k": 250000,
+      "500k-1m": 750000,
+      "1m-5m": 2500000,
+      "5m-10m": 7500000,
+      "10m-plus": 10000000,
+      "prefer-not": 0,
     };
-
-    const numericRevenue = revenueToNumber[revenue] || 0;
+    const numericRevenue = revenueToNumber[annualRevenue] || 0;
 
     // 1. Send Email via Resend
     const emailContent = `
-      New Contact Form Submission:
-      
-      Name: ${firstName} ${lastName}
-      Email: ${email}
-      ${website ? `Website: ${website}` : ""}
-      Reason for Call: ${reasonLabels[reason] || reason}
-      Decision Maker: ${decisionMaker}
-      Annual Revenue: ${revenue}
-      
-      Description:
-      ${description}
-    `;
+New Contact Form Submission:
+
+Name: ${firstName} ${lastName}
+Email: ${email}
+Website: ${website}
+Reason for call: ${reasonLabel}
+Decision maker only: ${decisionMaker === "yes" ? "Yes" : "No"}
+Company revenue: ${revenueLabel}
+${numberOfEmployees ? `Company size (employees): ${numberOfEmployees}` : ""}
+
+Message:
+${message}
+`;
 
     const emailPromise = resend.emails.send({
       from: "IntraWeb Contact Form <contact@intrawebtech.com>",
@@ -81,10 +105,10 @@ export async function POST(request: NextRequest) {
           { name: "firstname", value: firstName },
           { name: "lastname", value: lastName },
           { name: "website", value: website || "" },
-          { name: "reason_for_call", value: reason },
+          { name: "reason_for_call", value: reasonForCall },
           { name: "decision_maker", value: decisionMaker },
           { name: "annualrevenue", value: numericRevenue.toString() },
-          { name: "message", value: description },
+          { name: "message", value: message },
         ],
         context: {
           pageUri: request.headers.get("referer") || "",
@@ -121,9 +145,9 @@ export async function POST(request: NextRequest) {
     if (hubspotAccessToken) {
       const reasonMapping: Record<string, string> = {
         "ai-transformation": "ai-transformation",
-        "ai-engineer": "ai-engineer",
-        "education": "ai-education",
-        "reselling": "reselling",
+        "custom-ai-engineer": "ai-engineer",
+        "educating-team": "ai-education",
+        "reselling-white-label": "reselling",
       };
 
       const contactData = {
@@ -132,10 +156,10 @@ export async function POST(request: NextRequest) {
           firstname: firstName,
           lastname: lastName,
           website: website || "",
-          reason_for_call: reasonMapping[reason] || reason,
+          reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
           decision_maker: decisionMaker,
           annualrevenue: numericRevenue.toString(),
-          message: description,
+          message,
         },
       };
 
@@ -192,7 +216,7 @@ export async function POST(request: NextRequest) {
             const noteData = {
               properties: {
                 hs_timestamp: new Date().toISOString(),
-                hs_note_body: description
+                hs_note_body: message
               },
               associations: [
                 {
@@ -233,7 +257,11 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: "Invalid form data", errors: error.errors },
+        {
+          message: "Invalid form data",
+          error: error.errors.map((e) => e.message).join("; "),
+          errors: error.errors,
+        },
         { status: 400 }
       );
     }

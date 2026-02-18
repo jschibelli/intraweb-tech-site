@@ -1,9 +1,16 @@
 {
-  "heading": "About",
-  "description": "IntraWeb Technologies is led by John Schibelli, a senior software engineer with extensive experience in automation, systems design, and operational tooling.\n\nJohn has spent years embedded in organizations redesigning how work moves through teams, implementing automation that actually gets used, and building systems that reduce coordination overhead without creating new dependencies.\n\nThis firm exists because most operational improvements fail not from bad ideas, but from abandoned execution. IntraWeb's model is designed to prevent that—by staying engaged long enough to make changes stick.",
+  "heading": "Our Mission",
+  "tagline": "We exist to close the gap between strategy and delivery—so your AI investments actually pay off.",
+  "description": "IntraWeb Technologies exists to own the middle ground between \"strategy\" and \"IT will figure it out.\" Too many AI pilots die in that gap. We focus on implementation—building systems that actually work in production, not just on paper. We're not trying to scale to hundreds of consultants. We work with a small number of companies so we can deliver real capability and measurable value from their AI and workflow investments.",
+  "bullets": [
+    "15+ years engineering—building production systems, not prototypes",
+    "Deep experience in workflow automation and process integration",
+    "SMB focus: based in New Jersey, working with growing companies nationally",
+    "Implementation over advice; outcomes over activity; transparency over polish"
+  ],
   "ctas": [
     {
-      "label": "Request a Diagnostic",
+      "label": "Start a Conversation",
       "href": "/contact"
     }
   ]

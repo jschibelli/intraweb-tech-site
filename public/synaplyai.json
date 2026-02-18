@@ -1,20 +1,16 @@
 {
-  "heading": "Start with a Paid Diagnostic",
-  "description": "We don't hand you a report and walk away. We stay engaged long enough to make improvements stick.",
+  "heading": "Ready to see if we're the right fit?",
+  "description": "2–3 weeks. You'll know exactly where automation will drive savings—and have a roadmap to act on.",
   "features": [
-    "Structured assessment of workflows, coordination points, and automation opportunities",
-    "Written roadmap that prioritizes high-impact improvements",
-    "Clear scope definition: what's worth fixing first and how we'd approach implementation",
-    "No sales theater—just clarity on what the work would solve"
+    "No commitment to ongoing work. If we're not the right fit to implement, we'll tell you.",
+    "Diagnostic delivers a prioritized roadmap you can act on immediately",
+    "Hands-on implementation—we build and deploy, not just advise",
+    "Tool-agnostic and outcome-focused"
   ],
   "ctas": [
     {
-      "label": "Request a Diagnostic",
-      "href": "#contact"
-    },
-    {
-      "label": "Email Us",
-      "href": "mailto:contact@intrawebtech.com"
+      "label": "Book a Diagnostic Call",
+      "href": "/contact"
     }
   ]
 }

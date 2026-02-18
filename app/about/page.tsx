@@ -1,19 +1,14 @@
 export const metadata = {
-  title: "About IntraWeb Technologies | AI-Powered Web Development",
-  description: "IntraWeb Technologies combines human expertise with AI capabilities to build high-performance web solutions for startups and enterprises.",
+  title: "About IntraWeb",
+  description: "IntraWeb Technologies helps SMBs close the gap between AI strategy and delivery. Implementation-focused, outcome-driven workflow automation and system integration.",
+  alternates: {
+    canonical: "/about",
+  },
   openGraph: {
-    title: "About IntraWeb Technologies",
-    description: "We build high-performance web solutions that blend innovative design with rock-solid technology.",
+    title: "About IntraWeb",
+    description: "We exist to close the gap between strategy and delivery—so your AI investments actually pay off.",
     type: "website",
     url: "https://intrawebtech.com/about",
-    images: [
-      {
-        url: "https://intrawebtech.com/images/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "IntraWeb Technologies",
-      },
-    ],
   },
 };
 

@@ -1,159 +1,154 @@
-import React from "react";
-import { Split, Lightbulb, Shield } from "lucide-react";
-import AboutForkDiagram from "@/components/AboutForkDiagram";
-import AboutEngagementComparison from "@/components/AboutEngagementComparison";
-import MismatchCallout from "@/components/MismatchCallout";
-import AboutProfileCard from "@/components/AboutProfileCard";
+"use client";
 
-export default function AboutPage() {
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import AboutSections from "@/components/AboutSections";
+import EntranceReveal from "@/components/ui/EntranceReveal";
+
+const team = [
+  {
+    name: "John Schibelli",
+    title: "Founder & COO",
+    image: "/john_shibelli.png",
+    bio: "John provides strategic vision, product direction, and final approvals for all projects. He is passionate about building innovative solutions that drive business growth.",
+  },
+  {
+    name: "Chris Weston",
+    title: "Senior Software Engineer",
+    image: "/ctw_bio_photo.png",
+    bio: "Chris architects scalable systems, drives full-stack development, and brings deep engineering expertise to every project.",
+  },
+];
+
+export default function AboutClient() {
+  const [expandedName, setExpandedName] = useState<string | null>(null);
+
+  const toggleBio = (name: string) => {
+    setExpandedName((prev) => (prev === name ? null : name));
+  };
+
   return (
-    <main className="min-h-screen bg-[#0a2236]">
-      <div className="mx-auto max-w-[800px] px-6 pt-12 pb-16 md:pt-16 md:pb-20 text-[17px] md:text-[18px] leading-[1.75] text-[#e0e0e0] font-sans">
-        <h1 className="text-3xl md:text-4xl font-medium text-white font-heading mb-10 md:mb-12">
-          About IntraWeb Technologies
-        </h1>
-
-        {/* Section 1: Institutional Position */}
-        <section className="space-y-4 mb-10 md:mb-12">
-          <p>
-            IntraWeb Technologies is a technology firm organized around two distinct operational tracks: AI Transformation and AI Engineering.
-          </p>
-          <p>
-            This structure exists because organizational AI problems and technical AI problems require different decision-making frameworks, different engagement models, and different expertise.
-          </p>
-          <p>
-            We do not blend these tracks. Organizations either need transformation work or they need engineering work. This structure exists to prevent misalignment at the outset of engagement.
-          </p>
-          <p>This is not a service menu. It is an operational filter.</p>
-        </section>
-
-        <div className="border-t border-[#13293d] mb-10 md:mb-12" />
-
-        {/* Section 2: Structural Logic */}
-        <section className="-mx-6 px-6 py-10 md:py-12 bg-[#0d2b42]">
-          <div className="mx-auto max-w-[800px]">
-            <div className="flex items-center gap-3 mb-6">
-              <Split className="w-6 h-6 text-[#14b8a6]" />
-              <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Structural Logic</h2>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              <p className="font-medium text-white">Why the fork exists:</p>
-              <p>
-                Most firms treat AI as a capability layer that can be applied uniformly across strategy and implementation. This creates misalignment.
-              </p>
-            </div>
-
-            <AboutForkDiagram />
-
-            <div className="space-y-4 mt-8">
-              <p>
-                These are not sequential phases of the same engagement. They are structurally different problems.
-              </p>
-              <p>
-                Organizations that attempt to solve transformation problems with engineering resources fail. Organizations that attempt to solve engineering problems with transformation consulting fail.
-              </p>
-              <p>The fork prevents both failure modes.</p>
-            </div>
-
-            <div className="space-y-6 pt-6">
-              <p className="font-medium text-white">How they relate:</p>
-              <p>
-                Transformation engagements may identify engineering requirements. Engineering engagements may surface transformation gaps. When this occurs, we refer to the appropriate track or disengage.
-              </p>
-              <p>We do not expand scope to capture both. The structural separation is the point.</p>
-            </div>
+    <main className="bg-[#0a2236] min-h-screen text-white">
+      {/* Hero Section */}
+      <EntranceReveal>
+        <section className="page-hero bg-[#0a2236]">
+          {/* More visible SVG + teal overlay */}
+          <div className="absolute inset-0 z-0 pointer-events-none select-none">
+            <div
+              style={{
+                backgroundImage: 'url(/pentagon-pattern.svg)',
+                backgroundRepeat: 'repeat',
+                backgroundSize: '80px 80px',
+                opacity: 0.6,
+                filter: 'contrast(2)'
+              }}
+              className="w-full h-full absolute inset-0"
+            />
+            <div className="w-full h-full absolute inset-0 bg-teal-500/20" />
+          </div>
+          <div className="page-hero-content container max-w-7xl mx-auto px-4 relative z-10 text-left sm:text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="page-hero-heading text-left sm:text-center"
+            >
+              Our Mission
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="page-hero-subheading max-w-3xl text-left sm:text-center mx-auto"
+            >
+              We exist to close the gap between strategy and delivery—so your AI investments actually pay off.
+            </motion.p>
           </div>
         </section>
+      </EntranceReveal>
 
-        <div className="border-t border-[#13293d]" />
+      {/* Main Content Sections */}
+      <EntranceReveal>
+        <AboutSections />
+      </EntranceReveal>
 
-        {/* Section 3: Belief System */}
-        <section className="space-y-6 mb-10 md:mb-12 pt-10 md:pt-12">
-          <div className="flex items-center gap-3 mb-2">
-            <Lightbulb className="w-6 h-6 text-[#14b8a6]" />
-            <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Belief System</h2>
-          </div>
-
-          <div className="space-y-6">
-            <p className="font-medium text-white">What most firms misunderstand about AI work:</p>
-            <p>AI is not a feature set. It is not a technology stack. It is not a consulting practice area.</p>
-            <p>AI work is systems work. It requires operational discipline, technical precision, and institutional patience.</p>
-
-            <p>The firms that fail do so because they:</p>
-            <ul className="list-disc pl-5 space-y-2 marker:text-[#14b8a6]">
-              <li>Treat AI adoption as a technology decision rather than an organizational design problem</li>
-              <li>Assume engineering capability implies transformation readiness</li>
-              <li>Conflate proof-of-concept success with production viability</li>
-              <li>Underestimate the compliance, governance, and ethical frameworks required for institutional AI</li>
-            </ul>
-          </div>
-
-          <div className="space-y-6 pt-6">
-            <p className="font-medium text-white">What we consider non-negotiable:</p>
-            <ul className="list-disc pl-5 space-y-2 marker:text-[#14b8a6]">
-              <li>AI systems must be auditable</li>
-              <li>AI work must include failure mode analysis</li>
-              <li>AI implementations must respect regulatory boundaries</li>
-              <li>AI transformation must account for organizational resistance</li>
-            </ul>
-
-            <p className="pt-2">
-              We do not pitch AI as efficiency magic. We do not promise transformation without redesign. We do not build systems that cannot be maintained.
-            </p>
-          </div>
-        </section>
-
-        <div className="border-t border-[#13293d]" />
-
-        {/* Section 4: Engagement Boundary */}
-        <section className="-mx-6 px-6 py-10 md:py-12 bg-[#0d2b42]">
-          <div className="mx-auto max-w-[800px]">
-            <div className="flex items-center gap-3 mb-6">
-              <Shield className="w-6 h-6 text-[#14b8a6]" />
-              <h2 className="text-xl md:text-2xl font-medium text-white font-heading">Engagement Boundary</h2>
-            </div>
-
-            <AboutEngagementComparison />
-
-            <div className="space-y-6 mt-8">
-              <p>
-                Transformation requires redesign. Engineering requires institutional commitment to maintenance and evolution.
-              </p>
-              <p>
-                AI systems require iterative development, failure analysis, and governance overhead that cannot be compressed.
-              </p>
-            </div>
-
-            <div className="space-y-6 pt-6">
-              <p className="font-medium text-white">Mismatch signals we decline:</p>
-
-              <MismatchCallout>
-                <ul className="space-y-2">
-                  <li className="flex gap-3"><span className="text-[#fb923c]">-</span><span>Requests for capability demonstrations before problem definition</span></li>
-                  <li className="flex gap-3"><span className="text-[#fb923c]">-</span><span>Expectation that AI will eliminate existing process friction without process redesign</span></li>
-                  <li className="flex gap-3"><span className="text-[#fb923c]">-</span><span>Unwillingness to assign internal decision-making authority to the engagement</span></li>
-                  <li className="flex gap-3"><span className="text-[#fb923c]">-</span><span>Treating compliance and governance as post-deployment considerations</span></li>
-                </ul>
-              </MismatchCallout>
-
-              <p className="pt-2">
-                Organizations that bifurcate responsibility, assigning strategy internally while outsourcing implementation, create unresolvable gaps. We do not accept engagements structured this way.
-              </p>
-              <p>
-                Organizations that expect AI systems to operate autonomously without human oversight frameworks are building liability, not capability. We do not build systems designed to avoid accountability.
-              </p>
-              <p>
-                We disengage when misalignment becomes structural. This is not a negotiation position. It is operational necessity.
-              </p>
+      {/* Who We Are Section */}
+      <EntranceReveal>
+        <section className="py-16 bg-[#13293d]">
+          <div className="container max-w-4xl mx-auto px-4">
+            <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-3xl md:text-4xl font-bold mb-2 text-white text-center">Who We Are</motion.h2>
+            <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="text-lg max-w-2xl mb-12 text-teal-100 text-center mx-auto">
+              A lean, senior team that ships—no layers, no hand-offs, no bloat.
+            </motion.p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 max-w-2xl mx-auto items-start">
+              {team.map((member, i) => (
+                <motion.div
+                  key={member.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-700"
+                >
+                  <div className="w-36 h-36 mb-5 rounded-full overflow-hidden border-4 border-teal-400 bg-gray-700">
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      width={144}
+                      height={144}
+                      className="object-cover w-full h-full"
+                      style={{ objectPosition: 'top' }}
+                      unoptimized
+                    />
+                  </div>
+                  <h3 className="text-2xl font-heading font-bold text-white mb-1">{member.name}</h3>
+                  <p className="text-teal-400 font-semibold text-lg mb-3">{member.title}</p>
+                  <div className="w-full">
+                    <button
+                      type="button"
+                      onClick={() => toggleBio(member.name)}
+                      className="flex items-center justify-center gap-1 w-full py-2 px-4 border border-teal-400 text-teal-400 hover:text-teal-300 hover:border-teal-300 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
+                      aria-expanded={expandedName === member.name}
+                      aria-controls={`bio-${member.name.replace(/\s+/g, "-")}`}
+                    >
+                      {expandedName === member.name ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" aria-hidden />
+                          Less
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" aria-hidden />
+                          Read more
+                        </>
+                      )}
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {expandedName === member.name && (
+                        <motion.div
+                          id={`bio-${member.name.replace(/\s+/g, "-")}`}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="text-gray-300 font-body pt-5 pb-2 text-left">{member.bio}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
-
-
-        {/* Profile Section */}
-        <AboutProfileCard />
-      </div>
+      </EntranceReveal>
     </main>
   );
-}
+} 

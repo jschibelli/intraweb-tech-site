@@ -3,11 +3,27 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 
+const OPEN_COOKIE_PREFERENCES_EVENT = 'openCookiePreferences';
+
+export function dispatchOpenCookiePreferences() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(OPEN_COOKIE_PREFERENCES_EVENT));
+  }
+}
+
 type ConsentCategories = {
   necessary: boolean;
   analytics: boolean;
   marketing: boolean;
 };
+
+function getConsentFromCookies(): ConsentCategories {
+  return {
+    necessary: true,
+    analytics: Cookies.get('cookie_consent_analytics') === 'true',
+    marketing: Cookies.get('cookie_consent_marketing') === 'true',
+  };
+}
 
 export function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(true); // Changed to true by default for testing
@@ -19,14 +35,22 @@ export function CookieConsentBanner() {
   });
 
   useEffect(() => {
-    console.log('CookieConsentBanner mounted');
     const hasConsent = Cookies.get('cookie_consent');
-    console.log('Has consent:', hasConsent);
     if (!hasConsent) {
       setShowBanner(true);
     } else {
-      setShowBanner(false);
+      setConsent(getConsentFromCookies());
     }
+  }, []);
+
+  useEffect(() => {
+    const handleOpenPreferences = () => {
+      setConsent(getConsentFromCookies());
+      setShowBanner(true);
+      setShowPreferences(true);
+    };
+    window.addEventListener(OPEN_COOKIE_PREFERENCES_EVENT, handleOpenPreferences);
+    return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES_EVENT, handleOpenPreferences);
   }, []);
 
   const handleAcceptAll = () => {

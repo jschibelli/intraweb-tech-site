@@ -32,6 +32,185 @@ h6 {
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Homepage entrance reveal (optimized: transform + opacity only) */
+.entrance-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--entrance-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.entrance-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrance-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
+
+/* Shared page hero system */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: clamp(24rem, 56vh, 42rem);
+  padding-top: clamp(4rem, 9vh, 7rem);
+  padding-bottom: clamp(3rem, 8vh, 6rem);
+}
+
+.page-hero-content {
+  width: 100%;
+}
+
+.page-hero-eyebrow {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(110 231 183 / 1);
+}
+
+.page-hero-heading {
+  font-family: "Montserrat", Arial, Helvetica, sans-serif;
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  line-height: 1.1;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.page-hero-subheading {
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.9);
+}
+
+/* Legal page prose (dark background) */
+.legal-prose-dark h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+.legal-prose-dark h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+.legal-prose-dark p {
+  color: #d1d5db;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.legal-prose-dark ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.legal-prose-dark ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.legal-prose-dark li {
+  color: #d1d5db;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+.legal-prose-dark strong {
+  font-weight: 600;
+  color: #fff;
+}
+.legal-prose-dark a {
+  color: #15B8A1;
+  text-decoration: none;
+}
+.legal-prose-dark a:hover {
+  text-decoration: underline;
+}
+.legal-prose-dark hr {
+  border: none;
+  border-top: 1px solid #374151;
+  margin: 2rem 0;
+}
+
+/* Hero spider web animation (How We Work) – draw, 5s hold, repeat */
+@keyframes heroWebRepeat {
+  0% {
+    stroke-dashoffset: 2800;
+    opacity: 0.2;
+  }
+  17% {
+    stroke-dashoffset: 0;
+    opacity: 0.6;
+  }
+  72% {
+    stroke-dashoffset: 0;
+    opacity: 0.5;
+  }
+  100% {
+    stroke-dashoffset: 2800;
+    opacity: 0.2;
+  }
+}
+
+@keyframes heroWebPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.hero-web-line {
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 1px;
+  fill: none;
+  stroke-dasharray: 2800;
+  stroke-dashoffset: 2800;
+  animation: heroWebRepeat 9s ease-in-out infinite;
+}
+
+.hero-web-line.hero-web-pulse {
+  animation: heroWebRepeat 9s ease-in-out infinite, heroWebPulse 4s ease-in-out 1.5s infinite;
+  animation-fill-mode: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-web-line {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 0.6;
+  }
+  .hero-web-line.hero-web-pulse {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* ========================================
