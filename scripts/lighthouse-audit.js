@@ -6,7 +6,6 @@ const path = require('path');
 const pages = [
   '/',
   '/about',
-  '/services',
   '/contact'
 ];
 

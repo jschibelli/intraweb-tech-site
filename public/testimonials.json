@@ -19,5 +19,12 @@
     "company": "EduNext",
     "quote": "Professional, responsive, and creative. I highly recommend IntraWeb for any web project.",
     "avatar": "https://randomuser.me/api/portraits/men/65.jpg"
+  },
+  {
+    "name": "Sarah Okonkwo",
+    "title": "Director of Operations",
+    "company": "NovaBridge",
+    "quote": "They didn't just build what we asked for—they helped us rethink our entire workflow. The automation savings alone paid for the engagement in three months.",
+    "avatar": "https://randomuser.me/api/portraits/women/68.jpg"
   }
 ] 

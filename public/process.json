@@ -1,27 +1,17 @@
 [
   {
-    "title": "Discovery",
-    "description": "We learn about your business, goals, and users to define project requirements.",
+    "title": "Diagnostic",
+    "description": "We map your workflows, identify where automation makes sense, and build a prioritized roadmap.",
     "icon": "Search"
   },
   {
-    "title": "Design",
-    "description": "We create wireframes and high-fidelity designs for a seamless user experience.",
-    "icon": "Pen"
-  },
-  {
-    "title": "Development",
-    "description": "Our engineers build robust, scalable solutions using modern technologies.",
+    "title": "Implementation",
+    "description": "We build and deploy the workflows—agent integrations, automation sequences, exception handling. Hands-on, not advisory.",
     "icon": "Code"
   },
   {
-    "title": "Launch",
-    "description": "We deploy, monitor, and optimize your product for a successful launch.",
-    "icon": "Rocket"
-  },
-  {
-    "title": "Support",
-    "description": "Ongoing support and improvements to ensure your continued success.",
+    "title": "Optimization",
+    "description": "Systems drift. We monitor, tune, and extend as your operations evolve.",
     "icon": "LifeBuoy"
   }
-] 
+]

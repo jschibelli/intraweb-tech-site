@@ -1,15 +1,21 @@
 {
-  "heading": "Your partner in digital transformation",
-  "tagline": "Engineering Your Digital Advantage",
-  "description": "We are a team of passionate engineers, designers, and strategists dedicated to building high-impact web solutions for ambitious businesses.",
+  "heading": "Our Mission",
+  "tagline": "We exist to close the gap between strategy and delivery—so your AI investments actually pay off.",
+  "description": "IntraWeb Technologies exists to own the middle ground between \"strategy\" and \"IT will figure it out.\" Too many AI pilots die in that gap. We focus on implementation—building systems that actually work in production, not just on paper. We're not trying to scale to hundreds of consultants. We work with a small number of companies so we can deliver real capability and measurable value from their AI and workflow investments.",
   "bullets": [
-    "20+ years of experience across industries",
-    "Full-service: strategy, design, development, support",
-    "Client-first, transparent process",
-    "Cutting-edge tech, proven results"
+    "15+ years engineering—building production systems, not prototypes",
+    "Deep experience in workflow automation and process integration",
+    "SMB focus: based in New Jersey, working with growing companies nationally",
+    "Implementation over advice; outcomes over activity; transparency over polish"
   ],
   "ctas": [
-    { "label": "Meet the Team", "href": "#team" },
-    { "label": "Contact Us", "href": "#contact" }
+    {
+      "label": "Meet the Team",
+      "href": "/team"
+    },
+    {
+      "label": "Start a Conversation",
+      "href": "/contact"
+    }
   ]
-} 
+}

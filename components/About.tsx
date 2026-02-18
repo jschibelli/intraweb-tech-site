@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface AboutContent {
@@ -9,6 +10,21 @@ interface AboutContent {
   bullets: string[];
   ctas: { label: string; href: string }[];
 }
+
+const team = [
+  {
+    name: "John Schibelli",
+    title: "Founder / CEO",
+    image: "/john_schibelli.jpg",
+    bio: "John provides strategic vision, product direction, and final approvals for all projects. He is passionate about building innovative solutions that drive business growth.",
+  },
+  {
+    name: "Chris Weston",
+    title: "Senior Software Engineer",
+    image: "/ctw_bio_photo.png",
+    bio: "Chris architects scalable systems, drives full-stack development, and brings deep engineering expertise to every project.",
+  },
+];
 
 export default function About() {
   const [content, setContent] = useState<AboutContent | null>(null);
@@ -23,11 +39,8 @@ export default function About() {
 
   return (
     <section id="about" className="relative bg-[#0a2236] py-16 md:py-24 overflow-hidden" style={{ backgroundImage: 'url(/hexagon-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>
-      {/* Top inside shadow */}
       <div className="absolute top-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 16px 32px -8px #0008'}} />
-      {/* Bottom inside shadow */}
       <div className="absolute bottom-0 left-0 w-full h-10 md:h-16 pointer-events-none select-none" style={{boxShadow: 'inset 0 -16px 32px -8px #0008'}} />
-      {/* SVG Wave Top */}
       <div className="absolute top-0 left-0 w-full -z-10" aria-hidden="true">
         <svg viewBox="0 0 1440 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-32 md:h-40">
           <defs>
@@ -43,7 +56,7 @@ export default function About() {
         <h2 className="text-3xl text-teal-400 md:text-4xl font-heading font-bold mb-2">{content.heading}</h2>
         <p className="text-lg text-white font-semibold mb-4">{content.tagline}</p>
         <p className="text-gray-300 font-body mb-8">{content.description}</p>
-        <ul className="text-left max-w-xl mx-auto mb-8 space-y-2">
+        <ul className="text-left max-w-xl mx-auto mb-10 space-y-2">
           {content.bullets.map((item, i) => (
             <li key={i} className="flex items-start gap-2 text-gray-200">
               <span className="mt-1 w-2 h-2 rounded-full bg-teal-400 inline-block" />
@@ -51,12 +64,39 @@ export default function About() {
             </li>
           ))}
         </ul>
+
+        <h3 className="text-2xl md:text-3xl font-heading font-bold text-white mb-2">Who We Are</h3>
+        <p className="text-gray-300 font-body mb-10 max-w-2xl mx-auto">
+          A lean, senior team that ships—no layers, no hand-offs, no bloat.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto mb-10">
+          {team.map((member) => (
+            <div key={member.name} className="bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center border border-gray-700">
+              <div className="w-36 h-36 mb-5 rounded-full overflow-hidden border-4 border-teal-400 bg-gray-700">
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  width={144}
+                  height={144}
+                  className="object-cover w-full h-full"
+                  style={{ objectPosition: 'top' }}
+                  unoptimized
+                />
+              </div>
+              <h4 className="text-2xl font-heading font-bold text-white mb-1">{member.name}</h4>
+              <p className="text-teal-400 font-semibold text-lg mb-3">{member.title}</p>
+              <p className="text-gray-300 font-body">{member.bio}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/team"
+            href="/contact"
             className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
-            Meet Our Team
+            Start a Conversation
           </Link>
         </div>
       </div>

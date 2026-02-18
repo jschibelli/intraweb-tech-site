@@ -1,37 +1,58 @@
 import Hero from "../components/Hero";
+import ProblemStatement from "../components/ProblemStatement";
 import Services from "../components/Services";
 import { StatsSection } from "../components/StatsSection";
 import Process from "../components/Process";
-import About from "../components/About";
+import Differentiators from "../components/Differentiators";
+import TargetClient from "../components/TargetClient";
 import Testimonials from "../components/Testimonials";
 import SynaplyAI from "../components/SynaplyAI";
 import FAQ from "../components/FAQ";
-import projectsData from "@/data/projects.json";
+import EntranceReveal from "../components/ui/EntranceReveal";
 
 export default function Home() {
   return (
     <main>
-      <Hero />
+      <EntranceReveal>
+        <Hero />
+      </EntranceReveal>
+      <EntranceReveal delayMs={40}>
+        <ProblemStatement />
+      </EntranceReveal>
       <section id="services">
-        <Services />
+        <EntranceReveal>
+          <Services />
+        </EntranceReveal>
       </section>
       <section id="stats">
-        <StatsSection />
+        <EntranceReveal>
+          <StatsSection />
+        </EntranceReveal>
       </section>
       <section id="process">
-        <Process />
+        <EntranceReveal>
+          <Process />
+        </EntranceReveal>
       </section>
-      <section id="about">
-        <About />
-      </section>
+      <EntranceReveal>
+        <Differentiators />
+      </EntranceReveal>
+      <EntranceReveal>
+        <TargetClient />
+      </EntranceReveal>
       <section id="testimonials">
-        <Testimonials />
+        <EntranceReveal>
+          <Testimonials />
+        </EntranceReveal>
       </section>
-      <SynaplyAI />
+      <EntranceReveal>
+        <SynaplyAI />
+      </EntranceReveal>
       <section id="faq">
-        <FAQ />
+        <EntranceReveal>
+          <FAQ />
+        </EntranceReveal>
       </section>
-      {/* Services section will be added here next */}
     </main>
   );
 }

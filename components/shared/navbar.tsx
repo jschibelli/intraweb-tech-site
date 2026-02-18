@@ -1,17 +1,16 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import Image from 'next/image';
 
 const navLinks = [
   { name: "Home", href: "/" },
+  { name: "How We Work", href: "/process" },
   { name: "About", href: "/about" },
-  { name: "Our Team", href: "/team" },
-  { name: "Process", href: "/process" },
-  { name: "Services", href: "/services" },
-  // { name: "Work", href: "/portfolio" },
+  { name: "Agent Readiness", href: "/agent-readiness" },
+  { name: "Implementation", href: "/implementation" },
   { name: "FAQ", href: "/faq" },
 ];
 
@@ -19,6 +18,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("Home");
+  const animationFrameRef = useRef<number | null>(null);
   const pathname = usePathname();
   const isHome = pathname === "/";
 
@@ -50,21 +50,62 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
 
-  // Helper for smooth scroll
-  const handleSmoothScroll = (e: React.MouseEvent, href: string) => {
-    e.preventDefault();
-    if (href === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  const smoothScrollTo = (targetY: number, duration = 650) => {
+    if (animationFrameRef.current) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    const startY = window.scrollY;
+    const distance = targetY - startY;
+    const start = performance.now();
+
+    const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+    const step = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      window.scrollTo(0, startY + distance * eased);
+
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(step);
+  };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Smooth top scroll when already on homepage.
+    if (href === "/" && isHome) {
+      e.preventDefault();
+      smoothScrollTo(0);
       setActiveSection("Home");
-    } else {
+      setMenuOpen(false);
+      return;
+    }
+
+    // Smooth offset scrolling for in-page anchors.
+    if (href.startsWith("#")) {
+      e.preventDefault();
       const id = href.replace("#", "");
       const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-        setActiveSection(id.charAt(0).toUpperCase() + id.slice(1));
-      }
+      if (!el) return;
+
+      const navOffset = 88;
+      const targetY = Math.max(el.getBoundingClientRect().top + window.scrollY - navOffset, 0);
+      smoothScrollTo(targetY);
+      setActiveSection(id.charAt(0).toUpperCase() + id.slice(1));
+      setMenuOpen(false);
     }
-    setMenuOpen(false);
   };
 
   return (
@@ -84,6 +125,7 @@ export default function Navbar() {
               <Link
                 href={link.href}
                 className={`hover:text-teal-400 transition-colors ${pathname === link.href ? "text-teal-400 font-semibold" : ""}`}
+                onClick={(e) => handleNavClick(e, link.href)}
               >
                 {link.name}
               </Link>
@@ -91,7 +133,7 @@ export default function Navbar() {
           ))}
           <li>
             <Link href="/contact" className="ml-4 px-5 py-2 rounded bg-orange-500 text-white font-semibold hover:bg-teal-500 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-              Contact Us
+              Contact
             </Link>
           </li>
         </ul>
@@ -113,7 +155,12 @@ export default function Navbar() {
                 <Link
                   href={link.href}
                   className={`block py-2 px-2 rounded hover:bg-teal-500 hover:text-white transition-colors ${pathname === link.href ? "text-teal-400 font-semibold" : ""}`}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(e, link.href);
+                    if (!link.href.startsWith("#") && !(link.href === "/" && isHome)) {
+                      setMenuOpen(false);
+                    }
+                  }}
                 >
                   {link.name}
                 </Link>
@@ -125,7 +172,7 @@ export default function Navbar() {
                 className="block py-2 px-2 rounded bg-orange-500 text-white font-semibold hover:bg-teal-500 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                 onClick={() => setMenuOpen(false)}
               >
-                Contact Us
+                Contact
               </Link>
             </li>
           </ul>

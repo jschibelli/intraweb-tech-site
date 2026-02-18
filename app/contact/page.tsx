@@ -1,71 +1,74 @@
 "use client";
 import ContactForm from "@/components/shared/contact-form";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
+import EntranceReveal from "@/components/ui/EntranceReveal";
 
 export default function ContactPage() {
   return (
     <main className="bg-gray-900 text-white">
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden" style={{ backgroundImage: 'url(/circuit-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>
-        <div className="absolute inset-0 pointer-events-none select-none">
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-500 opacity-20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-orange-500 opacity-20 rounded-full blur-3xl" />
-        </div>
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">Get in Touch</h1>
-          <p className="text-xl md:text-2xl text-teal-400 font-semibold mb-4">Let's discuss your project</p>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Have a question or want to work together? We'd love to hear from you. Fill out the form below or use our contact information.
-          </p>
-        </div>
-      </section>
+      <EntranceReveal>
+        <section className="page-hero" style={{ backgroundImage: 'url(/circuit-pattern.svg)', backgroundRepeat: 'repeat', backgroundSize: 'auto' }}>
+          <div className="absolute inset-0 pointer-events-none select-none">
+            <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-500 opacity-20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-orange-500 opacity-20 rounded-full blur-3xl" />
+          </div>
+          <div className="page-hero-content max-w-5xl mx-auto px-4 text-center">
+            <h1 className="page-hero-heading">Ready to transform your business?</h1>
+            <p className="page-hero-subheading font-body mb-4">Request a diagnostic</p>
+            <p className="text-base md:text-lg text-white/80 max-w-3xl mx-auto">
+              Request a diagnostic to bridge the gap between strategy and execution. We provide the specialized engineering firepower and architectural guidance you need to turn AI concepts into high-impact production systems.
+            </p>
+          </div>
+        </section>
+      </EntranceReveal>
 
       {/* Contact Section */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-2xl font-heading font-bold mb-8">Contact Information</h2>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <Mail className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <a href="mailto:info@intrawebtech.com" className="text-gray-300 hover:text-teal-400 transition-colors">
-                      info@intrawebtech.com
-                    </a>
+      <EntranceReveal>
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Contact Information */}
+              <div>
+                <h2 className="text-2xl font-heading font-bold mb-8">Contact Information</h2>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <Mail className="w-6 h-6 text-teal-400 mt-1" />
+                    <div>
+                      <h3 className="font-semibold mb-1">Prefer email?</h3>
+                      <a href="mailto:human@intrawebtech.com" className="text-gray-300 hover:text-teal-400 transition-colors">
+                        human@intrawebtech.com
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <MapPin className="w-6 h-6 text-teal-400 mt-1" />
+                    <div>
+                      <h3 className="font-semibold mb-1">Location</h3>
+                      <p className="text-gray-300">Based in New Jersey</p>
+                      <p className="text-gray-300 text-sm">Working with companies nationally</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
-                  <Phone className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <a href="tel:+18622079004" className="text-gray-300 hover:text-teal-400 transition-colors">
-                      (862) 207-9004
-                    </a>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <MapPin className="w-6 h-6 text-teal-400 mt-1" />
-                  <div>
-                    <h3 className="font-semibold mb-1">Location</h3>
-                    <p className="text-gray-300">
-                      Towaco, New Jersey
-                    </p>
-                  </div>
+                <div className="mt-8 p-4 rounded-lg bg-gray-800 border border-gray-700">
+                  <h3 className="font-semibold mb-3 text-teal-400">What you get</h3>
+                  <ul className="space-y-2 text-gray-300 text-sm">
+                    <li>Identify and resolve the structural bottlenecks limiting your AI adoption</li>
+                    <li>Bypass recruitment cycles with immediate access to senior AI systems engineers</li>
+                    <li>Ship robust, custom infrastructure tailored to your specific operational reality</li>
+                  </ul>
                 </div>
               </div>
-            </div>
 
-            {/* Contact Form */}
-            <div>
-              <h2 className="text-2xl font-heading font-bold mb-8">Send us a Message</h2>
-              <ContactForm />
+              {/* Contact Form */}
+              <div>
+                <h2 className="text-2xl font-heading font-bold mb-8">Request a Diagnostic</h2>
+                <ContactForm />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </EntranceReveal>
     </main>
   );
-} 
+}

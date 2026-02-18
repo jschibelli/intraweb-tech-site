@@ -1,22 +1,22 @@
 [
   {
-    "title": "Web App Development",
-    "description": "Robust, scalable web applications tailored to your business goals.",
+    "title": "Automated Workflow Sequences",
+    "description": "Approvals, routing, escalation—the multi-step processes that currently require manual coordination.",
     "icon": "Code"
   },
   {
-    "title": "UI/UX Design",
-    "description": "Intuitive, beautiful interfaces that delight users and drive results.",
-    "icon": "Palette"
+    "title": "Agent Integrations",
+    "description": "Connecting your AI tools to your systems with proper error handling and fallbacks.",
+    "icon": "Sparkles"
   },
   {
-    "title": "Cloud & DevOps",
-    "description": "Modern cloud infrastructure and automation for performance and reliability.",
+    "title": "Exception Handling Logic",
+    "description": "What happens when automation fails. Alerts, fallbacks, human-in-the-loop escalation.",
     "icon": "Cloud"
   },
   {
-    "title": "AI Solutions",
-    "description": "Leverage artificial intelligence to automate, analyze, and innovate your business processes.",
-    "icon": "Sparkles"
+    "title": "Documentation & Handoff",
+    "description": "Everything written down so your team can maintain and extend it.",
+    "icon": "Palette"
   }
-] 
+]

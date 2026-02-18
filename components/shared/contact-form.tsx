@@ -3,24 +3,48 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
+const reasonOptions = [
+  { value: "", label: "Select..." },
+  { value: "ai-transformation", label: "AI Transformation" },
+  { value: "custom-ai-engineer", label: "Developing custom AI solutions / AI Engineer" },
+  { value: "educating-team", label: "Educating your team on AI" },
+  { value: "reselling-white-label", label: "Re-selling/white-label your solutions" },
+];
+
+const decisionMakerOptions = [
+  { value: "", label: "Select..." },
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
+const annualRevenueOptions = [
+  { value: "", label: "Select revenue range" },
+  { value: "less-than-100k", label: "Less than $100K" },
+  { value: "100k-500k", label: "$100K - $500K" },
+  { value: "500k-1m", label: "$500K - $1M" },
+  { value: "1m-5m", label: "$1M - $5M" },
+  { value: "5m-10m", label: "$5M - $10M" },
+  { value: "10m-plus", label: "$10M+" },
+  { value: "prefer-not", label: "Prefer not to say" },
+];
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  company: z.string().optional(),
-  service: z.string().optional(),
-  message: z.string().min(10, "Message must be at least 10 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  website: z.string().min(1, "Website is required"),
+  reasonForCall: z.string().min(1, "Please select a reason"),
+  email: z.string().email("Please enter a valid email"),
+  decisionMaker: z.string().min(1, "Please select an option"),
+  annualRevenue: z.string().min(1, "Please select a revenue range"),
+  numberOfEmployees: z.string().optional(),
+  message: z.string().min(1, "Message is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-const services = [
-  "Web App Development",
-  "UI/UX Design",
-  "Cloud & DevOps",
-  "AI Solutions",
-];
+const inputStyles =
+  "w-full px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent";
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +60,17 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      website: "",
+      reasonForCall: "",
+      email: "",
+      decisionMaker: "",
+      annualRevenue: "",
+      numberOfEmployees: "",
+      message: "",
+    },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -44,23 +79,32 @@ export default function ContactForm() {
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          website: data.website,
+          reasonForCall: data.reasonForCall,
+          email: data.email,
+          decisionMaker: data.decisionMaker,
+          annualRevenue: data.annualRevenue,
+          numberOfEmployees: data.numberOfEmployees || "",
+          message: data.message,
+        }),
       });
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || "Submission failed");
       }
       setSubmitStatus({
         type: "success",
-        message: "Thank you for your message! We'll get back to you soon.",
+        message: "We'll review your submission within 1 business day and get back to you.",
       });
       reset();
     } catch (error) {
       setSubmitStatus({
         type: "error",
-        message: "Failed to send message. Please try again later.",
+        message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -68,13 +112,13 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       {submitStatus && (
         <div
           className={`p-4 rounded-md ${
             submitStatus.type === "success"
-              ? "bg-teal-50 text-teal-600"
-              : "bg-red-50 text-red-600"
+              ? "bg-teal-500/20 text-teal-300 border border-teal-500/50"
+              : "bg-red-500/20 text-red-300 border border-red-500/50"
           }`}
         >
           {submitStatus.message}
@@ -82,91 +126,178 @@ export default function ContactForm() {
       )}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-1">
-          Name *
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          First Name <span className="text-red-400">*</span>
         </label>
         <input
-          {...register("name")}
+          {...register("firstName")}
           type="text"
-          id="name"
-          className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          placeholder="Your name"
+          id="firstName"
+          placeholder="Your first name"
+          className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.firstName}
         />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>
+        {errors.firstName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.firstName.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
-          Email *
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Last Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("lastName")}
+          type="text"
+          id="lastName"
+          placeholder="Your last name"
+          className={`${inputStyles} ${errors.lastName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.lastName}
+        />
+        {errors.lastName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Please provide your website <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("website")}
+          type="url"
+          id="website"
+          placeholder="https://"
+          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.website}
+        />
+        {errors.website && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="reasonForCall" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Which best describes the reason for the call? <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("reasonForCall")}
+          id="reasonForCall"
+          className={`${inputStyles} ${errors.reasonForCall ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.reasonForCall}
+        >
+          {reasonOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.reasonForCall && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.reasonForCall.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1.5">
+          What is your email? <span className="text-red-400">*</span>
         </label>
         <input
           {...register("email")}
           type="email"
           id="email"
-          className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          placeholder="your.email@example.com"
+          placeholder="you@company.com"
+          className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.email}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.email.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="company" className="block text-sm font-medium text-gray-200 mb-1">
-          Company
-        </label>
-        <input
-          {...register("company")}
-          type="text"
-          id="company"
-          className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          placeholder="Your company name"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="service" className="block text-sm font-medium text-gray-200 mb-1">
-          Service Interested In
+        <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Are you the only decision maker? <span className="text-red-400">*</span>
         </label>
         <select
-          {...register("service")}
-          id="service"
-          className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          {...register("decisionMaker")}
+          id="decisionMaker"
+          className={`${inputStyles} ${errors.decisionMaker ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.decisionMaker}
         >
-          <option value="">Select a service</option>
-          {services.map((service) => (
-            <option key={service} value={service}>
-              {service}
+          {decisionMakerOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
+        {errors.decisionMaker && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.decisionMaker.message}</p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1">
-          Message *
+        <label htmlFor="annualRevenue" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company revenue <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("annualRevenue")}
+          id="annualRevenue"
+          className={`${inputStyles} ${errors.annualRevenue ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.annualRevenue}
+        >
+          {annualRevenueOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.annualRevenue && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.annualRevenue.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="numberOfEmployees" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company size (employees)
+        </label>
+        <input
+          {...register("numberOfEmployees")}
+          type="number"
+          id="numberOfEmployees"
+          min={0}
+          placeholder="e.g. 50"
+          className={inputStyles}
+          aria-describedby="numberOfEmployees-hint"
+        />
+        <p id="numberOfEmployees-hint" className="text-sm text-gray-400 mt-1">
+          Optional. Helps us prioritize follow-up (ICP: 10–150).
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Message <span className="text-red-400">*</span>
         </label>
         <textarea
           {...register("message")}
           id="message"
-          rows={4}
-          className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          placeholder="Tell us about your project"
+          rows={5}
+          placeholder="Tell us about your goals and challenges..."
+          className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.message}
         />
         {errors.message && (
-          <p className="mt-1 text-sm text-red-400">{errors.message.message}</p>
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.message.message}</p>
         )}
       </div>
 
       <button
         type="submit"
-        className="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-6 py-3 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={isSubmitting}
       >
         {isSubmitting ? "Sending..." : "Send Message"}
       </button>
     </form>
   );
-} 
+}

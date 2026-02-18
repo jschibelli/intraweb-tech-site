@@ -215,7 +215,7 @@
       ],
       "team": {
         "human": [
-          {"role": "Product Manager", "name": "Alex Reyes"},
+          {"role": "Senior Software Engineer", "name": "Chris Weston"},
           {"role": "Lead Developer", "name": "Nico Alvarez"}
         ],
         "ai": [

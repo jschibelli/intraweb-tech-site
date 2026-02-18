@@ -1,14 +1,16 @@
 {
-  "heading": "Introducing SynaplyAI",
-  "description": "AI-powered automation and insights for your business workflows. Unlock new levels of efficiency and innovation.",
+  "heading": "Ready to see if we're the right fit?",
+  "description": "2–3 weeks. You'll know exactly where automation will drive savings—and have a roadmap to act on.",
   "features": [
-    "Automate repetitive tasks with smart workflows",
-    "Real-time analytics and actionable insights",
-    "Seamless integration with your existing tools",
-    "Enterprise-grade security and compliance"
+    "No commitment to ongoing work. If we're not the right fit to implement, we'll tell you.",
+    "Diagnostic delivers a prioritized roadmap you can act on immediately",
+    "Hands-on implementation—we build and deploy, not just advise",
+    "Tool-agnostic and outcome-focused"
   ],
   "ctas": [
-    { "label": "Learn More", "href": "#synaplyai-details" },
-    { "label": "Request a Demo", "href": "#contact" }
+    {
+      "label": "Book a Diagnostic Call",
+      "href": "/contact"
+    }
   ]
-} 
+}

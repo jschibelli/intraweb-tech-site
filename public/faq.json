@@ -1,22 +1,22 @@
 [
   {
-    "question": "What services does IntraWeb Technologies offer?",
-    "answer": "We provide end-to-end web development, UI/UX design, cloud & DevOps, and AI-powered solutions tailored to your business needs."
+    "question": "What is the diagnostic?",
+    "answer": "A 2–3 week engagement where we map your workflows, identify where automation makes sense, and build a prioritized roadmap. You'll know exactly where automation will drive savings—and have a plan to act on. No commitment to ongoing work."
   },
   {
-    "question": "How long does a typical project take?",
-    "answer": "Most projects are completed in 4–8 weeks, depending on complexity and requirements. We provide a detailed timeline after our initial discovery call."
+    "question": "How long does implementation take?",
+    "answer": "We work on a 6-month minimum retainer after the diagnostic. Scope is defined by diagnostic findings. We build and deploy workflows—agent integrations, automation sequences, exception handling—hands-on, not advisory."
   },
   {
-    "question": "Do you work with startups and enterprises?",
-    "answer": "Yes! We partner with organizations of all sizes, from early-stage startups to established enterprises."
+    "question": "Who is IntraWeb right for?",
+    "answer": "Operations-heavy SMBs (20–150 employees) with complex internal workflows, already using AI tools but not seeing returns, or operations leaders dealing with coordination overhead. We're not a fit for one-time projects, chatbot-only needs, or very small teams under 20."
   },
   {
-    "question": "What is your process for getting started?",
-    "answer": "We begin with a discovery call to understand your goals, then move to design, development, launch, and ongoing support."
+    "question": "What sets you apart from consultants or dev shops?",
+    "answer": "We're the implementation layer between your AI tools and your P&L. We stick around until it works—hands-on workflow build and deployment, tool-agnostic and outcome-focused. We don't stop at recommendations or build without understanding operations."
   },
   {
-    "question": "How do I request a quote or consultation?",
-    "answer": "Simply fill out our contact form or email us directly. We'll respond within 1 business day to schedule a call."
+    "question": "How do I get started?",
+    "answer": "Request a diagnostic call via our contact form. We'll respond within 1 business day to schedule. No pitch, no pressure—we'll tell you if we're not the right fit to implement."
   }
-] 
+]

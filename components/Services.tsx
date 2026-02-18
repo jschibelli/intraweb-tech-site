@@ -29,7 +29,7 @@ export default function Services() {
   return (
     <section id="services" className="bg-[#111827] text-white py-16 md:py-24">
       <div className="max-w-5xl mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-heading font-bold mb-10 text-teal-400 text-center">Comprehensive technology solutions driving your business forward</h2>
+        <h2 className="text-3xl md:text-4xl font-heading font-bold mb-10 text-teal-400 text-center">Hands-on workflow automation and agent integration</h2>
         {/* <p className="text-lg md:text-xl text-teal-100 text-left md:text-center mb-6">Comprehensive technology solutions to drive your business forward</p> */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {services.map((service, i) => {
@@ -55,10 +55,10 @@ export default function Services() {
         </div>
         <div className="flex justify-center">
           <Link
-            href="/services"
+            href="/contact"
             className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
-            Explore Our Services
+            Start with a Diagnostic
           </Link>
         </div>
       </div>

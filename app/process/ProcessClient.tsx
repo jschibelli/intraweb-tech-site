@@ -97,6 +97,7 @@ export default function ProcessClient({ project }: ProcessClientProps) {
       {/* Hero Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white text-center">
         <div className="max-w-3xl mx-auto px-4">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-teal-200">Our Process</p>
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">{project.name}</h1>
           <p className="text-lg md:text-2xl font-body mb-6 text-white/90">{project.summary}</p>
         </div>
@@ -136,8 +137,8 @@ export default function ProcessClient({ project }: ProcessClientProps) {
               top: clientCenterY - cardHeight / 2,
               width: cardWidth,
               height: cardHeight,
-              boxShadow: '0 0 32px 0 #F59E0B88, 0 0 0 3px #F59E0B',
-              border: '1px solid #F59E0B',
+              boxShadow: '0 0 32px 0 #F9731688, 0 0 0 3px #F97316',
+              border: '1px solid #F97316',
               aspectRatio: '1 / 1',
               display: 'flex',
               flexDirection: 'column',
@@ -145,7 +146,7 @@ export default function ProcessClient({ project }: ProcessClientProps) {
               justifyContent: 'center',
             }}
           >
-            <span className="flex items-center justify-center rounded-full shadow-md mb-3" style={{ width: iconCircle, height: iconCircle, background: '#F59E0B', aspectRatio: '1 / 1' }}>
+            <span className="flex items-center justify-center rounded-full shadow-md mb-3" style={{ width: iconCircle, height: iconCircle, background: '#F97316', aspectRatio: '1 / 1' }}>
               <User size={iconSize} color="#fff" />
             </span>
             <h3 className="font-heading font-bold mb-0 text-white text-center whitespace-nowrap" style={{ fontSize: headingFontSize, marginTop: 2, letterSpacing: 0.2, lineHeight: 1.1 }}>Client</h3>

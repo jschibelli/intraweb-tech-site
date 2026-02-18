@@ -1,19 +1,13 @@
 {
-  "heading": "Empowering Digital Innovation",
-  "subheading": "Custom web solutions for ambitious businesses. We design, build, and scale high-performance digital products.",
+  "heading": "95% of AI pilots fail to deliver ROI. We fix that.",
+  "subheading": "IntraWeb helps SMBs turn AI tool adoption into operational savings and reduce coordination overhead.",
   "cta": {
-    "label": "Get Started",
-    "href": "#contact"
+    "label": "Start with a Diagnostic",
+    "href": "/contact"
   },
   "announcement": {
-    "label": "Introducing SynaplyAI",
-    "href": "#synaplyai"
+    "label": "AI Implementation That Actually Works",
+    "href": "/contact"
   },
-  "clientLogos": [
-    { "src": "/globe.svg", "alt": "Client 1" },
-    { "src": "/file.svg", "alt": "Client 2" },
-    { "src": "/window.svg", "alt": "Client 3" },
-    { "src": "/next.svg", "alt": "Client 4" },
-    { "src": "/vercel.svg", "alt": "Client 5" }
-  ]
-} 
+  "clientLogos": []
+}
