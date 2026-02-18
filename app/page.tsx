@@ -1,15 +1,20 @@
+import dynamic from "next/dynamic";
 import Hero from "../components/Hero";
-import ProblemStatement from "../components/ProblemStatement";
-import Services from "../components/Services";
-import { StatsSection } from "../components/StatsSection";
-import Process from "../components/Process";
-import Differentiators from "../components/Differentiators";
-import TargetClient from "../components/TargetClient";
-import Testimonials from "../components/Testimonials";
-import SynaplyAI from "../components/SynaplyAI";
-import FAQ from "../components/FAQ";
 import EntranceReveal from "../components/ui/EntranceReveal";
 import type { Metadata } from "next";
+import heroContent from "../data/hero.json";
+
+const ProblemStatement = dynamic(() => import("../components/ProblemStatement"), { ssr: true });
+const Services = dynamic(() => import("../components/Services"), { ssr: true });
+const StatsSection = dynamic(() => import("../components/StatsSection").then((m) => m.StatsSection), {
+  ssr: true,
+});
+const Process = dynamic(() => import("../components/Process"), { ssr: true });
+const Differentiators = dynamic(() => import("../components/Differentiators"), { ssr: true });
+const TargetClient = dynamic(() => import("../components/TargetClient"), { ssr: true });
+const Testimonials = dynamic(() => import("../components/Testimonials"), { ssr: true });
+const SynaplyAI = dynamic(() => import("../components/SynaplyAI"), { ssr: true });
+const FAQ = dynamic(() => import("../components/FAQ"), { ssr: true });
 
 export const metadata: Metadata = {
   title: "AI Implementation That Actually Works",
@@ -23,9 +28,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main>
-      <EntranceReveal>
-        <Hero />
-      </EntranceReveal>
+      <Hero content={heroContent as import("../components/Hero").HeroContent} />
       <EntranceReveal delayMs={40}>
         <ProblemStatement />
       </EntranceReveal>

@@ -7,11 +7,13 @@ import Testimonials from "../../components/Testimonials";
 import SynaplyAI from "../../components/SynaplyAI";
 import FAQ from "../../components/FAQ";
 import projectsData from "@/data/projects.json";
+import heroContent from "../../data/hero.json";
+import type { HeroContent } from "../../components/Hero";
 
 export default function AITransformationPage() {
     return (
         <main>
-            <Hero />
+            <Hero content={heroContent as HeroContent} />
             <section id="services">
                 <Services />
             </section>

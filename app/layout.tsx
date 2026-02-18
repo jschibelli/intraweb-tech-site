@@ -1,9 +1,24 @@
 import "./globals.css";
+import { Montserrat, Roboto } from "next/font/google";
 import Navbar from "../components/shared/navbar";
 import { Footer } from "../components/Footer";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import { CookieConsentBanner } from "../components/CookieConsentBanner";
 import type { Metadata } from "next";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-montserrat",
+});
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://intrawebtech.com"),
@@ -58,7 +73,7 @@ return (
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
-      <body className="antialiased">
+      <body className={`${roboto.className} ${montserrat.variable} ${roboto.variable} antialiased`}>
         <GoogleAnalytics />
         <Navbar />
         {children}

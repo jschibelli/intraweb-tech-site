@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;500;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,8 +16,7 @@
 
 body {
   background: var(--background);
-  /* color: var(--foreground); */
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+  font-family: var(--font-roboto), Arial, Helvetica, sans-serif;
 }
 
 h1,
@@ -27,7 +25,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
 }
 
 html {
@@ -39,6 +37,34 @@ html {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Hero decorative orbs (CSS-only, no JS) – respects reduced motion */
+@keyframes heroOrbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(40px, 20px); }
+}
+@keyframes heroOrbFloatAlt {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-40px, -20px); }
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.2;
+  will-change: transform;
+}
+.hero-orb-teal {
+  background: #14b8a6;
+  animation: heroOrbFloat 8s ease-in-out infinite;
+}
+.hero-orb-orange {
+  background: #f97316;
+  animation: heroOrbFloatAlt 10s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb { animation: none !important; }
 }
 
 /* Homepage entrance reveal (optimized: transform + opacity only) */
@@ -91,7 +117,7 @@ html {
 }
 
 .page-hero-heading {
-  font-family: "Montserrat", Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
   font-size: clamp(2.25rem, 6vw, 3.75rem);
   line-height: 1.1;
   font-weight: 700;
