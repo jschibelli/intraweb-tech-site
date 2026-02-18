@@ -3,6 +3,16 @@ import Link from "next/link";
 import projectsData from "@/data/projects.json";
 import ProjectCard from "@/components/portfolio/ProjectCard";
 import EntranceReveal from "@/components/ui/EntranceReveal";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Portfolio",
+  description:
+    "Review IntraWeb portfolio case studies showing workflow automation, system integration, and measurable operational outcomes.",
+  alternates: {
+    canonical: "/portfolio",
+  },
+};
 
 export default function PortfolioPage() {
   return (

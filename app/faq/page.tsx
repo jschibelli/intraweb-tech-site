@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import Script from "next/script";
 import EntranceReveal from "@/components/ui/EntranceReveal";
+import faqData from "@/public/faq.json";
 
 interface FAQItem {
   question: string;
@@ -10,25 +12,28 @@ interface FAQItem {
 }
 
 export default function FAQPage() {
-  const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [open, setOpen] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch("/faq.json")
-      .then((res) => res.json())
-      .then(setFaqs)
-      .catch(() => {
-        // fallback placeholder
-        setFaqs([
-          { question: "What services do you offer?", answer: "We offer web app development, UI/UX design, cloud & DevOps, and AI solutions." },
-          { question: "How do I get started?", answer: "Contact us through our form or schedule a free consultation call." },
-          { question: "What is your process?", answer: "We follow a proven process: discovery, design, development, launch, and support." },
-        ]);
-      });
-  }, []);
+  const faqs = faqData as FAQItem[];
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
 
   return (
     <main className="bg-gray-900 text-white min-h-screen">
+      <Script
+        id="faq-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Hero Section */}
       <EntranceReveal>
         <section className="page-hero bg-gradient-to-br from-teal-500 via-blue-500 to-indigo-600 text-white text-center">
@@ -56,10 +61,12 @@ export default function FAQPage() {
                   </button>
                   <div
                     id={`faq-answer-${i}`}
-                    className={`overflow-hidden transition-all duration-300 ${open === i ? 'max-h-40 mt-4' : 'max-h-0'}`}
+                    className={`grid overflow-hidden transition-all duration-300 ${open === i ? "grid-rows-[1fr] mt-4" : "grid-rows-[0fr]"}`}
                     aria-hidden={open !== i}
                   >
-                    <p className="text-gray-300 font-body">{faq.answer}</p>
+                    <div className="overflow-hidden">
+                      <p className="text-gray-300 font-body">{faq.answer}</p>
+                    </div>
                   </div>
                 </div>
               ))}

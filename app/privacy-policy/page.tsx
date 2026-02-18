@@ -4,6 +4,9 @@ export const metadata = {
   title: "Privacy Policy",
   description:
     "How IntraWeb Technologies collects, uses, and protects your personal information.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
 };
 
 export default function PrivacyPolicyPage() {

@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import faqData from "@/public/faq.json";
 
 interface FAQItem {
   question: string;
@@ -9,14 +10,9 @@ interface FAQItem {
 }
 
 export default function FAQ() {
-  const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [open, setOpen] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch("/faq.json")
-      .then((res) => res.json())
-      .then(setFaqs);
-  }, []);
+  const faqs = faqData as FAQItem[];
+  const teaserFaqs = faqs.slice(0, 3);
 
   return (
     <section id="faq" className="bg-gray-900 py-16 md:py-24">
@@ -26,7 +22,7 @@ export default function FAQ() {
       </div>
       <div className="max-w-5xl mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8">
-          {faqs.map((faq, i) => (
+          {teaserFaqs.map((faq, i) => (
             <div key={i} className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
               <button
                 className="flex items-center justify-between w-full text-left text-lg font-semibold text-teal-400 focus:outline-none"
@@ -39,10 +35,12 @@ export default function FAQ() {
               </button>
               <div
                 id={`faq-answer-${i}`}
-                className={`overflow-hidden transition-all duration-300 ${open === i ? 'max-h-40 mt-4' : 'max-h-0'}`}
+                className={`grid overflow-hidden transition-all duration-300 ${open === i ? "grid-rows-[1fr] mt-4" : "grid-rows-[0fr]"}`}
                 aria-hidden={open !== i}
               >
-                <p className="text-gray-300 font-body">{faq.answer}</p>
+                <div className="overflow-hidden">
+                  <p className="text-gray-300 font-body">{faq.answer}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -52,7 +50,7 @@ export default function FAQ() {
             href="/faq"
             className="px-8 py-3 rounded-md bg-orange-500 text-white font-semibold text-lg hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
-            Still have questions?
+            View all FAQs
           </Link>
         </div>
       </div>

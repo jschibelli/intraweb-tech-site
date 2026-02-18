@@ -4,6 +4,9 @@ export const metadata = {
   title: "Terms of Service",
   description:
     "Terms and conditions governing use of IntraWeb Technologies website and services.",
+  alternates: {
+    canonical: "/terms-of-service",
+  },
 };
 
 export default function TermsOfServicePage() {

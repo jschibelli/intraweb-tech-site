@@ -17,10 +17,38 @@ export async function generateStaticParams() {
   }));
 }
 
-export const metadata: Metadata = {
-  title: 'Portfolio Project',
-  description: 'View our portfolio project details',
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const project = projectsData.projects.find((p) => p.slug === slug);
+
+  if (!project) {
+    return {
+      title: "Portfolio Project",
+      description: "View our portfolio project details",
+      alternates: {
+        canonical: `/portfolio/${slug}`,
+      },
+    };
+  }
+
+  return {
+    title: `${project.name} Case Study`,
+    description: project.summary,
+    alternates: {
+      canonical: `/portfolio/${project.slug}`,
+    },
+    openGraph: {
+      title: `${project.name} Case Study`,
+      description: project.summary,
+      type: "article",
+      url: `https://intrawebtech.com/portfolio/${project.slug}`,
+    },
+  };
+}
 
 export default async function Page({
   params,

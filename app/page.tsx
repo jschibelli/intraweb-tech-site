@@ -9,6 +9,16 @@ import Testimonials from "../components/Testimonials";
 import SynaplyAI from "../components/SynaplyAI";
 import FAQ from "../components/FAQ";
 import EntranceReveal from "../components/ui/EntranceReveal";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "AI Implementation That Actually Works",
+  description:
+    "IntraWeb helps SMBs turn AI tool adoption into measurable operational savings through workflow automation and implementation delivery.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function Home() {
   return (

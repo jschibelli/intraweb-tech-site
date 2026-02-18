@@ -4,6 +4,9 @@ export const metadata = {
   title: "Accessibility",
   description:
     "Our commitment to digital accessibility and how to contact us with feedback.",
+  alternates: {
+    canonical: "/accessibility",
+  },
 };
 
 export default function AccessibilityPage() {
