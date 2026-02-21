@@ -40,9 +40,17 @@ export const metadata: Metadata = {
     siteName: "IntraWeb Technologies",
     locale: "en_US",
     url: "https://intrawebtech.com",
+    title: "IntraWeb Technologies | AI Implementation That Actually Works",
+    description:
+      "We help SMBs turn AI tool adoption into actual operational savings. 95% of AI pilots fail—we fix that.",
+    // og:image is provided by app/opengraph-image.tsx (file convention)
   },
   twitter: {
     card: "summary_large_image",
+    title: "IntraWeb Technologies | AI Implementation That Actually Works",
+    description:
+      "We help SMBs turn AI tool adoption into actual operational savings. 95% of AI pilots fail—we fix that.",
+    // twitter:image inherited from Open Graph image (opengraph-image.tsx)
   },
 };
 

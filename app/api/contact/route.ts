@@ -128,6 +128,10 @@ export async function POST(request: NextRequest) {
     };
     const numericRevenue = revenueToNumber[annualRevenue] || 0;
 
+    // Normalize decision_maker for n8n lead scoring (expects "Yes" / "No" / "Partial")
+    const decisionMakerForHubSpot =
+      decisionMaker === "yes" ? "Yes" : decisionMaker === "no" ? "No" : decisionMaker;
+
     // 1. Send Email via Resend
     const emailContent = `
 New Contact Form Submission:
@@ -168,8 +172,9 @@ ${message}
           { name: "lastname", value: lastName },
           { name: "website", value: website || "" },
           { name: "reason_for_call", value: reasonForCall },
-          { name: "decision_maker", value: decisionMaker },
+          { name: "decision_maker", value: decisionMakerForHubSpot },
           { name: "annualrevenue", value: numericRevenue.toString() },
+          { name: "numberofemployees", value: numberOfEmployees ?? "" },
           { name: "message", value: message },
         ],
         context: {
@@ -219,8 +224,9 @@ ${message}
           lastname: lastName,
           website: website || "",
           reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
-          decision_maker: decisionMaker,
+          decision_maker: decisionMakerForHubSpot,
           annualrevenue: numericRevenue.toString(),
+          numberofemployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
           message,
         },
       };
@@ -272,6 +278,14 @@ ${message}
         .then(async (contactResult) => {
           if (contactResult && contactResult.id) {
             console.log("Processing contact:", contactResult.id);
+
+            // Trigger n8n Lead Qualification workflow (fire-and-forget)
+            const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
+            if (n8nWebhookUrl) {
+              fetch(n8nWebhookUrl, { method: "POST" }).catch((err) => {
+                console.error("n8n lead scoring webhook error:", err);
+              });
+            }
 
             // Create a Note for the message
             const notesUrl = `https://api.hubapi.com/crm/v3/objects/notes`;

@@ -1,5 +1,10 @@
 import Head from 'next/head';
 
+/**
+ * SEO meta tags (Open Graph, Twitter) for Pages Router.
+ * App Router uses app/layout.tsx metadata and app/opengraph-image.tsx for OG.
+ * If using this component, add public/og.png (1200×630) or pass the image prop.
+ */
 interface SEOProps {
   title: string;
   description: string;
@@ -17,7 +22,7 @@ export function SEO({
   title,
   description,
   url,
-  image = '/images/og-default.jpg',
+  image = '/og.png',
   type = 'website',
   canonical,
   siteName = 'IntraWeb Technologies',

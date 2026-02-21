@@ -141,6 +141,30 @@ function assertPageHtml(baseUrl, path, html) {
   if (org.length > 0 && (!org[0].name || !org[0].url)) {
     fail(`Organization schema must have name and url`, url);
   }
+
+  // Open Graph protocol (ogp.me) required and recommended tags
+  const ogTitle = $('meta[property="og:title"]').attr('content');
+  if (!ogTitle || !ogTitle.trim()) {
+    fail(`Missing or empty og:title`, url);
+  }
+  const ogType = $('meta[property="og:type"]').attr('content');
+  if (!ogType || !ogType.trim()) {
+    fail(`Missing or empty og:type`, url);
+  }
+  const ogImage = $('meta[property="og:image"]').attr('content');
+  if (!ogImage || !ogImage.trim()) {
+    fail(`Missing or empty og:image`, url);
+  } else if (!/^https?:\/\//.test(ogImage.trim())) {
+    fail(`og:image must be an absolute URL (http:// or https://), got: ${ogImage.trim().slice(0, 50)}...`, url);
+  }
+  const ogUrl = $('meta[property="og:url"]').attr('content');
+  if (!ogUrl || !ogUrl.trim()) {
+    fail(`Missing or empty og:url`, url);
+  }
+  const ogDesc = $('meta[property="og:description"]').attr('content');
+  if (!ogDesc || !ogDesc.trim()) {
+    console.warn(`Warning: missing og:description (recommended) at ${url}`);
+  }
 }
 
 async function fetchText(url) {

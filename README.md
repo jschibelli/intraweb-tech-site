@@ -195,6 +195,16 @@ RECAPTCHA_ENTERPRISE_PROJECT_ID=your-gcp-project-id
 ```
 Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and Application Default Credentials (e.g. `GOOGLE_APPLICATION_CREDENTIALS` or default service account on GCP).
 
+For HubSpot contact sync and n8n lead scoring (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API), and for automatic lead scoring after each form submission, set the n8n webhook URL:
+```
+N8N_LEAD_SCORING_WEBHOOK_URL=https://your-n8n-instance/webhook/your-webhook-path
+```
+Copy the Production (or Test) webhook URL from the n8n "Lead Qualification & Routing" workflow Webhook node. When set, the contact API triggers this workflow after each successful HubSpot contact create/update so leads are scored and updated in HubSpot.
+
+**HubSpot + n8n lead scoring checklist:**
+- In HubSpot: create custom contact properties `lead_score` (number), `lead_tier` (string), `scoring_breakdown` (string) if they do not exist; ensure `numberofemployees` exists on contacts (standard or custom).
+- In n8n: in the "Get recently created/updated contacts" node, add `numberofemployees` to the list of requested properties so the scoring Code node can use it.
+
 ### HTTPS Enforcement
 The site enforces HTTPS in production through:
 - HSTS header configuration
