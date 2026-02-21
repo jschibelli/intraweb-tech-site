@@ -77,7 +77,6 @@ function loadRecaptchaScript(siteKey: string): Promise<void> {
 }
 
 export default function ContactForm() {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
