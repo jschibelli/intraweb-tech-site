@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { RecaptchaEnterpriseServiceClient } from "@google-cloud/recaptcha-enterprise";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const RECAPTCHA_ACTION = "contact";
+const RECAPTCHA_MIN_SCORE = 0.5;
 
 const formSchema = z.object({
   firstName: z.string().min(1),
@@ -15,7 +19,44 @@ const formSchema = z.object({
   annualRevenue: z.string().min(1),
   numberOfEmployees: z.string().optional(),
   message: z.string().min(1),
+  recaptchaToken: z.string().optional(),
 });
+
+async function verifyRecaptchaToken(
+  token: string,
+  request: NextRequest
+): Promise<{ valid: boolean; score?: number }> {
+  const projectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
+  const siteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
+  if (!projectId || !siteKey) {
+    return { valid: false };
+  }
+  try {
+    const client = new RecaptchaEnterpriseServiceClient();
+    const userAgent = request.headers.get("user-agent") ?? "";
+    const forwarded = request.headers.get("x-forwarded-for");
+    const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
+    const [response] = await client.createAssessment({
+      parent: `projects/${projectId}`,
+      assessment: {
+        event: {
+          token,
+          siteKey,
+          expectedAction: RECAPTCHA_ACTION,
+          userAgent: userAgent || undefined,
+          userIpAddress: userIp || undefined,
+        },
+      },
+    });
+    const valid = response.tokenProperties?.valid ?? false;
+    const score = response.riskAnalysis?.score ?? 0;
+    const scoreOk = score >= RECAPTCHA_MIN_SCORE;
+    return { valid: valid && scoreOk, score };
+  } catch (err) {
+    console.error("reCAPTCHA verification error:", err);
+    return { valid: false };
+  }
+}
 
 const reasonLabels: Record<string, string> = {
   "ai-transformation": "AI Transformation",
@@ -38,6 +79,27 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = formSchema.parse(body);
+
+    const recaptchaProjectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
+    const recaptchaSiteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
+    const recaptchaEnabled = Boolean(recaptchaProjectId && recaptchaSiteKey);
+
+    if (recaptchaEnabled) {
+      const token = validatedData.recaptchaToken;
+      if (!token || typeof token !== "string") {
+        return NextResponse.json(
+          { error: "reCAPTCHA verification required", message: "Please complete the security check and try again." },
+          { status: 400 }
+        );
+      }
+      const { valid } = await verifyRecaptchaToken(token, request);
+      if (!valid) {
+        return NextResponse.json(
+          { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
+          { status: 400 }
+        );
+      }
+    }
 
     const {
       firstName,

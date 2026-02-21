@@ -187,6 +187,14 @@ NEXT_PUBLIC_GA_ID=your-ga-id
 NEXT_PUBLIC_HUBSPOT_ID=your-hubspot-id
 ```
 
+For contact form reCAPTCHA Enterprise (optional; form works without these, but verification is skipped):
+```
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-enterprise-site-key
+RECAPTCHA_ENTERPRISE_SITE_KEY=your-recaptcha-enterprise-site-key
+RECAPTCHA_ENTERPRISE_PROJECT_ID=your-gcp-project-id
+```
+Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and Application Default Credentials (e.g. `GOOGLE_APPLICATION_CREDENTIALS` or default service account on GCP).
+
 ### HTTPS Enforcement
 The site enforces HTTPS in production through:
 - HSTS header configuration

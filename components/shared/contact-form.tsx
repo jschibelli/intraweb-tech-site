@@ -1,9 +1,22 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
+const RECAPTCHA_ACTION = "contact";
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      enterprise: {
+        ready: (cb: () => void) => void;
+        execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      };
+    };
+  }
+}
 
 const reasonOptions = [
   { value: "", label: "Select..." },
@@ -47,6 +60,22 @@ type FormData = z.infer<typeof formSchema>;
 const inputStyles =
   "w-full px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent";
 
+function loadRecaptchaScript(siteKey: string): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    if (window.grecaptcha?.enterprise) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/enterprise.js?render=${siteKey}`;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("reCAPTCHA failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
 export default function ContactForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,11 +83,11 @@ export default function ContactForm() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const recaptchaReady = useRef(false);
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -75,10 +104,32 @@ export default function ContactForm() {
     },
   });
 
+  const getRecaptchaToken = useCallback(async (): Promise<string | null> => {
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    if (!siteKey) return null;
+    try {
+      if (!recaptchaReady.current) {
+        await loadRecaptchaScript(siteKey);
+        recaptchaReady.current = true;
+      }
+      return new Promise((resolve) => {
+        window.grecaptcha!.enterprise.ready(() => {
+          window
+            .grecaptcha!.enterprise.execute(siteKey, { action: RECAPTCHA_ACTION })
+            .then(resolve)
+            .catch(() => resolve(null));
+        });
+      });
+    } catch {
+      return null;
+    }
+  }, []);
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     setSubmitStatus(null);
     try {
+      const recaptchaToken = await getRecaptchaToken();
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,22 +143,20 @@ export default function ContactForm() {
           annualRevenue: data.annualRevenue,
           numberOfEmployees: data.numberOfEmployees || "",
           message: data.message,
+          recaptchaToken: recaptchaToken ?? undefined,
         }),
       });
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || errData.message || "Submission failed");
       }
-      setSubmitStatus({
-        type: "success",
-        message: "We'll review your submission within 1 business day and get back to you.",
-      });
-      reset();
+      router.push("/thank-you");
     } catch (error) {
       setSubmitStatus({
         type: "error",
         message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
