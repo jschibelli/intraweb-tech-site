@@ -75,6 +75,23 @@ const revenueLabels: Record<string, string> = {
   "prefer-not": "Prefer not to say",
 };
 
+// Exact labels expected by n8n "Lead Intake & Scoring" workflow (reasonScores / revenueScores)
+const n8nReasonLabels: Record<string, string> = {
+  "ai-transformation": "AI Transformation",
+  "custom-ai-engineer": "Custom AI Engineer",
+  "reselling-white-label": "Reselling/White-label",
+  "educating-team": "Educating Team",
+};
+const n8nRevenueLabels: Record<string, string> = {
+  "less-than-100k": "Under $100K",
+  "100k-500k": "$100K - $500K",
+  "500k-1m": "$500K - $1M",
+  "1m-5m": "$1M - $5M",
+  "5m-10m": "$5M - $10M",
+  "10m-plus": "$10M+",
+  "prefer-not": "Prefer not to say",
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -279,10 +296,26 @@ ${message}
           if (contactResult && contactResult.id) {
             console.log("Processing contact:", contactResult.id);
 
-            // Trigger n8n Lead Qualification workflow (fire-and-forget)
+            // Trigger n8n Lead Intake & Scoring workflow with payload (workflow expects flat body)
             const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
             if (n8nWebhookUrl) {
-              fetch(n8nWebhookUrl, { method: "POST" }).catch((err) => {
+              const n8nPayload = {
+                contactId: String(contactResult.id),
+                firstName,
+                lastName,
+                email,
+                website: website || "",
+                reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
+                decisionMaker: decisionMakerForHubSpot,
+                annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
+                numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
+                message,
+              };
+              fetch(n8nWebhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(n8nPayload),
+              }).catch((err) => {
                 console.error("n8n lead scoring webhook error:", err);
               });
             }
