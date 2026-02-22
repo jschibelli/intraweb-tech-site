@@ -187,6 +187,7 @@ ${message}
     if (hubspotPortalId && hubspotFormGuid && hubspotFormGuid !== "TODO_FILL_THIS") {
       const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormGuid}`;
 
+      // Use only form field names that exist on your HubSpot form (numberofemployees omitted if not on form)
       const hubspotData = {
         fields: [
           { name: "email", value: email },
@@ -196,7 +197,6 @@ ${message}
           { name: "reason_for_call", value: reasonForCall },
           { name: "decision_maker", value: decisionMakerForHubSpot },
           { name: "annualrevenue", value: numericRevenue.toString() },
-          { name: "numberofemployees", value: numberOfEmployees ?? "" },
           { name: "message", value: message },
         ],
         context: {
@@ -239,6 +239,7 @@ ${message}
         "reselling-white-label": "reselling",
       };
 
+      // Omit numberofemployees unless you've created that custom property on the Contact in HubSpot
       const contactData = {
         properties: {
           email,
@@ -248,7 +249,6 @@ ${message}
           reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
           decision_maker: decisionMakerForHubSpot,
           annualrevenue: numericRevenue.toString(),
-          numberofemployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
           message,
         },
       };
