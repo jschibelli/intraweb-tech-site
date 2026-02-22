@@ -130,6 +130,11 @@ export async function POST(request: NextRequest) {
       message,
     } = validatedData;
 
+    const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
+    if (n8nWebhookUrl) {
+      console.log("[n8n] N8N_LEAD_SCORING_WEBHOOK_URL is set (webhook will be triggered after HubSpot)");
+    }
+
     const reasonLabel = reasonLabels[reasonForCall] || reasonForCall;
     const revenueLabel = revenueLabels[annualRevenue] || annualRevenue;
 
@@ -293,32 +298,44 @@ ${message}
           return res.json();
         })
         .then(async (contactResult) => {
-          if (contactResult && contactResult.id) {
-            console.log("Processing contact:", contactResult.id);
+          const contactId = contactResult?.id ? String(contactResult.id) : "";
 
-            // Trigger n8n Lead Intake & Scoring workflow with payload (workflow expects flat body)
-            const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
-            if (n8nWebhookUrl) {
-              const n8nPayload = {
-                contactId: String(contactResult.id),
-                firstName,
-                lastName,
-                email,
-                website: website || "",
-                reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
-                decisionMaker: decisionMakerForHubSpot,
-                annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
-                numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
-                message,
-              };
-              fetch(n8nWebhookUrl, {
+          // Trigger n8n Lead Intake & Scoring workflow (fire even without HubSpot id so scoring still runs)
+          const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
+          if (n8nWebhookUrl) {
+            const n8nPayload = {
+              contactId,
+              firstName,
+              lastName,
+              email,
+              website: website || "",
+              reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
+              decisionMaker: decisionMakerForHubSpot,
+              annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
+              numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
+              message,
+            };
+            try {
+              console.log("[n8n] Calling lead scoring webhook for", email);
+              const n8nRes = await fetch(n8nWebhookUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(n8nPayload),
-              }).catch((err) => {
-                console.error("n8n lead scoring webhook error:", err);
               });
+              console.log("[n8n] Webhook response:", n8nRes.status, n8nRes.statusText);
+              if (!n8nRes.ok) {
+                const text = await n8nRes.text();
+                console.error("[n8n] Webhook error body:", text.slice(0, 300));
+              }
+            } catch (err) {
+              console.error("[n8n] Lead scoring webhook error:", err);
             }
+          } else {
+            console.warn("[n8n] N8N_LEAD_SCORING_WEBHOOK_URL not set – lead scoring skipped");
+          }
+
+          if (contactResult && contactResult.id) {
+            console.log("Processing contact:", contactResult.id);
 
             // Create a Note for the message
             const notesUrl = `https://api.hubapi.com/crm/v3/objects/notes`;
@@ -353,6 +370,33 @@ ${message}
         .catch((err) => {
           console.error("HubSpot Contacts API Error:", err);
         });
+    } else if (n8nWebhookUrl) {
+      // No HubSpot token – still trigger n8n so lead scoring runs
+      (async () => {
+        try {
+          console.log("[n8n] Calling lead scoring webhook (no HubSpot)", email);
+          const n8nPayload = {
+            contactId: "",
+            firstName,
+            lastName,
+            email,
+            website: website || "",
+            reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
+            decisionMaker: decisionMakerForHubSpot,
+            annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
+            numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
+            message,
+          };
+          const n8nRes = await fetch(n8nWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(n8nPayload),
+          });
+          console.log("[n8n] Webhook response:", n8nRes.status, n8nRes.statusText);
+        } catch (err) {
+          console.error("[n8n] Lead scoring webhook error:", err);
+        }
+      })();
     }
 
     await Promise.all([emailPromise, hubspotPromise, contactsApiPromise]);
