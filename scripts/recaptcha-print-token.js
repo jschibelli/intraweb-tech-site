@@ -5,12 +5,13 @@
  *
  * Usage:
  *   node scripts/recaptcha-print-token.js
- *   # Or with a key file:
- *   # Windows CMD:
- *   #   set GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\service-account.json
- *   # PowerShell:
- *   #   $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\service-account.json"
- *   node scripts/recaptcha-print-token.js
+ *
+ *   Or with a key file (choose one for your shell):
+ *   Windows CMD:
+ *     set GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\service-account.json
+ *   PowerShell:
+ *     $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\service-account.json"
+ *   Then run: node scripts/recaptcha-print-token.js
  *
  * Copy the printed token into Postman → Auth → Bearer Token.
  */

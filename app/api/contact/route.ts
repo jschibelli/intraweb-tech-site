@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
       process.env.NODE_ENV === "development" &&
       process.env.RECAPTCHA_SKIP_IN_DEV === "true";
 
+    // When RECAPTCHA_SKIP_IN_DEV is set, skip token requirement and verification entirely (no token needed).
     if (recaptchaEnabled && !skipRecaptchaInDev) {
       const token = validatedData.recaptchaToken;
       if (!token || typeof token !== "string") {
