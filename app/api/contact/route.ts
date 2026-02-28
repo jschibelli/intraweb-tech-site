@@ -112,7 +112,7 @@ async function verifyRecaptchaToken(
           },
         },
       });
-      response = (result as [AssessmentResult])[0];
+      response = result[0] as AssessmentResult;
     } finally {
       if (prevPath !== undefined) process.env.GOOGLE_APPLICATION_CREDENTIALS = prevPath;
       else delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
