@@ -22,10 +22,14 @@ const formSchema = z.object({
   recaptchaToken: z.string().optional(),
 });
 
+/**
+ * Create a reCAPTCHA Enterprise assessment (aligns with createAssessment sample).
+ * Validates token, expected action "contact", and minimum risk score.
+ */
 async function verifyRecaptchaToken(
   token: string,
   request: NextRequest
-): Promise<{ valid: boolean; score?: number }> {
+): Promise<{ valid: boolean; score?: number; invalidReason?: string }> {
   const projectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
   const siteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!projectId || !siteKey) {
@@ -33,11 +37,12 @@ async function verifyRecaptchaToken(
   }
   try {
     const client = new RecaptchaEnterpriseServiceClient();
+    const projectPath = client.projectPath(projectId);
     const userAgent = request.headers.get("user-agent") ?? "";
     const forwarded = request.headers.get("x-forwarded-for");
     const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
     const [response] = await client.createAssessment({
-      parent: `projects/${projectId}`,
+      parent: projectPath,
       assessment: {
         event: {
           token,
@@ -48,10 +53,38 @@ async function verifyRecaptchaToken(
         },
       },
     });
-    const valid = response.tokenProperties?.valid ?? false;
+
+    const invalidReason = response.tokenProperties?.invalidReason ?? "unknown";
+    if (process.env.NODE_ENV === "development") {
+      console.log("[reCAPTCHA] assessment response:", {
+        valid: response.tokenProperties?.valid,
+        invalidReason,
+        action: response.tokenProperties?.action,
+        hostname: response.tokenProperties?.hostname,
+        createTime: response.tokenProperties?.createTime,
+        score: response.riskAnalysis?.score,
+      });
+    }
+
+    if (!response.tokenProperties?.valid) {
+      console.log(
+        "reCAPTCHA token invalid:",
+        invalidReason
+      );
+      return { valid: false, invalidReason };
+    }
+    if (response.tokenProperties.action !== RECAPTCHA_ACTION) {
+      console.log(
+        "reCAPTCHA action mismatch: expected",
+        RECAPTCHA_ACTION,
+        "got",
+        response.tokenProperties.action
+      );
+      return { valid: false };
+    }
     const score = response.riskAnalysis?.score ?? 0;
     const scoreOk = score >= RECAPTCHA_MIN_SCORE;
-    return { valid: valid && scoreOk, score };
+    return { valid: scoreOk, score };
   } catch (err) {
     console.error("reCAPTCHA verification error:", err);
     return { valid: false };
@@ -101,6 +134,10 @@ export async function POST(request: NextRequest) {
     const recaptchaSiteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
     const recaptchaEnabled = Boolean(recaptchaProjectId && recaptchaSiteKey);
 
+    const skipRecaptchaInDev =
+      process.env.NODE_ENV === "development" &&
+      process.env.RECAPTCHA_SKIP_IN_DEV === "true";
+
     if (recaptchaEnabled) {
       const token = validatedData.recaptchaToken;
       if (!token || typeof token !== "string") {
@@ -109,12 +146,19 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const { valid } = await verifyRecaptchaToken(token, request);
+      const { valid, invalidReason } = await verifyRecaptchaToken(token, request);
       if (!valid) {
-        return NextResponse.json(
-          { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
-          { status: 400 }
-        );
+        if (skipRecaptchaInDev) {
+          console.warn(
+            "[reCAPTCHA] Skipping verification in dev (RECAPTCHA_SKIP_IN_DEV=true). Reason:",
+            invalidReason ?? "unknown"
+          );
+        } else {
+          return NextResponse.json(
+            { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
+            { status: 400 }
+          );
+        }
       }
     }
 

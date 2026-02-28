@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "reCAPTCHA Enterprise – Create Assessment",
+    "description": "Test Create Assessment for contact form (action: contact). Set Auth Bearer token (e.g. from gcloud auth print-access-token) and replace {{recaptcha_token}} in body with a token from the contact page.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Assessment (contact)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": {\n    \"token\": \"{{recaptcha_token}}\",\n    \"siteKey\": \"6LckZE4rAAAAADYbgtBw5rZ-oazauYc7rKlBGpHL\",\n    \"expectedAction\": \"contact\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://recaptchaenterprise.googleapis.com/v1/projects/angelic-ivy-461304-j2/assessments",
+          "protocol": "https",
+          "host": ["recaptchaenterprise", "googleapis", "com"],
+          "path": ["v1", "projects", "angelic-ivy-461304-j2", "assessments"]
+        },
+        "description": "Creates an assessment for a contact-form token. Use Bearer token from gcloud auth print-access-token. Get recaptcha_token from the contact page console (grecaptcha.enterprise.execute with action 'contact')."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "recaptcha_token",
+      "value": "PASTE_TOKEN_FROM_CONTACT_PAGE_CONSOLE"
+    }
+  ]
+}

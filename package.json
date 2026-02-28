@@ -12,7 +12,8 @@
     "seo:check": "node scripts/seo-compliance.js",
     "analyze": "ANALYZE=true next build",
     "postbuild": "next-sitemap",
-    "audit:cookies": "ts-node scripts/auditCookies.ts"
+    "audit:cookies": "ts-node scripts/auditCookies.ts",
+    "recaptcha:token": "node scripts/recaptcha-print-token.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",

@@ -193,7 +193,7 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-enterprise-site-key
 RECAPTCHA_ENTERPRISE_SITE_KEY=your-recaptcha-enterprise-site-key
 RECAPTCHA_ENTERPRISE_PROJECT_ID=your-gcp-project-id
 ```
-Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and Application Default Credentials (e.g. `GOOGLE_APPLICATION_CREDENTIALS` or default service account on GCP).
+Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and authentication via [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials) (e.g. `gcloud auth application-default login` locally, `GOOGLE_APPLICATION_CREDENTIALS`, or the default service account on GCP). The `projects.assessments.create` method also supports [API keys](https://docs.cloud.google.com/recaptcha/docs/authentication) for billing/quota. See [Authenticate to reCAPTCHA](https://docs.cloud.google.com/recaptcha/docs/authentication) for all options.
 
 For HubSpot contact sync and n8n lead scoring (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API), and for automatic lead scoring after each form submission, set the n8n webhook URL:
 ```
