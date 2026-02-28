@@ -116,7 +116,7 @@ export default function Navbar() {
           <span className="sr-only">IntraWeb Technologies</span>
           {/* Replace with SVG logo if available */}
           
-            <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4 h-auto w-auto" style={{ width: "auto", height: "auto" }} />
+            <Image src="/intraweb-logo-white.png" alt="IntraWeb Technologies Logo" width={150} height={150} className="mr-4 h-auto w-auto" />
         </Link>
         {/* Desktop Nav (hidden on tablet and mobile) */}
         <ul className="hidden lg:flex items-center gap-8 font-body">

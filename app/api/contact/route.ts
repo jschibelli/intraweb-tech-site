@@ -68,19 +68,20 @@ async function verifyRecaptchaToken(
     }
 
     if (!response.tokenProperties?.valid) {
-      console.log(
-        "reCAPTCHA token invalid:",
-        invalidReason
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.log("reCAPTCHA token invalid:", invalidReason);
+      }
       return { valid: false, invalidReason };
     }
     if (response.tokenProperties.action !== RECAPTCHA_ACTION) {
-      console.log(
-        "reCAPTCHA action mismatch: expected",
-        RECAPTCHA_ACTION,
-        "got",
-        response.tokenProperties.action
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "reCAPTCHA action mismatch: expected",
+          RECAPTCHA_ACTION,
+          "got",
+          response.tokenProperties.action
+        );
+      }
       return { valid: false };
     }
     const score = response.riskAnalysis?.score ?? 0;
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
       process.env.NODE_ENV === "development" &&
       process.env.RECAPTCHA_SKIP_IN_DEV === "true";
 
-    if (recaptchaEnabled) {
+    if (recaptchaEnabled && !skipRecaptchaInDev) {
       const token = validatedData.recaptchaToken;
       if (!token || typeof token !== "string") {
         return NextResponse.json(
@@ -147,19 +148,12 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const { valid, invalidReason } = await verifyRecaptchaToken(token, request);
+      const { valid } = await verifyRecaptchaToken(token, request);
       if (!valid) {
-        if (skipRecaptchaInDev) {
-          console.warn(
-            "[reCAPTCHA] Skipping verification in dev (RECAPTCHA_SKIP_IN_DEV=true). Reason:",
-            invalidReason ?? "unknown"
-          );
-        } else {
-          return NextResponse.json(
-            { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
-            { status: 400 }
-          );
-        }
+        return NextResponse.json(
+          { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
+          { status: 400 }
+        );
       }
     }
 

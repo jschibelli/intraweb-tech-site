@@ -45,8 +45,10 @@ You can configure Postman to get tokens automatically with a Google Cloud OAuth 
 ### URL (no query params)
 
 ```
-POST https://recaptchaenterprise.googleapis.com/v1/projects/angelic-ivy-461304-j2/assessments
+POST https://recaptchaenterprise.googleapis.com/v1/projects/YOUR_PROJECT_ID/assessments
 ```
+
+Use your GCP project ID (same as `RECAPTCHA_ENTERPRISE_PROJECT_ID` in your app).
 
 - **Params tab:** leave empty. Do **not** put `sitekey` or `key` in the URL.
 
@@ -64,11 +66,13 @@ POST https://recaptchaenterprise.googleapis.com/v1/projects/angelic-ivy-461304-j
 {
   "event": {
     "token": "PASTE_TOKEN_FROM_CONTACT_FORM_HERE",
-    "siteKey": "6LckZE4rAAAAADYbgtBw5rZ-oazauYc7rKlBGpHL",
+    "siteKey": "YOUR_RECAPTCHA_SITE_KEY",
     "expectedAction": "contact"
   }
 }
 ```
+
+Use the same site key as `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` / `RECAPTCHA_ENTERPRISE_SITE_KEY` in your app.
 
 Optional (can improve risk analysis):
 
@@ -76,7 +80,7 @@ Optional (can improve risk analysis):
 {
   "event": {
     "token": "PASTE_TOKEN_HERE",
-    "siteKey": "6LckZE4rAAAAADYbgtBw5rZ-oazauYc7rKlBGpHL",
+    "siteKey": "YOUR_RECAPTCHA_SITE_KEY",
     "expectedAction": "contact",
     "userAgent": "Mozilla/5.0 ...",
     "userIpAddress": "203.0.113.42"
@@ -98,7 +102,7 @@ The `token` value must come from your site’s contact form (same key and action
 ```javascript
 grecaptcha.enterprise.ready(async () => {
   const token = await grecaptcha.enterprise.execute(
-    '6LckZE4rAAAAADYbgtBw5rZ-oazauYc7rKlBGpHL',
+    'YOUR_RECAPTCHA_SITE_KEY',  // same as NEXT_PUBLIC_RECAPTCHA_SITE_KEY
     { action: 'contact' }
   );
   console.log('Token (copy this):', token);
@@ -154,4 +158,4 @@ Use the Postman collection in this repo for a pre-configured request:
 
 **File:** `docs/postman-recaptcha-create-assessment.json`
 
-Import via Postman: **Import** → select that file. Then set the **Auth** Bearer token and replace `event.token` in the body with a fresh token from step 3.
+Import via Postman: **Import** → select that file. Set the collection variables **gcp_project_id** and **recaptcha_site_key** (same values as in your app env). Set **Auth** → Bearer Token and the **recaptcha_token** variable (or `event.token` in the body) with a fresh token from step 3.
