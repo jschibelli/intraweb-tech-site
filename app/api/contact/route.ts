@@ -3,6 +3,9 @@ import { Resend } from "resend";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { RecaptchaEnterpriseServiceClient } from "@google-cloud/recaptcha-enterprise";
+import { writeFileSync, mkdirSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -36,8 +39,8 @@ async function verifyRecaptchaToken(
     return { valid: false };
   }
   try {
-    // On Vercel/serverless there are no default credentials; pass from env.
-    // Set GOOGLE_APPLICATION_CREDENTIALS_JSON to the full service account JSON string.
+    // On Vercel/serverless there are no default credentials. Use env JSON and write to a temp
+    // file so GOOGLE_APPLICATION_CREDENTIALS works (Google client reads this path).
     const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (!credentialsJson || credentialsJson.trim() === "") {
       return {
@@ -47,16 +50,9 @@ async function verifyRecaptchaToken(
           "GOOGLE_APPLICATION_CREDENTIALS_JSON is not set. In Vercel: Settings → Environment Variables → add the full service account JSON for Production, then redeploy.",
       };
     }
-    let clientOptions: ConstructorParameters<typeof RecaptchaEnterpriseServiceClient>[0] = {};
+    let key: { client_email?: string; private_key?: string; [k: string]: unknown };
     try {
-      const key = JSON.parse(credentialsJson) as { client_email?: string; private_key?: string };
-      if (key.client_email && key.private_key) {
-        // Restore newlines in private_key if they were lost when pasting into env (e.g. \n as literal)
-        const privateKey = key.private_key.includes("\\n")
-          ? key.private_key.replace(/\\n/g, "\n")
-          : key.private_key;
-        clientOptions = { credentials: { client_email: key.client_email, private_key: privateKey } };
-      }
+      key = JSON.parse(credentialsJson) as typeof key;
     } catch (parseErr) {
       const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
       return {
@@ -65,7 +61,7 @@ async function verifyRecaptchaToken(
         apiErrorMessage: `Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON (parse error: ${msg}). Paste the full JSON from your service account key file.`,
       };
     }
-    if (!clientOptions.credentials) {
+    if (!key.client_email || !key.private_key) {
       return {
         valid: false,
         invalidReason: "api_error",
@@ -73,7 +69,33 @@ async function verifyRecaptchaToken(
           "GOOGLE_APPLICATION_CREDENTIALS_JSON must contain client_email and private_key. Use the JSON file from Google Cloud service account Keys.",
       };
     }
-    const client = new RecaptchaEnterpriseServiceClient(clientOptions);
+    // Restore newlines in private_key if lost when pasting into env
+    const privateKey = key.private_key.includes("\\n")
+      ? key.private_key.replace(/\\n/g, "\n")
+      : key.private_key;
+    const keyWithNewlines = { ...key, private_key: privateKey };
+    const tmpDir = tmpdir();
+    const credsPath = join(tmpDir, "gcp-recaptcha-creds.json");
+    try {
+      mkdirSync(tmpDir, { recursive: true });
+      writeFileSync(credsPath, JSON.stringify(keyWithNewlines), "utf8");
+    } catch (writeErr) {
+      const msg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage: `Could not write credentials file: ${msg}.`,
+      };
+    }
+    const prevPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credsPath;
+    let client: RecaptchaEnterpriseServiceClient;
+    try {
+      client = new RecaptchaEnterpriseServiceClient();
+    } finally {
+      if (prevPath !== undefined) process.env.GOOGLE_APPLICATION_CREDENTIALS = prevPath;
+      else delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
     const projectPath = client.projectPath(projectId);
     const userAgent = request.headers.get("user-agent") ?? "";
     const forwarded = request.headers.get("x-forwarded-for");
