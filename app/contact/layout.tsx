@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 
 const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
+/** Load reCAPTCHA Enterprise in head for /contact. ContactForm uses it when present, otherwise loads on submit. */
+
 export default function ContactLayout({
   children,
 }: {
