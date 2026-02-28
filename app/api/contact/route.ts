@@ -29,7 +29,7 @@ const formSchema = z.object({
 async function verifyRecaptchaToken(
   token: string,
   request: NextRequest
-): Promise<{ valid: boolean; score?: number; invalidReason?: string; hostname?: string }> {
+): Promise<{ valid: boolean; score?: number; invalidReason?: string; hostname?: string; apiErrorMessage?: string }> {
   const projectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
   const siteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!projectId || !siteKey) {
@@ -96,8 +96,9 @@ async function verifyRecaptchaToken(
       hostname,
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("reCAPTCHA verification error:", err);
-    return { valid: false };
+    return { valid: false, invalidReason: "api_error", apiErrorMessage: message };
   }
 }
 
@@ -157,14 +158,15 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const { valid, invalidReason, score, hostname } = await verifyRecaptchaToken(token, request);
+      const { valid, invalidReason, score, hostname, apiErrorMessage } = await verifyRecaptchaToken(token, request);
       if (!valid) {
         // Log server-side so you can debug in production (Vercel logs, etc.)
         console.error("[reCAPTCHA] verification failed", {
           invalidReason,
           score,
           hostname,
-          hint: "Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY matches RECAPTCHA_ENTERPRISE_SITE_KEY; domain allowed in reCAPTCHA key; token not reused.",
+          apiErrorMessage,
+          hint: "Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY matches RECAPTCHA_ENTERPRISE_SITE_KEY; domain allowed in reCAPTCHA key; token not reused; Google credentials and API enabled.",
         });
         const responseBody: Record<string, unknown> = {
           error: "reCAPTCHA verification failed",
@@ -172,7 +174,7 @@ export async function POST(request: NextRequest) {
         };
         // Optional: set RECAPTCHA_DEBUG_RESPONSE=true in Vercel env to see reason in Network tab, then remove after fixing
         if (process.env.RECAPTCHA_DEBUG_RESPONSE === "true") {
-          responseBody.debug = { invalidReason, score, hostname };
+          responseBody.debug = { invalidReason, score, hostname, apiErrorMessage };
         }
         return NextResponse.json(responseBody, { status: 400 });
       }
