@@ -166,10 +166,15 @@ export async function POST(request: NextRequest) {
           hostname,
           hint: "Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY matches RECAPTCHA_ENTERPRISE_SITE_KEY; domain allowed in reCAPTCHA key; token not reused.",
         });
-        return NextResponse.json(
-          { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
-          { status: 400 }
-        );
+        const responseBody: Record<string, unknown> = {
+          error: "reCAPTCHA verification failed",
+          message: "Security check failed. Please try again.",
+        };
+        // Optional: set RECAPTCHA_DEBUG_RESPONSE=true in Vercel env to see reason in Network tab, then remove after fixing
+        if (process.env.RECAPTCHA_DEBUG_RESPONSE === "true") {
+          responseBody.debug = { invalidReason, score, hostname };
+        }
+        return NextResponse.json(responseBody, { status: 400 });
       }
     }
 
