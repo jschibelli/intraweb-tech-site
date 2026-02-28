@@ -89,31 +89,31 @@ async function verifyRecaptchaToken(
     }
     const prevPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
     process.env.GOOGLE_APPLICATION_CREDENTIALS = credsPath;
-    let client: RecaptchaEnterpriseServiceClient;
+    let response: Awaited<ReturnType<RecaptchaEnterpriseServiceClient["createAssessment"]>>[0];
     try {
-      client = new RecaptchaEnterpriseServiceClient();
+      const client = new RecaptchaEnterpriseServiceClient();
+      const projectPath = client.projectPath(projectId);
+      const userAgent = request.headers.get("user-agent") ?? "";
+      const forwarded = request.headers.get("x-forwarded-for");
+      const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
+      [response] = await client.createAssessment({
+        parent: projectPath,
+        assessment: {
+          event: {
+            token,
+            siteKey,
+            expectedAction: RECAPTCHA_ACTION,
+            userAgent: userAgent || undefined,
+            userIpAddress: userIp || undefined,
+          },
+        },
+      });
     } finally {
       if (prevPath !== undefined) process.env.GOOGLE_APPLICATION_CREDENTIALS = prevPath;
       else delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     }
-    const projectPath = client.projectPath(projectId);
-    const userAgent = request.headers.get("user-agent") ?? "";
-    const forwarded = request.headers.get("x-forwarded-for");
-    const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
-    const [response] = await client.createAssessment({
-      parent: projectPath,
-      assessment: {
-        event: {
-          token,
-          siteKey,
-          expectedAction: RECAPTCHA_ACTION,
-          userAgent: userAgent || undefined,
-          userIpAddress: userIp || undefined,
-        },
-      },
-    });
 
-    const invalidReasonRaw = response.tokenProperties?.invalidReason;
+    const invalidReasonRaw = response!.tokenProperties?.invalidReason;
     const invalidReason = invalidReasonRaw != null ? String(invalidReasonRaw) : "unknown";
     const score = response.riskAnalysis?.score ?? 0;
     const action = response.tokenProperties?.action ?? "";
