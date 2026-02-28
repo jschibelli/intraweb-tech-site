@@ -7,8 +7,11 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$Title,
     
-    [Parameter(Mandatory=$true)]
-    [string]$Body,
+    [Parameter(Mandatory=$false)]
+    [string]$Body = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$BodyFile = "",
     
     [string]$Labels = "",
     [string]$Milestone = "",
@@ -51,6 +54,32 @@ Write-Host "===============================================" -ForegroundColor Bl
 Write-Host "   Enhanced Issue Creation with Auto Branch" -ForegroundColor Blue
 Write-Host "===============================================" -ForegroundColor Blue
 Write-Host ""
+
+# Resolve body: from file or parameter (script uses bodyPath for gh -F when provided)
+$bodyPath = $null
+if ($BodyFile) {
+    $bodyPath = $BodyFile
+    if (-not [System.IO.Path]::IsPathRooted($bodyPath)) {
+        $bodyPath = Join-Path (Get-Location) $bodyPath
+    }
+    if (-not (Test-Path -Path $bodyPath -PathType Leaf)) {
+        if (Test-Path -Path $bodyPath -PathType Container) {
+            Write-Host "❌ Body path is a directory, expected a file: $bodyPath" -ForegroundColor Red
+        } else {
+            Write-Host "❌ Body file not found: $bodyPath" -ForegroundColor Red
+        }
+        exit 1
+    }
+    try {
+        $Body = Get-Content -Path $bodyPath -Raw -ErrorAction Stop
+    } catch {
+        Write-Host "❌ Failed to read body file: $bodyPath. $($_.Exception.Message)" -ForegroundColor Red
+        exit 1
+    }
+} elseif (-not $Body) {
+    Write-Host "❌ Either -Body or -BodyFile must be provided" -ForegroundColor Red
+    exit 1
+}
 
 # Require project configuration
 $config = Require-ProjectConfig
@@ -238,26 +267,30 @@ if ($DryRun) {
     Write-Host "  [DRY RUN] Would create issue with title: $Title" -ForegroundColor Magenta
     $issueNumber = 999
 } else {
-    # Build the gh issue create command
-    $createCmd = "gh issue create --title `"$Title`" --body `"$Body`""
-    
-    if ($Labels) {
-        $createCmd += " --label `"$Labels`""
+    # Use -F (body file) to avoid quoting/command-injection; for inline Body write to temp file
+    $bodyFileToUse = $bodyPath
+    $tempBodyFile = $null
+    if (-not $bodyPath) {
+        $tempBodyFile = [System.IO.Path]::GetTempFileName()
+        try {
+            Set-Content -Path $tempBodyFile -Value $Body -NoNewline:$false -ErrorAction Stop
+        } catch {
+            Remove-Item -Path $tempBodyFile -Force -ErrorAction SilentlyContinue
+            Write-Host "❌ Failed to write body to temp file: $($_.Exception.Message)" -ForegroundColor Red
+            exit 1
+        }
+        $bodyFileToUse = $tempBodyFile
     }
-    
-    if ($Milestone) {
-        $createCmd += " --milestone `"$Milestone`""
-    }
-    
-    if ($Assignee) {
-        $createCmd += " --assignee `"$Assignee`""
-    }
-    
-    Write-Host "  Executing: $createCmd" -ForegroundColor Gray
-    
+
+    Write-Host "  Executing: gh issue create --title ... -F (body file)" -ForegroundColor Gray
+
     try {
-        $issueUrl = Invoke-Expression $createCmd
-        
+        $createArgs = @('issue', 'create', '--title', $Title, '-F', $bodyFileToUse)
+        if ($Labels) { $createArgs += '--label'; $createArgs += $Labels }
+        if ($Milestone) { $createArgs += '--milestone'; $createArgs += $Milestone }
+        if ($Assignee) { $createArgs += '--assignee'; $createArgs += $Assignee }
+        $issueUrl = gh @createArgs
+
         # Extract issue number from URL
         if ($issueUrl -match '/issues/(\d+)') {
             $issueNumber = [int]$Matches[1]
@@ -269,6 +302,10 @@ if ($DryRun) {
     } catch {
         Write-Host "  ❌ Failed to create issue: $_" -ForegroundColor Red
         exit 1
+    } finally {
+        if ($tempBodyFile -and (Test-Path -Path $tempBodyFile -PathType Leaf)) {
+            Remove-Item -Path $tempBodyFile -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
