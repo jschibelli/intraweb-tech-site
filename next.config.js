@@ -13,7 +13,7 @@ const cspScriptSrc = [
   "https://www.google.com",
   "https://www.gstatic.com",
   "https://www.googletagmanager.com",
-  "https://js.hs-scripts.com", // HubSpot (loaded after marketing consent)
+  "https://*.hs-scripts.com", // HubSpot regional scripts (e.g. js.hs-scripts.com, js-na2.hs-scripts.com)
 ].join(" ");
 
 /** @type {import('next').NextConfig} */
@@ -35,7 +35,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://www.googletagmanager.com https://analytics.google.com https://*.google-analytics.com https://js.hs-scripts.com https://track.hubspot.com https://api.hubapi.com",
+              "connect-src 'self' https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://www.googletagmanager.com https://analytics.google.com https://*.google-analytics.com https://*.hs-scripts.com https://track.hubspot.com https://api.hubapi.com",
               "frame-src https://www.google.com https://www.recaptcha.net",
             ].join("; "),
           },

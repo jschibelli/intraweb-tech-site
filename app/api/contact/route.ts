@@ -29,7 +29,7 @@ const formSchema = z.object({
 async function verifyRecaptchaToken(
   token: string,
   request: NextRequest
-): Promise<{ valid: boolean; score?: number; invalidReason?: string }> {
+): Promise<{ valid: boolean; score?: number; invalidReason?: string; hostname?: string }> {
   const projectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
   const siteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!projectId || !siteKey) {
@@ -56,14 +56,18 @@ async function verifyRecaptchaToken(
 
     const invalidReasonRaw = response.tokenProperties?.invalidReason;
     const invalidReason = invalidReasonRaw != null ? String(invalidReasonRaw) : "unknown";
+    const score = response.riskAnalysis?.score ?? 0;
+    const action = response.tokenProperties?.action ?? "";
+    const hostname = response.tokenProperties?.hostname ?? "";
+
     if (process.env.NODE_ENV === "development") {
       console.log("[reCAPTCHA] assessment response:", {
         valid: response.tokenProperties?.valid,
         invalidReason,
-        action: response.tokenProperties?.action,
-        hostname: response.tokenProperties?.hostname,
+        action,
+        hostname,
         createTime: response.tokenProperties?.createTime,
-        score: response.riskAnalysis?.score,
+        score,
       });
     }
 
@@ -71,7 +75,7 @@ async function verifyRecaptchaToken(
       if (process.env.NODE_ENV === "development") {
         console.log("reCAPTCHA token invalid:", invalidReason);
       }
-      return { valid: false, invalidReason };
+      return { valid: false, invalidReason, score, hostname };
     }
     if (response.tokenProperties.action !== RECAPTCHA_ACTION) {
       if (process.env.NODE_ENV === "development") {
@@ -79,14 +83,18 @@ async function verifyRecaptchaToken(
           "reCAPTCHA action mismatch: expected",
           RECAPTCHA_ACTION,
           "got",
-          response.tokenProperties.action
+          action
         );
       }
-      return { valid: false };
+      return { valid: false, invalidReason: "action_mismatch", score, hostname };
     }
-    const score = response.riskAnalysis?.score ?? 0;
     const scoreOk = score >= RECAPTCHA_MIN_SCORE;
-    return { valid: scoreOk, score };
+    return {
+      valid: scoreOk,
+      score,
+      invalidReason: scoreOk ? undefined : "score_below_threshold",
+      hostname,
+    };
   } catch (err) {
     console.error("reCAPTCHA verification error:", err);
     return { valid: false };
@@ -149,8 +157,15 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const { valid } = await verifyRecaptchaToken(token, request);
+      const { valid, invalidReason, score, hostname } = await verifyRecaptchaToken(token, request);
       if (!valid) {
+        // Log server-side so you can debug in production (Vercel logs, etc.)
+        console.error("[reCAPTCHA] verification failed", {
+          invalidReason,
+          score,
+          hostname,
+          hint: "Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY matches RECAPTCHA_ENTERPRISE_SITE_KEY; domain allowed in reCAPTCHA key; token not reused.",
+        });
         return NextResponse.json(
           { error: "reCAPTCHA verification failed", message: "Security check failed. Please try again." },
           { status: 400 }
