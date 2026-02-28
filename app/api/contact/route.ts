@@ -89,14 +89,18 @@ async function verifyRecaptchaToken(
     }
     const prevPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
     process.env.GOOGLE_APPLICATION_CREDENTIALS = credsPath;
-    let response: Awaited<ReturnType<RecaptchaEnterpriseServiceClient["createAssessment"]>>[0];
+    type AssessmentResult = {
+      tokenProperties?: { valid?: boolean; invalidReason?: string; action?: string; hostname?: string; createTime?: string };
+      riskAnalysis?: { score?: number };
+    };
+    let response: AssessmentResult;
     try {
       const client = new RecaptchaEnterpriseServiceClient();
       const projectPath = client.projectPath(projectId);
       const userAgent = request.headers.get("user-agent") ?? "";
       const forwarded = request.headers.get("x-forwarded-for");
       const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
-      [response] = await client.createAssessment({
+      const result = await client.createAssessment({
         parent: projectPath,
         assessment: {
           event: {
@@ -108,6 +112,7 @@ async function verifyRecaptchaToken(
           },
         },
       });
+      response = (result as [AssessmentResult])[0];
     } finally {
       if (prevPath !== undefined) process.env.GOOGLE_APPLICATION_CREDENTIALS = prevPath;
       else delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
