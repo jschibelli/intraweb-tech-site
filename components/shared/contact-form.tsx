@@ -162,7 +162,7 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate suppressHydrationWarning>
       {submitStatus && (
         <div
           className={`p-4 rounded-md ${
@@ -186,6 +186,7 @@ export default function ContactForm() {
           placeholder="Your first name"
           className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`}
           aria-invalid={!!errors.firstName}
+          suppressHydrationWarning
         />
         {errors.firstName && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.firstName.message}</p>
@@ -203,6 +204,7 @@ export default function ContactForm() {
           placeholder="Your last name"
           className={`${inputStyles} ${errors.lastName ? "border-red-500" : ""}`}
           aria-invalid={!!errors.lastName}
+          suppressHydrationWarning
         />
         {errors.lastName && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
@@ -221,6 +223,7 @@ export default function ContactForm() {
           placeholder="https://"
           className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
           aria-invalid={!!errors.website}
+          suppressHydrationWarning
         />
         {errors.website && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
@@ -236,6 +239,7 @@ export default function ContactForm() {
           id="reasonForCall"
           className={`${inputStyles} ${errors.reasonForCall ? "border-red-500" : ""}`}
           aria-invalid={!!errors.reasonForCall}
+          suppressHydrationWarning
         >
           {reasonOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -259,6 +263,7 @@ export default function ContactForm() {
           placeholder="you@company.com"
           className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
           aria-invalid={!!errors.email}
+          suppressHydrationWarning
         />
         {errors.email && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.email.message}</p>
@@ -274,6 +279,7 @@ export default function ContactForm() {
           id="decisionMaker"
           className={`${inputStyles} ${errors.decisionMaker ? "border-red-500" : ""}`}
           aria-invalid={!!errors.decisionMaker}
+          suppressHydrationWarning
         >
           {decisionMakerOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -295,6 +301,7 @@ export default function ContactForm() {
           id="annualRevenue"
           className={`${inputStyles} ${errors.annualRevenue ? "border-red-500" : ""}`}
           aria-invalid={!!errors.annualRevenue}
+          suppressHydrationWarning
         >
           {annualRevenueOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -319,6 +326,7 @@ export default function ContactForm() {
           placeholder="e.g. 50"
           className={inputStyles}
           aria-describedby="numberOfEmployees-hint"
+          suppressHydrationWarning
         />
         <p id="numberOfEmployees-hint" className="text-sm text-gray-400 mt-1">
           Optional. Helps us prioritize follow-up (ICP: 10–150).
@@ -336,6 +344,7 @@ export default function ContactForm() {
           placeholder="Tell us about your goals and challenges..."
           className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
           aria-invalid={!!errors.message}
+          suppressHydrationWarning
         />
         {errors.message && (
           <p className="mt-1 text-sm text-red-400" role="alert">{errors.message.message}</p>

@@ -7,21 +7,28 @@ param(
     [string]$Mode = "full",
     
     [Parameter(Mandatory=$false)]
-    [switch]$DryRun = $false
+    [switch]$DryRun = $false,
+
+    [Parameter(Mandatory=$false)]
+    [switch]$SkipBranchCheck = $false
 )
 
 Write-Host "Portfolio OS House Cleaning Script" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Mode: $Mode | DryRun: $DryRun" -ForegroundColor Cyan
 
-# Check branch
+# Check branch (unless skipped for dry-run on feature branches)
 $currentBranch = git branch --show-current
-if ($currentBranch -ne "develop") {
+if (-not $SkipBranchCheck -and $currentBranch -ne "develop") {
     Write-Host "WARNING: Not on develop branch (current: $currentBranch)" -ForegroundColor Yellow
-    Write-Host "Please switch to develop branch" -ForegroundColor Red
+    Write-Host "Please switch to develop branch (or use -SkipBranchCheck for dry-run only)" -ForegroundColor Red
     exit 1
 }
-Write-Host "SUCCESS: On correct branch: $currentBranch" -ForegroundColor Green
+if ($SkipBranchCheck -and $currentBranch -ne "develop") {
+    Write-Host "INFO: Skipping branch check (current: $currentBranch)" -ForegroundColor Yellow
+} else {
+    Write-Host "SUCCESS: On correct branch: $currentBranch" -ForegroundColor Green
+}
 
 # Function to organize docs folder
 function Organize-DocsFolder {
@@ -194,14 +201,16 @@ function Validate-ProjectStructure {
 
 # Main execution logic
 try {
-    # Pre-flight checks
-    $currentBranch = git branch --show-current
-    if ($currentBranch -ne "develop") {
-        Write-Host "WARNING: Not on develop branch (current: $currentBranch)" -ForegroundColor Yellow
-        Write-Host "Please switch to develop branch" -ForegroundColor Red
-        exit 1
+    # Pre-flight checks (branch already checked at top unless -SkipBranchCheck)
+    if (-not $SkipBranchCheck) {
+        $currentBranch = git branch --show-current
+        if ($currentBranch -ne "develop") {
+            Write-Host "WARNING: Not on develop branch (current: $currentBranch)" -ForegroundColor Yellow
+            Write-Host "Please switch to develop branch" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "SUCCESS: On correct branch: $currentBranch" -ForegroundColor Green
     }
-    Write-Host "SUCCESS: On correct branch: $currentBranch" -ForegroundColor Green
     
     # Create logs directory
     if (!(Test-Path "logs")) { New-Item -ItemType Directory -Path "logs" -Force | Out-Null }
