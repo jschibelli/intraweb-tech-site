@@ -7,8 +7,11 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$Title,
     
-    [Parameter(Mandatory=$true)]
-    [string]$Body,
+    [Parameter(Mandatory=$false)]
+    [string]$Body = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$BodyFile = "",
     
     [string]$Labels = "",
     [string]$Milestone = "",
@@ -51,6 +54,23 @@ Write-Host "===============================================" -ForegroundColor Bl
 Write-Host "   Enhanced Issue Creation with Auto Branch" -ForegroundColor Blue
 Write-Host "===============================================" -ForegroundColor Blue
 Write-Host ""
+
+# Resolve body: from file or parameter (script uses bodyPath for gh -F when provided)
+$bodyPath = $null
+if ($BodyFile) {
+    $bodyPath = $BodyFile
+    if (-not [System.IO.Path]::IsPathRooted($bodyPath)) {
+        $bodyPath = Join-Path (Get-Location) $bodyPath
+    }
+    if (-not (Test-Path $bodyPath)) {
+        Write-Host "❌ Body file not found: $bodyPath" -ForegroundColor Red
+        exit 1
+    }
+    $Body = Get-Content -Path $bodyPath -Raw
+} elseif (-not $Body) {
+    Write-Host "❌ Either -Body or -BodyFile must be provided" -ForegroundColor Red
+    exit 1
+}
 
 # Require project configuration
 $config = Require-ProjectConfig
@@ -238,8 +258,12 @@ if ($DryRun) {
     Write-Host "  [DRY RUN] Would create issue with title: $Title" -ForegroundColor Magenta
     $issueNumber = 999
 } else {
-    # Build the gh issue create command
-    $createCmd = "gh issue create --title `"$Title`" --body `"$Body`""
+    # Build the gh issue create command (use -F when body from file to avoid quoting issues)
+    if ($bodyPath) {
+        $createCmd = "gh issue create --title `"$Title`" -F `"$bodyPath`""
+    } else {
+        $createCmd = "gh issue create --title `"$Title`" --body `"$($Body -replace '[\r\n]+', ' ' -replace '"', '\"')`""
+    }
     
     if ($Labels) {
         $createCmd += " --label `"$Labels`""
@@ -253,10 +277,18 @@ if ($DryRun) {
         $createCmd += " --assignee `"$Assignee`""
     }
     
-    Write-Host "  Executing: $createCmd" -ForegroundColor Gray
+    Write-Host "  Executing: gh issue create --title ... $(if ($bodyPath) { '-F (body file)' } else { '--body ...' })" -ForegroundColor Gray
     
     try {
-        $issueUrl = Invoke-Expression $createCmd
+        if ($bodyPath) {
+            $createArgs = @('issue', 'create', '--title', $Title, '-F', $bodyPath)
+            if ($Labels) { $createArgs += '--label'; $createArgs += $Labels }
+            if ($Milestone) { $createArgs += '--milestone'; $createArgs += $Milestone }
+            if ($Assignee) { $createArgs += '--assignee'; $createArgs += $Assignee }
+            $issueUrl = gh @createArgs
+        } else {
+            $issueUrl = Invoke-Expression $createCmd
+        }
         
         # Extract issue number from URL
         if ($issueUrl -match '/issues/(\d+)') {
