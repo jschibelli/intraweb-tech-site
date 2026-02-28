@@ -36,7 +36,44 @@ async function verifyRecaptchaToken(
     return { valid: false };
   }
   try {
-    const client = new RecaptchaEnterpriseServiceClient();
+    // On Vercel/serverless there are no default credentials; pass from env.
+    // Set GOOGLE_APPLICATION_CREDENTIALS_JSON to the full service account JSON string.
+    const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    if (!credentialsJson || credentialsJson.trim() === "") {
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage:
+          "GOOGLE_APPLICATION_CREDENTIALS_JSON is not set. In Vercel: Settings → Environment Variables → add the full service account JSON for Production, then redeploy.",
+      };
+    }
+    let clientOptions: ConstructorParameters<typeof RecaptchaEnterpriseServiceClient>[0] = {};
+    try {
+      const key = JSON.parse(credentialsJson) as { client_email?: string; private_key?: string };
+      if (key.client_email && key.private_key) {
+        // Restore newlines in private_key if they were lost when pasting into env (e.g. \n as literal)
+        const privateKey = key.private_key.includes("\\n")
+          ? key.private_key.replace(/\\n/g, "\n")
+          : key.private_key;
+        clientOptions = { credentials: { client_email: key.client_email, private_key: privateKey } };
+      }
+    } catch (parseErr) {
+      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage: `Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON (parse error: ${msg}). Paste the full JSON from your service account key file.`,
+      };
+    }
+    if (!clientOptions.credentials) {
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage:
+          "GOOGLE_APPLICATION_CREDENTIALS_JSON must contain client_email and private_key. Use the JSON file from Google Cloud service account Keys.",
+      };
+    }
+    const client = new RecaptchaEnterpriseServiceClient(clientOptions);
     const projectPath = client.projectPath(projectId);
     const userAgent = request.headers.get("user-agent") ?? "";
     const forwarded = request.headers.get("x-forwarded-for");
