@@ -54,7 +54,8 @@ async function verifyRecaptchaToken(
       },
     });
 
-    const invalidReason = response.tokenProperties?.invalidReason ?? "unknown";
+    const invalidReasonRaw = response.tokenProperties?.invalidReason;
+    const invalidReason = invalidReasonRaw != null ? String(invalidReasonRaw) : "unknown";
     if (process.env.NODE_ENV === "development") {
       console.log("[reCAPTCHA] assessment response:", {
         valid: response.tokenProperties?.valid,
