@@ -225,6 +225,10 @@ export async function POST(request: NextRequest) {
     ].filter((url): url is string => Boolean(url?.trim()));
     if (n8nWebhookUrls.length > 0) {
       console.log("[n8n] Triggering", n8nWebhookUrls.length, "webhook(s) for", email);
+    } else {
+      console.warn(
+        "[n8n] Skipped: no webhook URLs set. Set N8N_LEAD_SCORING_WEBHOOK_URL and/or N8N_CONTACT_WEBHOOK_URL in your deployment env (e.g. Vercel)."
+      );
     }
     const n8nPayload = {
       contactId: "",
@@ -284,6 +288,13 @@ ${message}
 
     let hubspotPromise = Promise.resolve();
 
+    if (!hubspotPortalId || !hubspotFormGuid || hubspotFormGuid === "TODO_FILL_THIS") {
+      if (hubspotPortalId || hubspotFormGuid) {
+        console.warn(
+          "[HubSpot Forms] Skipped: missing or placeholder config. Need NEXT_PUBLIC_HUBSPOT_ID and HUBSPOT_FORM_GUID (not TODO_FILL_THIS) in deployment env."
+        );
+      }
+    }
     if (hubspotPortalId && hubspotFormGuid && hubspotFormGuid !== "TODO_FILL_THIS") {
       const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormGuid}`;
 
@@ -330,6 +341,11 @@ ${message}
     const hubspotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
     let contactsApiPromise = Promise.resolve();
 
+    if (!hubspotAccessToken) {
+      console.warn(
+        "[HubSpot Contacts] Skipped: HUBSPOT_ACCESS_TOKEN not set in deployment env. Form submissions will not create/update HubSpot contacts."
+      );
+    }
     if (hubspotAccessToken) {
       const contactData = {
         properties: {

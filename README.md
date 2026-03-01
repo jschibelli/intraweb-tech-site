@@ -205,6 +205,17 @@ Use **Production** webhook URLs from each workflow’s Webhook node (or `/webhoo
 - In HubSpot: create custom contact properties `lead_score` (number), `lead_tier` (string), `scoring_breakdown` (string) if they do not exist; ensure `numberofemployees` exists on contacts (standard or custom).
 - In n8n: in the "Get recently created/updated contacts" node, add `numberofemployees` to the list of requested properties so the scoring Code node can use it.
 
+**Troubleshooting: form submitted but not in HubSpot / n8n not triggered**
+
+- **Deployment env:** HubSpot and n8n are only used when the **deployment** (e.g. Vercel) has the env vars set. `.env.local` is for local dev only. In Vercel: Project → Settings → Environment Variables → add for Production (and Preview if needed):
+  - `NEXT_PUBLIC_HUBSPOT_ID`, `HUBSPOT_FORM_GUID`, `HUBSPOT_ACCESS_TOKEN` for HubSpot
+  - `N8N_LEAD_SCORING_WEBHOOK_URL`, `N8N_CONTACT_WEBHOOK_URL` for n8n  
+  Redeploy after changing env.
+- **reCAPTCHA blocking:** If reCAPTCHA is enabled and verification fails, the API returns 400 before any HubSpot/n8n code runs. In production, set `GOOGLE_APPLICATION_CREDENTIALS_JSON` (full service account JSON) and ensure the site domain is allowed in the reCAPTCHA key. Check deployment logs for `[reCAPTCHA] verification failed`.
+- **Logs:** After a form submit, check deployment logs (e.g. Vercel → Logs). You should see either:
+  - `[n8n] Triggering 2 webhook(s)` and `HubSpot Forms API Successful` / `HubSpot Contact Updated`, or
+  - `[n8n] Skipped: no webhook URLs set` / `[HubSpot Forms] Skipped: missing or placeholder config` / `[HubSpot Contacts] Skipped: HUBSPOT_ACCESS_TOKEN not set` — fix the listed env vars and redeploy.
+
 ### HTTPS Enforcement
 The site enforces HTTPS in production through:
 - HSTS header configuration
