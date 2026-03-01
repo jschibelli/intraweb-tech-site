@@ -18,41 +18,14 @@ declare global {
   }
 }
 
-const reasonOptions = [
-  { value: "", label: "Select..." },
-  { value: "ai-transformation", label: "AI Transformation" },
-  { value: "custom-ai-engineer", label: "Developing custom AI solutions / AI Engineer" },
-  { value: "educating-team", label: "Educating your team on AI" },
-  { value: "reselling-white-label", label: "Re-selling/white-label your solutions" },
-];
-
-const decisionMakerOptions = [
-  { value: "", label: "Select..." },
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-];
-
-const annualRevenueOptions = [
-  { value: "", label: "Select revenue range" },
-  { value: "less-than-100k", label: "Less than $100K" },
-  { value: "100k-500k", label: "$100K - $500K" },
-  { value: "500k-1m", label: "$500K - $1M" },
-  { value: "1m-5m", label: "$1M - $5M" },
-  { value: "5m-10m", label: "$5M - $10M" },
-  { value: "10m-plus", label: "$10M+" },
-  { value: "prefer-not", label: "Prefer not to say" },
-];
-
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  website: z.string().min(1, "Website is required"),
-  reasonForCall: z.string().min(1, "Please select a reason"),
+  companyName: z.string().min(1, "Company name is required"),
   email: z.string().email("Please enter a valid email"),
-  decisionMaker: z.string().min(1, "Please select an option"),
-  annualRevenue: z.string().min(1, "Please select a revenue range"),
-  numberOfEmployees: z.string().optional(),
-  message: z.string().min(1, "Message is required"),
+  phone: z.string().optional(),
+  website: z.string().min(1, "Website is required"),
+  message: z.string().min(1, "Please describe your pain point"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -94,12 +67,10 @@ export default function ContactForm() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      website: "",
-      reasonForCall: "",
+      companyName: "",
       email: "",
-      decisionMaker: "",
-      annualRevenue: "",
-      numberOfEmployees: "",
+      phone: "",
+      website: "",
       message: "",
     },
   });
@@ -136,12 +107,10 @@ export default function ContactForm() {
         body: JSON.stringify({
           firstName: data.firstName,
           lastName: data.lastName,
-          website: data.website,
-          reasonForCall: data.reasonForCall,
+          companyName: data.companyName,
           email: data.email,
-          decisionMaker: data.decisionMaker,
-          annualRevenue: data.annualRevenue,
-          numberOfEmployees: data.numberOfEmployees || "",
+          phone: data.phone ?? "",
+          website: data.website,
           message: data.message,
           recaptchaToken: recaptchaToken ?? undefined,
         }),
@@ -213,42 +182,20 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Please provide your website <span className="text-red-400">*</span>
+        <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company Name <span className="text-red-400">*</span>
         </label>
         <input
-          {...register("website")}
-          type="url"
-          id="website"
-          placeholder="https://"
-          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.website}
+          {...register("companyName")}
+          type="text"
+          id="companyName"
+          placeholder="Acme Corp"
+          className={`${inputStyles} ${errors.companyName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.companyName}
           suppressHydrationWarning
         />
-        {errors.website && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="reasonForCall" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Which best describes the reason for the call? <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("reasonForCall")}
-          id="reasonForCall"
-          className={`${inputStyles} ${errors.reasonForCall ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.reasonForCall}
-          suppressHydrationWarning
-        >
-          {reasonOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.reasonForCall && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.reasonForCall.message}</p>
+        {errors.companyName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.companyName.message}</p>
         )}
       </div>
 
@@ -271,77 +218,50 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Are you the only decision maker? <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("decisionMaker")}
-          id="decisionMaker"
-          className={`${inputStyles} ${errors.decisionMaker ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.decisionMaker}
-          suppressHydrationWarning
-        >
-          {decisionMakerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.decisionMaker && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.decisionMaker.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="annualRevenue" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Company revenue <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("annualRevenue")}
-          id="annualRevenue"
-          className={`${inputStyles} ${errors.annualRevenue ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.annualRevenue}
-          suppressHydrationWarning
-        >
-          {annualRevenueOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.annualRevenue && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.annualRevenue.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="numberOfEmployees" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Company size (employees)
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Phone Number
         </label>
         <input
-          {...register("numberOfEmployees")}
-          type="number"
-          id="numberOfEmployees"
-          min={0}
-          placeholder="e.g. 50"
+          {...register("phone")}
+          type="tel"
+          id="phone"
+          placeholder="+1 (555) 000-0000"
           className={inputStyles}
-          aria-describedby="numberOfEmployees-hint"
+          aria-describedby="phone-hint"
           suppressHydrationWarning
         />
-        <p id="numberOfEmployees-hint" className="text-sm text-gray-400 mt-1">
-          Optional. Helps us prioritize follow-up (ICP: 10–150).
+        <p id="phone-hint" className="text-sm text-gray-400 mt-1">
+          Include your number for a same-day callback
         </p>
       </div>
 
       <div>
+        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Please provide your website <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("website")}
+          type="url"
+          id="website"
+          placeholder="https://"
+          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.website}
+          suppressHydrationWarning
+        />
+        {errors.website && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
+        )}
+      </div>
+
+      <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Message <span className="text-red-400">*</span>
+          What’s your main pain point? <span className="text-red-400">*</span>
         </label>
         <textarea
           {...register("message")}
           id="message"
           rows={5}
-          placeholder="Tell us about your goals and challenges..."
+          placeholder="Describe the challenge or problem you’re looking to solve..."
           className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
           aria-invalid={!!errors.message}
           suppressHydrationWarning

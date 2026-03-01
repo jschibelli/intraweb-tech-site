@@ -1,3 +1,9 @@
+---
+title: Compliance & Accessibility
+description: Privacy, legal, cookie consent, and WCAG 2.1 AA for the IntraWeb Technologies landing page.
+last_updated: 2025-02
+---
+
 # Compliance & Accessibility – IntraWeb Technologies Landing Page
 
 ## 1. Privacy & Legal

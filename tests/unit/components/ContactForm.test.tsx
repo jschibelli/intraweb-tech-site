@@ -23,8 +23,12 @@ describe('ContactForm', () => {
 
         expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
         expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/company name/i)).toBeInTheDocument()
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-        expect(screen.getByLabelText(/message/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument()
+        expect(screen.getByText(/Include your number for a same-day callback/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/website/i)).toBeInTheDocument()
+        expect(screen.getByLabelText(/pain point/i)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument()
     })
 
@@ -46,31 +50,17 @@ describe('ContactForm', () => {
 
         await userEvent.type(screen.getByLabelText(/first name/i), 'John')
         await userEvent.type(screen.getByLabelText(/last name/i), 'Doe')
+        await userEvent.type(screen.getByLabelText(/company name/i), 'Acme Corp')
         await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com')
         await userEvent.type(screen.getByLabelText(/website/i), 'https://example.com')
-
-        // Select Reason (Radio)
-        const reasonRadio = screen.getByLabelText(/ai transformation/i)
-        await userEvent.click(reasonRadio)
-
-        // Select Decision Maker
-        await userEvent.selectOptions(screen.getByLabelText(/are you the only decision maker/i), 'Yes')
-
-        // Select Revenue
-        await userEvent.selectOptions(screen.getByLabelText(/annual revenue/i), '$1M - $5M')
-
-        // Type a long enough message (>20 chars)
-        await userEvent.type(screen.getByLabelText(/message/i), 'This is a detailed message about our project requirements that is definitely longer than twenty characters.')
+        await userEvent.type(screen.getByLabelText(/pain point/i), 'This is a detailed message about our project requirements that is definitely longer than twenty characters.')
 
         await userEvent.click(screen.getByRole('button', { name: /send message/i }))
 
         await waitFor(() => {
             expect(global.fetch).toHaveBeenCalled()
-            // Expect redirect instead of inline message
             expect(mockPush).toHaveBeenCalledWith('/thank-you')
         })
-
-        // Form reset check removed as component unmounts/redirects
     })
 
     it('handles submission error', async () => {
@@ -82,13 +72,10 @@ describe('ContactForm', () => {
 
         await userEvent.type(screen.getByLabelText(/first name/i), 'John')
         await userEvent.type(screen.getByLabelText(/last name/i), 'Doe')
+        await userEvent.type(screen.getByLabelText(/company name/i), 'Acme Corp')
         await userEvent.type(screen.getByLabelText(/email/i), 'john@example.com')
         await userEvent.type(screen.getByLabelText(/website/i), 'https://example.com')
-
-        await userEvent.click(screen.getByLabelText(/ai transformation/i))
-        await userEvent.selectOptions(screen.getByLabelText(/are you the only decision maker/i), 'Yes')
-        await userEvent.selectOptions(screen.getByLabelText(/annual revenue/i), '$1M - $5M')
-        await userEvent.type(screen.getByLabelText(/message/i), 'This is a detailed message regarding the error handling test case that meets the length requirement.')
+        await userEvent.type(screen.getByLabelText(/pain point/i), 'This is a detailed message regarding the error handling test case that meets the length requirement.')
 
         await userEvent.click(screen.getByRole('button', { name: /send message/i }))
 

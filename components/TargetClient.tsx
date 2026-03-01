@@ -20,9 +20,9 @@ const scenarios = [
       "What worked at 20 people breaks at 80. You're adding process debt faster than headcount, and it's slowing everything down.",
   },
   {
-    headline: "You're stuck between strategy decks and actual delivery",
+    headline: "You have a plan but need someone to build it",
     description:
-      "Consultants gave you a roadmap. Now you need someone who can actually build it—and make it work inside your operations.",
+      "You know where you want to go with AI or automation. Now you need someone who can actually build it—and make it work inside your operations.",
   },
 ];
 

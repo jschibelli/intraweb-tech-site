@@ -1,3 +1,9 @@
+---
+title: HubSpot Integration Prompt
+description: Prompt template for consent-aware HubSpot tracking (Next.js/React).
+last_updated: 2025-02
+---
+
 # Prompt: Proper HubSpot Integration
 
 Use this prompt when asking an AI or developer to add HubSpot tracking to a website (Next.js, React, or similar).
