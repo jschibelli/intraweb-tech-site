@@ -18,46 +18,13 @@ declare global {
   }
 }
 
-const reasonOptions = [
-  { value: "", label: "Select..." },
-  { value: "AI Transformation", label: "AI Transformation" },
-  { value: "Workflow Automation", label: "Workflow Automation" },
-  { value: "Custom AI Engineer", label: "Custom AI Engineer" },
-  { value: "Educating Team", label: "Educating Team" },
-  { value: "Reselling/White-label", label: "Reselling / White-label" },
-];
-
-const roleOptions = [
-  { value: "", label: "Select..." },
-  { value: "Owner / C-Suite", label: "Owner / C-Suite" },
-  { value: "VP / Director", label: "VP / Director" },
-  { value: "Manager", label: "Manager" },
-  { value: "Individual Contributor", label: "Individual Contributor" },
-];
-
-const annualRevenueOptions = [
-  { value: "", label: "Select revenue range" },
-  { value: "Under $100K", label: "Under $100K" },
-  { value: "$100K - $500K", label: "$100K – $500K" },
-  { value: "$500K - $1M", label: "$500K – $1M" },
-  { value: "$1M - $5M", label: "$1M – $5M" },
-  { value: "$5M - $10M", label: "$5M – $10M" },
-  { value: "$10M - $50M", label: "$10M – $50M" },
-  { value: "$50M+", label: "$50M+" },
-  { value: "Prefer not to say", label: "Prefer not to say" },
-];
-
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   companyName: z.string().min(1, "Company name is required"),
-  role: z.string().min(1, "Please select your role"),
-  website: z.string().min(1, "Website is required"),
-  reasonForCall: z.string().min(1, "Please select a reason"),
   email: z.string().email("Please enter a valid email"),
   phone: z.string().optional(),
-  annualRevenue: z.string().min(1, "Please select a revenue range"),
-  numberOfEmployees: z.string().optional(),
+  website: z.string().min(1, "Website is required"),
   message: z.string().min(1, "Please describe your pain point"),
 });
 
@@ -101,13 +68,9 @@ export default function ContactForm() {
       firstName: "",
       lastName: "",
       companyName: "",
-      role: "",
-      website: "",
-      reasonForCall: "",
       email: "",
       phone: "",
-      annualRevenue: "",
-      numberOfEmployees: "",
+      website: "",
       message: "",
     },
   });
@@ -145,13 +108,9 @@ export default function ContactForm() {
           firstName: data.firstName,
           lastName: data.lastName,
           companyName: data.companyName,
-          role: data.role,
-          website: data.website,
-          reasonForCall: data.reasonForCall,
           email: data.email,
           phone: data.phone ?? "",
-          annualRevenue: data.annualRevenue,
-          numberOfEmployees: data.numberOfEmployees || "",
+          website: data.website,
           message: data.message,
           recaptchaToken: recaptchaToken ?? undefined,
         }),
@@ -241,68 +200,6 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="role" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Your Role <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("role")}
-          id="role"
-          className={`${inputStyles} ${errors.role ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.role}
-          suppressHydrationWarning
-        >
-          {roleOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.role && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.role.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Please provide your website <span className="text-red-400">*</span>
-        </label>
-        <input
-          {...register("website")}
-          type="url"
-          id="website"
-          placeholder="https://"
-          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.website}
-          suppressHydrationWarning
-        />
-        {errors.website && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="reasonForCall" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Which best describes the reason for the call? <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("reasonForCall")}
-          id="reasonForCall"
-          className={`${inputStyles} ${errors.reasonForCall ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.reasonForCall}
-          suppressHydrationWarning
-        >
-          {reasonOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.reasonForCall && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.reasonForCall.message}</p>
-        )}
-      </div>
-
-      <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1.5">
           What is your email? <span className="text-red-400">*</span>
         </label>
@@ -339,40 +236,21 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="annualRevenue" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Company revenue <span className="text-red-400">*</span>
-        </label>
-        <select
-          {...register("annualRevenue")}
-          id="annualRevenue"
-          className={`${inputStyles} ${errors.annualRevenue ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.annualRevenue}
-          suppressHydrationWarning
-        >
-          {annualRevenueOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.annualRevenue && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.annualRevenue.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="numberOfEmployees" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Company size (employees)
+        <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Please provide your website <span className="text-red-400">*</span>
         </label>
         <input
-          {...register("numberOfEmployees")}
-          type="number"
-          id="numberOfEmployees"
-          min={0}
-          placeholder="e.g. 50"
-          className={inputStyles}
+          {...register("website")}
+          type="url"
+          id="website"
+          placeholder="https://"
+          className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.website}
           suppressHydrationWarning
         />
+        {errors.website && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.website.message}</p>
+        )}
       </div>
 
       <div>

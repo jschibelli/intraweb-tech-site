@@ -16,13 +16,9 @@ const formSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   companyName: z.string().min(1),
-  role: z.string().min(1),
-  website: z.string().min(1),
-  reasonForCall: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional(),
-  annualRevenue: z.string().min(1),
-  numberOfEmployees: z.string().optional(),
+  website: z.string().min(1),
   message: z.string().min(1),
   recaptchaToken: z.string().optional(),
 });
@@ -168,44 +164,6 @@ async function verifyRecaptchaToken(
   }
 }
 
-const reasonLabels: Record<string, string> = {
-  "AI Transformation": "AI Transformation",
-  "Workflow Automation": "Workflow Automation",
-  "Custom AI Engineer": "Custom AI Engineer",
-  "Educating Team": "Educating Team",
-  "Reselling/White-label": "Reselling / White-label",
-};
-
-const revenueLabels: Record<string, string> = {
-  "Under $100K": "Under $100K",
-  "$100K - $500K": "$100K – $500K",
-  "$500K - $1M": "$500K – $1M",
-  "$1M - $5M": "$1M – $5M",
-  "$5M - $10M": "$5M – $10M",
-  "$10M - $50M": "$10M – $50M",
-  "$50M+": "$50M+",
-  "Prefer not to say": "Prefer not to say",
-};
-
-// Exact labels expected by n8n "Lead Intake & Scoring" workflow (reasonScores / revenueScores)
-const n8nReasonLabels: Record<string, string> = {
-  "AI Transformation": "AI Transformation",
-  "Workflow Automation": "Workflow Automation",
-  "Custom AI Engineer": "Custom AI Engineer",
-  "Educating Team": "Educating Team",
-  "Reselling/White-label": "Reselling / White-label",
-};
-const n8nRevenueLabels: Record<string, string> = {
-  "Under $100K": "Under $100K",
-  "$100K - $500K": "$100K – $500K",
-  "$500K - $1M": "$500K – $1M",
-  "$1M - $5M": "$1M – $5M",
-  "$5M - $10M": "$5M – $10M",
-  "$10M - $50M": "$10M – $50M",
-  "$50M+": "$50M+",
-  "Prefer not to say": "Prefer not to say",
-};
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -254,13 +212,9 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       companyName,
-      role,
-      website,
-      reasonForCall,
       email,
       phone,
-      annualRevenue,
-      numberOfEmployees,
+      website,
       message,
     } = validatedData;
 
@@ -269,35 +223,15 @@ export async function POST(request: NextRequest) {
       console.log("[n8n] N8N_LEAD_SCORING_WEBHOOK_URL is set (webhook will be triggered after HubSpot)");
     }
 
-    const reasonLabel = reasonLabels[reasonForCall] || reasonForCall;
-    const revenueLabel = revenueLabels[annualRevenue] || annualRevenue;
-
-    // Map value keys to estimated integer for HubSpot 'annualrevenue'
-    const revenueToNumber: Record<string, number> = {
-      "Under $100K": 50000,
-      "$100K - $500K": 250000,
-      "$500K - $1M": 750000,
-      "$1M - $5M": 2500000,
-      "$5M - $10M": 7500000,
-      "$10M - $50M": 25000000,
-      "$50M+": 50000000,
-      "Prefer not to say": 0,
-    };
-    const numericRevenue = revenueToNumber[annualRevenue] || 0;
-
     // 1. Send Email via Resend
     const emailContent = `
 New Contact Form Submission:
 
 Name: ${firstName} ${lastName}
 Company: ${companyName}
-Role: ${role}
 Email: ${email}
 ${phone ? `Phone: ${phone}` : ""}
 Website: ${website}
-Reason for call: ${reasonLabel}
-Company revenue: ${revenueLabel}
-${numberOfEmployees ? `Company size (employees): ${numberOfEmployees}` : ""}
 
 Message:
 ${message}
@@ -320,18 +254,15 @@ ${message}
     if (hubspotPortalId && hubspotFormGuid && hubspotFormGuid !== "TODO_FILL_THIS") {
       const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormGuid}`;
 
-      // Use only form field names that exist on your HubSpot form (numberofemployees omitted if not on form)
+      // Use only form field names that exist on your HubSpot form
       const hubspotData = {
         fields: [
           { name: "email", value: email },
           { name: "firstname", value: firstName },
           { name: "lastname", value: lastName },
           { name: "companyname", value: companyName },
-          { name: "role", value: role },
           { name: "phone", value: phone || "" },
           { name: "website", value: website || "" },
-          { name: "reason_for_call", value: reasonForCall },
-          { name: "annualrevenue", value: numericRevenue.toString() },
           { name: "message", value: message },
         ],
         context: {
@@ -367,26 +298,14 @@ ${message}
     let contactsApiPromise = Promise.resolve();
 
     if (hubspotAccessToken) {
-      const reasonMapping: Record<string, string> = {
-        "AI Transformation": "ai-transformation",
-        "Workflow Automation": "workflow-automation",
-        "Custom AI Engineer": "ai-engineer",
-        "Educating Team": "ai-education",
-        "Reselling/White-label": "reselling",
-      };
-
-      // Omit numberofemployees unless you've created that custom property on the Contact in HubSpot
       const contactData = {
         properties: {
           email,
           firstname: firstName,
           lastname: lastName,
           companyname: companyName,
-          role,
           phone: phone || "",
           website: website || "",
-          reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
-          annualrevenue: numericRevenue.toString(),
           message,
         },
       };
@@ -446,13 +365,9 @@ ${message}
               firstName,
               lastName,
               companyName,
-              role,
               phone: phone || "",
               email,
               website: website || "",
-              reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
-              annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
-              numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
               message,
             };
             try {
@@ -520,13 +435,9 @@ ${message}
             firstName,
             lastName,
             companyName,
-            role,
             phone: phone || "",
             email,
             website: website || "",
-            reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
-            annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
-            numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
             message,
           };
           const n8nRes = await fetch(n8nWebhookUrl, {
