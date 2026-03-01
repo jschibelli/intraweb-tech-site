@@ -109,10 +109,10 @@ function Organize-DocsFolder {
 function Organize-FileStructure {
     Write-Host "Organizing file structure..." -ForegroundColor Cyan
     
-    # Check for misplaced files in root
+    # Check for misplaced files in root (exclude standard project configs)
     $RootFiles = Get-ChildItem -Path . -File | Where-Object { 
         $_.Name -match "\.(ps1|md|json|js|ts|sh)$" -and 
-        $_.Name -notmatch "^(README|package|tsconfig|turbo|prettier|vercel|pnpm)" 
+        $_.Name -notmatch "^(README|package|tsconfig|turbo|prettier|vercel|pnpm|next\.config|next-sitemap\.config|tailwind\.config|jest\.config|jest\.setup|playwright\.config|CHANGELOG)" 
     }
     
     if ($RootFiles.Count -gt 0) {

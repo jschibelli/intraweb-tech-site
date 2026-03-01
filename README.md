@@ -121,10 +121,9 @@
 
 ## 8. Documentation & Handoff (Est. 0.5 day)
 
-- `README.md`:
-  - Install instructions, folder overview, how to update content
-- **Future Enhancements**:
-  - A/B testing, optional CMS, animation perf, SSR caching
+- **Repository docs**: See **[docs/README.md](docs/README.md)** for the full documentation index (project summary, technical reference, compliance, implementation guides, integrations).
+- `README.md`: Install instructions, folder overview, how to update content
+- **Future Enhancements**: A/B testing, optional CMS, animation perf, SSR caching
 
 ---
 
