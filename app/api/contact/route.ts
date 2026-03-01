@@ -15,10 +15,12 @@ const RECAPTCHA_MIN_SCORE = 0.5;
 const formSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  companyName: z.string().min(1),
+  role: z.string().min(1),
   website: z.string().min(1),
   reasonForCall: z.string().min(1),
   email: z.string().email(),
-  decisionMaker: z.string().min(1),
+  phone: z.string().optional(),
   annualRevenue: z.string().min(1),
   numberOfEmployees: z.string().optional(),
   message: z.string().min(1),
@@ -167,37 +169,41 @@ async function verifyRecaptchaToken(
 }
 
 const reasonLabels: Record<string, string> = {
-  "ai-transformation": "AI Transformation",
-  "custom-ai-engineer": "Developing custom AI solutions / AI Engineer",
-  "educating-team": "Educating your team on AI",
-  "reselling-white-label": "Re-selling/white-label your solutions",
+  "AI Transformation": "AI Transformation",
+  "Workflow Automation": "Workflow Automation",
+  "Custom AI Engineer": "Custom AI Engineer",
+  "Educating Team": "Educating Team",
+  "Reselling/White-label": "Reselling / White-label",
 };
 
 const revenueLabels: Record<string, string> = {
-  "less-than-100k": "Less than $100K",
-  "100k-500k": "$100K - $500K",
-  "500k-1m": "$500K - $1M",
-  "1m-5m": "$1M - $5M",
-  "5m-10m": "$5M - $10M",
-  "10m-plus": "$10M+",
-  "prefer-not": "Prefer not to say",
+  "Under $100K": "Under $100K",
+  "$100K - $500K": "$100K – $500K",
+  "$500K - $1M": "$500K – $1M",
+  "$1M - $5M": "$1M – $5M",
+  "$5M - $10M": "$5M – $10M",
+  "$10M - $50M": "$10M – $50M",
+  "$50M+": "$50M+",
+  "Prefer not to say": "Prefer not to say",
 };
 
 // Exact labels expected by n8n "Lead Intake & Scoring" workflow (reasonScores / revenueScores)
 const n8nReasonLabels: Record<string, string> = {
-  "ai-transformation": "AI Transformation",
-  "custom-ai-engineer": "Custom AI Engineer",
-  "reselling-white-label": "Reselling/White-label",
-  "educating-team": "Educating Team",
+  "AI Transformation": "AI Transformation",
+  "Workflow Automation": "Workflow Automation",
+  "Custom AI Engineer": "Custom AI Engineer",
+  "Educating Team": "Educating Team",
+  "Reselling/White-label": "Reselling / White-label",
 };
 const n8nRevenueLabels: Record<string, string> = {
-  "less-than-100k": "Under $100K",
-  "100k-500k": "$100K - $500K",
-  "500k-1m": "$500K - $1M",
-  "1m-5m": "$1M - $5M",
-  "5m-10m": "$5M - $10M",
-  "10m-plus": "$10M+",
-  "prefer-not": "Prefer not to say",
+  "Under $100K": "Under $100K",
+  "$100K - $500K": "$100K – $500K",
+  "$500K - $1M": "$500K – $1M",
+  "$1M - $5M": "$1M – $5M",
+  "$5M - $10M": "$5M – $10M",
+  "$10M - $50M": "$10M – $50M",
+  "$50M+": "$50M+",
+  "Prefer not to say": "Prefer not to say",
 };
 
 export async function POST(request: NextRequest) {
@@ -247,10 +253,12 @@ export async function POST(request: NextRequest) {
     const {
       firstName,
       lastName,
+      companyName,
+      role,
       website,
       reasonForCall,
       email,
-      decisionMaker,
+      phone,
       annualRevenue,
       numberOfEmployees,
       message,
@@ -266,29 +274,28 @@ export async function POST(request: NextRequest) {
 
     // Map value keys to estimated integer for HubSpot 'annualrevenue'
     const revenueToNumber: Record<string, number> = {
-      "less-than-100k": 50000,
-      "100k-500k": 250000,
-      "500k-1m": 750000,
-      "1m-5m": 2500000,
-      "5m-10m": 7500000,
-      "10m-plus": 10000000,
-      "prefer-not": 0,
+      "Under $100K": 50000,
+      "$100K - $500K": 250000,
+      "$500K - $1M": 750000,
+      "$1M - $5M": 2500000,
+      "$5M - $10M": 7500000,
+      "$10M - $50M": 25000000,
+      "$50M+": 50000000,
+      "Prefer not to say": 0,
     };
     const numericRevenue = revenueToNumber[annualRevenue] || 0;
-
-    // Normalize decision_maker for n8n lead scoring (expects "Yes" / "No" / "Partial")
-    const decisionMakerForHubSpot =
-      decisionMaker === "yes" ? "Yes" : decisionMaker === "no" ? "No" : decisionMaker;
 
     // 1. Send Email via Resend
     const emailContent = `
 New Contact Form Submission:
 
 Name: ${firstName} ${lastName}
+Company: ${companyName}
+Role: ${role}
 Email: ${email}
+${phone ? `Phone: ${phone}` : ""}
 Website: ${website}
 Reason for call: ${reasonLabel}
-Decision maker only: ${decisionMaker === "yes" ? "Yes" : "No"}
 Company revenue: ${revenueLabel}
 ${numberOfEmployees ? `Company size (employees): ${numberOfEmployees}` : ""}
 
@@ -319,9 +326,11 @@ ${message}
           { name: "email", value: email },
           { name: "firstname", value: firstName },
           { name: "lastname", value: lastName },
+          { name: "companyname", value: companyName },
+          { name: "role", value: role },
+          { name: "phone", value: phone || "" },
           { name: "website", value: website || "" },
           { name: "reason_for_call", value: reasonForCall },
-          { name: "decision_maker", value: decisionMakerForHubSpot },
           { name: "annualrevenue", value: numericRevenue.toString() },
           { name: "message", value: message },
         ],
@@ -359,10 +368,11 @@ ${message}
 
     if (hubspotAccessToken) {
       const reasonMapping: Record<string, string> = {
-        "ai-transformation": "ai-transformation",
-        "custom-ai-engineer": "ai-engineer",
-        "educating-team": "ai-education",
-        "reselling-white-label": "reselling",
+        "AI Transformation": "ai-transformation",
+        "Workflow Automation": "workflow-automation",
+        "Custom AI Engineer": "ai-engineer",
+        "Educating Team": "ai-education",
+        "Reselling/White-label": "reselling",
       };
 
       // Omit numberofemployees unless you've created that custom property on the Contact in HubSpot
@@ -371,9 +381,11 @@ ${message}
           email,
           firstname: firstName,
           lastname: lastName,
+          companyname: companyName,
+          role,
+          phone: phone || "",
           website: website || "",
           reason_for_call: reasonMapping[reasonForCall] || reasonForCall,
-          decision_maker: decisionMakerForHubSpot,
           annualrevenue: numericRevenue.toString(),
           message,
         },
@@ -433,10 +445,12 @@ ${message}
               contactId,
               firstName,
               lastName,
+              companyName,
+              role,
+              phone: phone || "",
               email,
               website: website || "",
               reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
-              decisionMaker: decisionMakerForHubSpot,
               annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
               numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
               message,
@@ -505,10 +519,12 @@ ${message}
             contactId: "",
             firstName,
             lastName,
+            companyName,
+            role,
+            phone: phone || "",
             email,
             website: website || "",
             reasonForCall: n8nReasonLabels[reasonForCall] ?? reasonLabel,
-            decisionMaker: decisionMakerForHubSpot,
             annualRevenue: n8nRevenueLabels[annualRevenue] ?? revenueLabel,
             numberOfEmployees: numberOfEmployees ? String(parseInt(numberOfEmployees, 10) || "") : "",
             message,

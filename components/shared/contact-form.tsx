@@ -20,39 +20,45 @@ declare global {
 
 const reasonOptions = [
   { value: "", label: "Select..." },
-  { value: "ai-transformation", label: "AI Transformation" },
-  { value: "custom-ai-engineer", label: "Developing custom AI solutions / AI Engineer" },
-  { value: "educating-team", label: "Educating your team on AI" },
-  { value: "reselling-white-label", label: "Re-selling/white-label your solutions" },
+  { value: "AI Transformation", label: "AI Transformation" },
+  { value: "Workflow Automation", label: "Workflow Automation" },
+  { value: "Custom AI Engineer", label: "Custom AI Engineer" },
+  { value: "Educating Team", label: "Educating Team" },
+  { value: "Reselling/White-label", label: "Reselling / White-label" },
 ];
 
-const decisionMakerOptions = [
+const roleOptions = [
   { value: "", label: "Select..." },
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
+  { value: "Owner / C-Suite", label: "Owner / C-Suite" },
+  { value: "VP / Director", label: "VP / Director" },
+  { value: "Manager", label: "Manager" },
+  { value: "Individual Contributor", label: "Individual Contributor" },
 ];
 
 const annualRevenueOptions = [
   { value: "", label: "Select revenue range" },
-  { value: "less-than-100k", label: "Less than $100K" },
-  { value: "100k-500k", label: "$100K - $500K" },
-  { value: "500k-1m", label: "$500K - $1M" },
-  { value: "1m-5m", label: "$1M - $5M" },
-  { value: "5m-10m", label: "$5M - $10M" },
-  { value: "10m-plus", label: "$10M+" },
-  { value: "prefer-not", label: "Prefer not to say" },
+  { value: "Under $100K", label: "Under $100K" },
+  { value: "$100K - $500K", label: "$100K – $500K" },
+  { value: "$500K - $1M", label: "$500K – $1M" },
+  { value: "$1M - $5M", label: "$1M – $5M" },
+  { value: "$5M - $10M", label: "$5M – $10M" },
+  { value: "$10M - $50M", label: "$10M – $50M" },
+  { value: "$50M+", label: "$50M+" },
+  { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  companyName: z.string().min(1, "Company name is required"),
+  role: z.string().min(1, "Please select your role"),
   website: z.string().min(1, "Website is required"),
   reasonForCall: z.string().min(1, "Please select a reason"),
   email: z.string().email("Please enter a valid email"),
-  decisionMaker: z.string().min(1, "Please select an option"),
+  phone: z.string().optional(),
   annualRevenue: z.string().min(1, "Please select a revenue range"),
   numberOfEmployees: z.string().optional(),
-  message: z.string().min(1, "Message is required"),
+  message: z.string().min(1, "Please describe your pain point"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -94,10 +100,12 @@ export default function ContactForm() {
     defaultValues: {
       firstName: "",
       lastName: "",
+      companyName: "",
+      role: "",
       website: "",
       reasonForCall: "",
       email: "",
-      decisionMaker: "",
+      phone: "",
       annualRevenue: "",
       numberOfEmployees: "",
       message: "",
@@ -136,10 +144,12 @@ export default function ContactForm() {
         body: JSON.stringify({
           firstName: data.firstName,
           lastName: data.lastName,
+          companyName: data.companyName,
+          role: data.role,
           website: data.website,
           reasonForCall: data.reasonForCall,
           email: data.email,
-          decisionMaker: data.decisionMaker,
+          phone: data.phone ?? "",
           annualRevenue: data.annualRevenue,
           numberOfEmployees: data.numberOfEmployees || "",
           message: data.message,
@@ -213,6 +223,46 @@ export default function ContactForm() {
       </div>
 
       <div>
+        <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Company Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          {...register("companyName")}
+          type="text"
+          id="companyName"
+          placeholder="Acme Corp"
+          className={`${inputStyles} ${errors.companyName ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.companyName}
+          suppressHydrationWarning
+        />
+        {errors.companyName && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.companyName.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="role" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Your Role <span className="text-red-400">*</span>
+        </label>
+        <select
+          {...register("role")}
+          id="role"
+          className={`${inputStyles} ${errors.role ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.role}
+          suppressHydrationWarning
+        >
+          {roleOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {errors.role && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.role.message}</p>
+        )}
+      </div>
+
+      <div>
         <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
           Please provide your website <span className="text-red-400">*</span>
         </label>
@@ -271,25 +321,21 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="decisionMaker" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Are you the only decision maker? <span className="text-red-400">*</span>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Phone Number
         </label>
-        <select
-          {...register("decisionMaker")}
-          id="decisionMaker"
-          className={`${inputStyles} ${errors.decisionMaker ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.decisionMaker}
+        <input
+          {...register("phone")}
+          type="tel"
+          id="phone"
+          placeholder="+1 (555) 000-0000"
+          className={inputStyles}
+          aria-describedby="phone-hint"
           suppressHydrationWarning
-        >
-          {decisionMakerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {errors.decisionMaker && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.decisionMaker.message}</p>
-        )}
+        />
+        <p id="phone-hint" className="text-sm text-gray-400 mt-1">
+          Include your number for a same-day callback
+        </p>
       </div>
 
       <div>
@@ -325,23 +371,19 @@ export default function ContactForm() {
           min={0}
           placeholder="e.g. 50"
           className={inputStyles}
-          aria-describedby="numberOfEmployees-hint"
           suppressHydrationWarning
         />
-        <p id="numberOfEmployees-hint" className="text-sm text-gray-400 mt-1">
-          Optional. Helps us prioritize follow-up (ICP: 10–150).
-        </p>
       </div>
 
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Message <span className="text-red-400">*</span>
+          What’s your main pain point? <span className="text-red-400">*</span>
         </label>
         <textarea
           {...register("message")}
           id="message"
           rows={5}
-          placeholder="Tell us about your goals and challenges..."
+          placeholder="Describe the challenge or problem you’re looking to solve..."
           className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
           aria-invalid={!!errors.message}
           suppressHydrationWarning

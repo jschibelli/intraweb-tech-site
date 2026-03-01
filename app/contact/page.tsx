@@ -53,9 +53,9 @@ export default function ContactPage() {
                 <div className="mt-8 p-4 rounded-lg bg-gray-800 border border-gray-700">
                   <h3 className="font-semibold mb-3 text-teal-400">What you get</h3>
                   <ul className="space-y-2 text-gray-300 text-sm">
-                    <li>Identify and resolve the structural bottlenecks limiting your AI adoption</li>
-                    <li>Bypass recruitment cycles with immediate access to senior AI systems engineers</li>
-                    <li>Ship robust, custom infrastructure tailored to your specific operational reality</li>
+                    <li>A clear diagnostic on where your AI strategy is stuck and the highest-impact next step</li>
+                    <li>Direct access to senior AI and automation engineers—no lengthy hiring or RFP cycles</li>
+                    <li>Implementation tailored to your stack and workflows, not a one-size-fits-all playbook</li>
                   </ul>
                 </div>
               </div>
