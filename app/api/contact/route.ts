@@ -218,10 +218,43 @@ export async function POST(request: NextRequest) {
       message,
     } = validatedData;
 
-    const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
-    if (n8nWebhookUrl) {
-      console.log("[n8n] N8N_LEAD_SCORING_WEBHOOK_URL is set (webhook will be triggered after HubSpot)");
+    // n8n webhooks: run in parallel with email/HubSpot so they always fire (not dependent on HubSpot success)
+    const n8nWebhookUrls: string[] = [
+      process.env.N8N_LEAD_SCORING_WEBHOOK_URL,
+      process.env.N8N_CONTACT_WEBHOOK_URL,
+    ].filter((url): url is string => Boolean(url?.trim()));
+    if (n8nWebhookUrls.length > 0) {
+      console.log("[n8n] Triggering", n8nWebhookUrls.length, "webhook(s) for", email);
     }
+    const n8nPayload = {
+      contactId: "",
+      firstName,
+      lastName,
+      companyName,
+      phone: phone || "",
+      email,
+      website: website || "",
+      message,
+    };
+    const n8nPromise = Promise.all(
+      n8nWebhookUrls.map((url) =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(n8nPayload),
+        })
+          .then(async (res) => {
+            console.log("[n8n] Webhook response:", res.status, res.statusText, url.slice(-20));
+            if (!res.ok) {
+              const text = await res.text();
+              console.error("[n8n] Webhook error body:", text.slice(0, 300));
+            }
+          })
+          .catch((err) => {
+            console.error("[n8n] Webhook error:", err);
+          })
+      )
+    );
 
     // 1. Send Email via Resend
     const emailContent = `
@@ -355,40 +388,6 @@ ${message}
           return res.json();
         })
         .then(async (contactResult) => {
-          const contactId = contactResult?.id ? String(contactResult.id) : "";
-
-          // Trigger n8n Lead Intake & Scoring workflow (fire even without HubSpot id so scoring still runs)
-          const n8nWebhookUrl = process.env.N8N_LEAD_SCORING_WEBHOOK_URL;
-          if (n8nWebhookUrl) {
-            const n8nPayload = {
-              contactId,
-              firstName,
-              lastName,
-              companyName,
-              phone: phone || "",
-              email,
-              website: website || "",
-              message,
-            };
-            try {
-              console.log("[n8n] Calling lead scoring webhook for", email);
-              const n8nRes = await fetch(n8nWebhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(n8nPayload),
-              });
-              console.log("[n8n] Webhook response:", n8nRes.status, n8nRes.statusText);
-              if (!n8nRes.ok) {
-                const text = await n8nRes.text();
-                console.error("[n8n] Webhook error body:", text.slice(0, 300));
-              }
-            } catch (err) {
-              console.error("[n8n] Lead scoring webhook error:", err);
-            }
-          } else {
-            console.warn("[n8n] N8N_LEAD_SCORING_WEBHOOK_URL not set – lead scoring skipped");
-          }
-
           if (contactResult && contactResult.id) {
             console.log("Processing contact:", contactResult.id);
 
@@ -425,34 +424,9 @@ ${message}
         .catch((err) => {
           console.error("HubSpot Contacts API Error:", err);
         });
-    } else if (n8nWebhookUrl) {
-      // No HubSpot token – still trigger n8n so lead scoring runs
-      (async () => {
-        try {
-          console.log("[n8n] Calling lead scoring webhook (no HubSpot)", email);
-          const n8nPayload = {
-            contactId: "",
-            firstName,
-            lastName,
-            companyName,
-            phone: phone || "",
-            email,
-            website: website || "",
-            message,
-          };
-          const n8nRes = await fetch(n8nWebhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(n8nPayload),
-          });
-          console.log("[n8n] Webhook response:", n8nRes.status, n8nRes.statusText);
-        } catch (err) {
-          console.error("[n8n] Lead scoring webhook error:", err);
-        }
-      })();
     }
 
-    await Promise.all([emailPromise, hubspotPromise, contactsApiPromise]);
+    await Promise.all([emailPromise, hubspotPromise, contactsApiPromise, n8nPromise]);
 
     return NextResponse.json(
       { message: "Message sent successfully" },
