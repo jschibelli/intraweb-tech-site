@@ -315,7 +315,7 @@ ${message}
         },
       };
 
-      console.log("Sending to HubSpot Forms API:", JSON.stringify(hubspotData, null, 2));
+      console.log("[HubSpot Forms] Submitting to", hubspotUrl.replace(/\/[a-f0-9-]{36}$/i, "/<formGuid>"));
 
       hubspotPromise = fetch(hubspotUrl, {
         method: "POST",
@@ -325,15 +325,22 @@ ${message}
         body: JSON.stringify(hubspotData),
       })
         .then(async (res) => {
+          const bodyText = await res.text();
           if (!res.ok) {
-            const errorBody = await res.text();
-            console.error("HubSpot Forms API Failed:", res.status, errorBody);
+            console.error(
+              "[HubSpot Forms] Failed:",
+              res.status,
+              res.statusText,
+              "—",
+              bodyText.slice(0, 500),
+              bodyText.length > 500 ? "…" : ""
+            );
           } else {
-            console.log("HubSpot Forms API Successful");
+            console.log("[HubSpot Forms] Success");
           }
         })
         .catch((err) => {
-          console.error("HubSpot Forms API Error:", err);
+          console.error("[HubSpot Forms] Request error:", err);
         });
     }
 
@@ -398,7 +405,12 @@ ${message}
             }
 
             const errorBody = await res.text();
-            console.error("HubSpot Contacts API Failed:", res.status, errorBody);
+            console.error(
+              "[HubSpot Contacts] Failed:",
+              res.status,
+              errorBody.slice(0, 500),
+              errorBody.length > 500 ? "…" : ""
+            );
             return null;
           }
           return res.json();

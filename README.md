@@ -213,8 +213,9 @@ Use **Production** webhook URLs from each workflow’s Webhook node (or `/webhoo
   Redeploy after changing env.
 - **reCAPTCHA blocking:** If reCAPTCHA is enabled and verification fails, the API returns 400 before any HubSpot/n8n code runs. In production, set `GOOGLE_APPLICATION_CREDENTIALS_JSON` (full service account JSON) and ensure the site domain is allowed in the reCAPTCHA key. Check deployment logs for `[reCAPTCHA] verification failed`.
 - **Logs:** After a form submit, check deployment logs (e.g. Vercel → Logs). You should see either:
-  - `[n8n] Triggering 2 webhook(s)` and `HubSpot Forms API Successful` / `HubSpot Contact Updated`, or
+  - `[n8n] Triggering 2 webhook(s)` and `[HubSpot Forms] Success` / `HubSpot Contact Updated`, or
   - `[n8n] Skipped: no webhook URLs set` / `[HubSpot Forms] Skipped: missing or placeholder config` / `[HubSpot Contacts] Skipped: HUBSPOT_ACCESS_TOKEN not set` — fix the listed env vars and redeploy.
+- **Env set but still no data in HubSpot:** Check logs for `[HubSpot Forms] Failed:` or `[HubSpot Contacts] Failed:` — the message after that is HubSpot’s error (e.g. invalid form GUID, unknown field name, or token scope). Fix: use the form GUID from HubSpot → Marketing → Lead Capture → Forms → your form → Options → Form ID; ensure form field names match (email, firstname, lastname, companyname, phone, website, message). For Contacts API, ensure `message` (and any custom fields) exist as contact properties in HubSpot.
 
 ### HTTPS Enforcement
 The site enforces HTTPS in production through:
