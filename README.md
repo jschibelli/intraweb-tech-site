@@ -194,11 +194,12 @@ RECAPTCHA_ENTERPRISE_PROJECT_ID=your-gcp-project-id
 ```
 Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and authentication via [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials) (e.g. `gcloud auth application-default login` locally, `GOOGLE_APPLICATION_CREDENTIALS`, or the default service account on GCP). The `projects.assessments.create` method also supports [API keys](https://docs.cloud.google.com/recaptcha/docs/authentication) for billing/quota. See [Authenticate to reCAPTCHA](https://docs.cloud.google.com/recaptcha/docs/authentication) for all options.
 
-For HubSpot contact sync and n8n lead scoring (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API), and for automatic lead scoring after each form submission, set the n8n webhook URL:
+For HubSpot contact sync and n8n (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API). For n8n, set one or both webhook URLs so the contact API triggers your workflows on every form submission (in parallel with email and HubSpot, so they run even if HubSpot fails). Example for n8n at `n8n.intrawebtech.com`:
 ```
-N8N_LEAD_SCORING_WEBHOOK_URL=https://your-n8n-instance/webhook/your-webhook-path
+N8N_LEAD_SCORING_WEBHOOK_URL=https://n8n.intrawebtech.com/webhook/6fZCT68dlyiXMrnK
+N8N_CONTACT_WEBHOOK_URL=https://n8n.intrawebtech.com/webhook/zJWCaaXQ0HbwYiAO
 ```
-Copy the Production (or Test) webhook URL from the n8n "Lead Qualification & Routing" workflow Webhook node. When set, the contact API triggers this workflow after each successful HubSpot contact create/update so leads are scored and updated in HubSpot.
+Use **Production** webhook URLs from each workflow’s Webhook node (or `/webhook-test/...` for test). Both workflows receive the same JSON: `contactId`, `firstName`, `lastName`, `companyName`, `phone`, `email`, `website`, `message`.
 
 **HubSpot + n8n lead scoring checklist:**
 - In HubSpot: create custom contact properties `lead_score` (number), `lead_tier` (string), `scoring_breakdown` (string) if they do not exist; ensure `numberofemployees` exists on contacts (standard or custom).
