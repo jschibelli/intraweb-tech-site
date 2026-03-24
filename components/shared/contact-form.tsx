@@ -7,6 +7,9 @@ import { z } from "zod";
 
 const RECAPTCHA_ACTION = "contact";
 
+/** Match HubSpot `pain_point` single-line limit used on the server */
+const PAIN_POINT_MAX = 1000;
+
 declare global {
   interface Window {
     grecaptcha?: {
@@ -18,14 +21,46 @@ declare global {
   }
 }
 
+function toSingleLinePainPoint(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
+}
+
+function isValidOptionalWebsite(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return true;
+  const normalized = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  try {
+    new URL(normalized);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const formSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  companyName: z.string().min(1, "Company name is required"),
-  email: z.string().email("Please enter a valid email"),
-  phone: z.string().optional(),
-  website: z.string().min(1, "Website is required"),
-  message: z.string().min(1, "Please describe your pain point"),
+  companyName: z.string().min(1, "Company or business name is required"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((v) => {
+      const digits = v.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15;
+    }, "Enter a valid phone number (10–15 digits, e.g. +1 555 000 0000)"),
+  website: z
+    .string()
+    .transform((s) => s.trim())
+    .refine(isValidOptionalWebsite, "Enter a valid URL or leave blank"),
+  painPoint: z
+    .string()
+    .max(PAIN_POINT_MAX, `Please use at most ${PAIN_POINT_MAX} characters`)
+    .transform(toSingleLinePainPoint)
+    .refine(
+      (s) => s.length > 0,
+      "Please tell us what you are trying to fix or achieve"
+    ),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -65,13 +100,13 @@ export default function ContactForm() {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      email: "",
       firstName: "",
       lastName: "",
       companyName: "",
-      email: "",
       phone: "",
       website: "",
-      message: "",
+      painPoint: "",
     },
   });
 
@@ -105,13 +140,13 @@ export default function ContactForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          email: data.email,
           firstName: data.firstName,
           lastName: data.lastName,
           companyName: data.companyName,
-          email: data.email,
-          phone: data.phone ?? "",
-          website: data.website,
-          message: data.message,
+          phone: data.phone,
+          website: data.website.trim() === "" ? "" : data.website.trim(),
+          painPoint: data.painPoint,
           recaptchaToken: recaptchaToken ?? undefined,
         }),
       });
@@ -143,52 +178,75 @@ export default function ContactForm() {
           {submitStatus.message}
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
       <div>
-        <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1.5">
-          First Name <span className="text-red-400">*</span>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1.5">
+          Email <span className="text-red-400">*</span>
         </label>
         <input
-          {...register("firstName")}
-          type="text"
-          id="firstName"
-          placeholder="Your first name"
-          className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.firstName}
+          {...register("email")}
+          type="email"
+          id="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.email}
           suppressHydrationWarning
         />
-        {errors.firstName && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.firstName.message}</p>
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.email.message}</p>
         )}
       </div>
 
-      <div>
-        <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Last Name <span className="text-red-400">*</span>
-        </label>
-        <input
-          {...register("lastName")}
-          type="text"
-          id="lastName"
-          placeholder="Your last name"
-          className={`${inputStyles} ${errors.lastName ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.lastName}
-          suppressHydrationWarning
-        />
-        {errors.lastName && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
-        )}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1.5">
+            First name <span className="text-red-400">*</span>
+          </label>
+          <input
+            {...register("firstName")}
+            type="text"
+            id="firstName"
+            autoComplete="given-name"
+            placeholder="First name"
+            className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`}
+            aria-invalid={!!errors.firstName}
+            suppressHydrationWarning
+          />
+          {errors.firstName && (
+            <p className="mt-1 text-sm text-red-400" role="alert">{errors.firstName.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1.5">
+            Last name <span className="text-red-400">*</span>
+          </label>
+          <input
+            {...register("lastName")}
+            type="text"
+            id="lastName"
+            autoComplete="family-name"
+            placeholder="Last name"
+            className={`${inputStyles} ${errors.lastName ? "border-red-500" : ""}`}
+            aria-invalid={!!errors.lastName}
+            suppressHydrationWarning
+          />
+          {errors.lastName && (
+            <p className="mt-1 text-sm text-red-400" role="alert">{errors.lastName.message}</p>
+          )}
+        </div>
       </div>
 
       <div>
         <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Company Name <span className="text-red-400">*</span>
+          Company / business name <span className="text-red-400">*</span>
         </label>
         <input
           {...register("companyName")}
           type="text"
           id="companyName"
+          autoComplete="organization"
           placeholder="Acme Corp"
           className={`${inputStyles} ${errors.companyName ? "border-red-500" : ""}`}
           aria-invalid={!!errors.companyName}
@@ -200,50 +258,38 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1.5">
-          What is your email? <span className="text-red-400">*</span>
-        </label>
-        <input
-          {...register("email")}
-          type="email"
-          id="email"
-          placeholder="you@company.com"
-          className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.email}
-          suppressHydrationWarning
-        />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.email.message}</p>
-        )}
-      </div>
-
-      <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Phone Number
+          Phone <span className="text-red-400">*</span>
         </label>
         <input
           {...register("phone")}
           type="tel"
           id="phone"
+          autoComplete="tel"
           placeholder="+1 (555) 000-0000"
-          className={inputStyles}
+          className={`${inputStyles} ${errors.phone ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.phone}
           aria-describedby="phone-hint"
           suppressHydrationWarning
         />
         <p id="phone-hint" className="text-sm text-gray-400 mt-1">
-          Include your number for a same-day callback
+          Include country code if outside the US (10–15 digits total).
         </p>
+        {errors.phone && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.phone.message}</p>
+        )}
       </div>
 
       <div>
         <label htmlFor="website" className="block text-sm font-medium text-gray-200 mb-1.5">
-          Please provide your website <span className="text-red-400">*</span>
+          Website <span className="text-gray-500 font-normal">(optional)</span>
         </label>
         <input
           {...register("website")}
           type="url"
           id="website"
-          placeholder="https://"
+          autoComplete="url"
+          placeholder="https://example.com"
           className={`${inputStyles} ${errors.website ? "border-red-500" : ""}`}
           aria-invalid={!!errors.website}
           suppressHydrationWarning
@@ -254,20 +300,25 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-200 mb-1.5">
-          What’s your main pain point? <span className="text-red-400">*</span>
+        <label htmlFor="painPoint" className="block text-sm font-medium text-gray-200 mb-1.5">
+          What are you trying to fix or achieve? <span className="text-red-400">*</span>
         </label>
         <textarea
-          {...register("message")}
-          id="message"
+          {...register("painPoint")}
+          id="painPoint"
           rows={5}
-          placeholder="Describe the challenge or problem you’re looking to solve..."
-          className={`${inputStyles} resize-y ${errors.message ? "border-red-500" : ""}`}
-          aria-invalid={!!errors.message}
+          maxLength={PAIN_POINT_MAX}
+          placeholder="e.g. what’s broken, what you want to improve, timeline if any."
+          className={`${inputStyles} resize-y ${errors.painPoint ? "border-red-500" : ""}`}
+          aria-invalid={!!errors.painPoint}
+          aria-describedby="pain-point-hint"
           suppressHydrationWarning
         />
-        {errors.message && (
-          <p className="mt-1 text-sm text-red-400" role="alert">{errors.message.message}</p>
+        <p id="pain-point-hint" className="text-sm text-gray-400 mt-1">
+          Up to {PAIN_POINT_MAX} characters.
+        </p>
+        {errors.painPoint && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.painPoint.message}</p>
         )}
       </div>
 

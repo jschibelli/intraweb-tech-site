@@ -12,14 +12,64 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const RECAPTCHA_ACTION = "contact";
 const RECAPTCHA_MIN_SCORE = 0.5;
 
+/** HubSpot single-line text; keep UI/server in sync with property limits */
+const PAIN_POINT_MAX = 1000;
+
+function digitsOnly(s: string): string {
+  return s.replace(/\D/g, "");
+}
+
+function normalizeWebsiteInput(raw: string): string {
+  const t = raw.trim();
+  if (!t) return "";
+  const withScheme = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  try {
+    new URL(withScheme);
+    return withScheme;
+  } catch {
+    return t;
+  }
+}
+
+function isValidOptionalWebsite(raw: string): boolean {
+  const t = raw.trim();
+  if (!t) return true;
+  const normalized = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  try {
+    new URL(normalized);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Collapse whitespace/newlines for HubSpot single-line `pain_point` */
+function toHubSpotSingleLinePainPoint(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
+}
+
 const formSchema = z.object({
+  email: z.string().email(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   companyName: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  website: z.string().min(1),
-  message: z.string().min(1),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .refine((v) => {
+      const d = digitsOnly(v);
+      return d.length >= 10 && d.length <= 15;
+    }, "Enter a valid phone number (10–15 digits, e.g. +1 555 000 0000)"),
+  website: z
+    .string()
+    .optional()
+    .transform((s) => (s == null ? "" : s.trim()))
+    .refine(isValidOptionalWebsite, "Enter a valid URL or leave blank"),
+  painPoint: z
+    .string()
+    .max(PAIN_POINT_MAX)
+    .transform(toHubSpotSingleLinePainPoint)
+    .refine((s) => s.length > 0, "Please describe what you are trying to fix or achieve"),
   recaptchaToken: z.string().optional(),
 });
 
@@ -209,14 +259,16 @@ export async function POST(request: NextRequest) {
     }
 
     const {
+      email,
       firstName,
       lastName,
       companyName,
-      email,
       phone,
       website,
-      message,
+      painPoint,
     } = validatedData;
+
+    const websiteForHubSpot = website ? normalizeWebsiteInput(website) : "";
 
     // n8n webhooks: run in parallel with email/HubSpot so they always fire (not dependent on HubSpot success)
     const n8nWebhookUrls: string[] = [
@@ -235,10 +287,11 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       companyName,
-      phone: phone || "",
+      phone,
       email,
-      website: website || "",
-      message,
+      website: websiteForHubSpot,
+      painPoint,
+      message: painPoint,
     };
     const n8nPromise = Promise.all(
       n8nWebhookUrls.map((url) =>
@@ -267,11 +320,11 @@ New Contact Form Submission:
 Name: ${firstName} ${lastName}
 Company: ${companyName}
 Email: ${email}
-${phone ? `Phone: ${phone}` : ""}
-Website: ${website}
+Phone: ${phone}
+${websiteForHubSpot ? `Website: ${websiteForHubSpot}` : ""}
 
-Message:
-${message}
+What they are trying to fix or achieve:
+${painPoint}
 `;
 
     const emailPromise = resend.emails.send({
@@ -298,16 +351,16 @@ ${message}
     if (hubspotPortalId && hubspotFormGuid && hubspotFormGuid !== "TODO_FILL_THIS") {
       const hubspotUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${hubspotPortalId}/${hubspotFormGuid}`;
 
-      // Use only form field names that exist on your HubSpot form
+      // Field `name` values must match the HubSpot form’s internal names (and contact properties)
       const hubspotData = {
         fields: [
           { name: "email", value: email },
           { name: "firstname", value: firstName },
           { name: "lastname", value: lastName },
-          { name: "companyname", value: companyName },
-          { name: "phone", value: phone || "" },
-          { name: "website", value: website || "" },
-          { name: "message", value: message },
+          { name: "company", value: companyName },
+          { name: "phone", value: phone },
+          ...(websiteForHubSpot ? [{ name: "website", value: websiteForHubSpot }] : []),
+          { name: "pain_point", value: painPoint },
         ],
         context: {
           pageUri: request.headers.get("referer") || "",
@@ -354,17 +407,18 @@ ${message}
       );
     }
     if (hubspotAccessToken) {
-      const contactData = {
-        properties: {
-          email,
-          firstname: firstName,
-          lastname: lastName,
-          companyname: companyName,
-          phone: phone || "",
-          website: website || "",
-          message,
-        },
+      const contactProperties: Record<string, string> = {
+        email,
+        firstname: firstName,
+        lastname: lastName,
+        company: companyName,
+        phone,
+        pain_point: painPoint,
       };
+      if (websiteForHubSpot) {
+        contactProperties.website = websiteForHubSpot;
+      }
+      const contactData = { properties: contactProperties };
 
       console.log("Creating/updating contact via Contacts API");
 
@@ -416,37 +470,8 @@ ${message}
           return res.json();
         })
         .then(async (contactResult) => {
-          if (contactResult && contactResult.id) {
-            console.log("Processing contact:", contactResult.id);
-
-            // Create a Note for the message
-            const notesUrl = `https://api.hubapi.com/crm/v3/objects/notes`;
-            const noteData = {
-              properties: {
-                hs_timestamp: new Date().toISOString(),
-                hs_note_body: message
-              },
-              associations: [
-                {
-                  to: { id: contactResult.id },
-                  types: [
-                    { associationCategory: "HUBSPOT_DEFINED", associationTypeId: 202 }
-                  ]
-                }
-              ]
-            };
-
-            await fetch(notesUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${hubspotAccessToken}`
-              },
-              body: JSON.stringify(noteData)
-            }).then(res => {
-              if (res.ok) console.log("HubSpot Note Created");
-              else res.text().then(t => console.error("HubSpot Note Failed:", t));
-            });
+          if (contactResult?.id) {
+            console.log("HubSpot contact processed:", contactResult.id);
           }
         })
         .catch((err) => {
