@@ -339,10 +339,15 @@ ${painPoint}
     const hubspotPortalId = process.env.NEXT_PUBLIC_HUBSPOT_ID;
     const hubspotFormGuid = process.env.HUBSPOT_FORM_GUID;
 
+    let hubspotFormsSummary = "skipped: Forms API not configured (set NEXT_PUBLIC_HUBSPOT_ID + HUBSPOT_FORM_GUID on the server)";
+    let hubspotContactsSummary = "skipped: Contacts API not configured (set HUBSPOT_ACCESS_TOKEN on the server)";
+
     let hubspotPromise = Promise.resolve();
 
     if (!hubspotPortalId || !hubspotFormGuid || hubspotFormGuid === "TODO_FILL_THIS") {
       if (hubspotPortalId || hubspotFormGuid) {
+        hubspotFormsSummary =
+          "skipped: incomplete config (need both NEXT_PUBLIC_HUBSPOT_ID and HUBSPOT_FORM_GUID; GUID must not be TODO_FILL_THIS)";
         console.warn(
           "[HubSpot Forms] Skipped: missing or placeholder config. Need NEXT_PUBLIC_HUBSPOT_ID and HUBSPOT_FORM_GUID (not TODO_FILL_THIS) in deployment env."
         );
@@ -368,6 +373,7 @@ ${painPoint}
         },
       };
 
+      hubspotFormsSummary = "pending";
       console.log("[HubSpot Forms] Submitting to", hubspotUrl.replace(/\/[a-f0-9-]{36}$/i, "/<formGuid>"));
 
       hubspotPromise = fetch(hubspotUrl, {
@@ -380,19 +386,16 @@ ${painPoint}
         .then(async (res) => {
           const bodyText = await res.text();
           if (!res.ok) {
-            console.error(
-              "[HubSpot Forms] Failed:",
-              res.status,
-              res.statusText,
-              "—",
-              bodyText.slice(0, 500),
-              bodyText.length > 500 ? "…" : ""
-            );
+            hubspotFormsSummary = `error: HTTP ${res.status} — ${bodyText.slice(0, 400)}${bodyText.length > 400 ? "…" : ""}`;
+            console.error("[HubSpot Forms] Failed:", res.status, res.statusText, "—", bodyText.slice(0, 800));
           } else {
+            hubspotFormsSummary = "ok";
             console.log("[HubSpot Forms] Success");
           }
         })
         .catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          hubspotFormsSummary = `error: ${msg}`;
           console.error("[HubSpot Forms] Request error:", err);
         });
     }
@@ -420,6 +423,7 @@ ${painPoint}
       }
       const contactData = { properties: contactProperties };
 
+      hubspotContactsSummary = "pending";
       console.log("Creating/updating contact via Contacts API");
 
       contactsApiPromise = fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
@@ -449,24 +453,23 @@ ${painPoint}
 
               if (!updateResponse.ok) {
                 const updateError = await updateResponse.text();
+                hubspotContactsSummary = `error: PATCH by email HTTP ${updateResponse.status} — ${updateError.slice(0, 400)}`;
                 console.error("Failed to update contact:", updateError);
                 return null;
               }
 
               const updateResult = await updateResponse.json();
+              hubspotContactsSummary = "ok (contact updated by email)";
               console.log("HubSpot Contact Updated:", email);
               return updateResult;
             }
 
             const errorBody = await res.text();
-            console.error(
-              "[HubSpot Contacts] Failed:",
-              res.status,
-              errorBody.slice(0, 500),
-              errorBody.length > 500 ? "…" : ""
-            );
+            hubspotContactsSummary = `error: POST contact HTTP ${res.status} — ${errorBody.slice(0, 400)}${errorBody.length > 400 ? "…" : ""}`;
+            console.error("[HubSpot Contacts] Failed:", res.status, errorBody.slice(0, 800));
             return null;
           }
+          hubspotContactsSummary = "ok (contact created)";
           return res.json();
         })
         .then(async (contactResult) => {
@@ -475,16 +478,35 @@ ${painPoint}
           }
         })
         .catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          hubspotContactsSummary = `error: ${msg}`;
           console.error("HubSpot Contacts API Error:", err);
         });
     }
 
     await Promise.all([emailPromise, hubspotPromise, contactsApiPromise, n8nPromise]);
 
-    return NextResponse.json(
-      { message: "Message sent successfully" },
-      { status: 200 }
+    console.log(
+      "[contact] integration summary for",
+      email,
+      "| hubspot_forms:",
+      hubspotFormsSummary,
+      "| hubspot_contacts:",
+      hubspotContactsSummary
     );
+
+    const responseBody: Record<string, unknown> = {
+      message: "Message sent successfully",
+    };
+    if (process.env.CONTACT_INTEGRATION_DEBUG === "true") {
+      responseBody.integrations = {
+        hubspotForms: hubspotFormsSummary,
+        hubspotContacts: hubspotContactsSummary,
+        hint: "Disable CONTACT_INTEGRATION_DEBUG after troubleshooting. Fix env vars and HubSpot form field internal names (email, firstname, lastname, company, phone, pain_point; website optional). Ensure custom property pain_point exists for Contacts API.",
+      };
+    }
+
+    return NextResponse.json(responseBody, { status: 200 });
   } catch (error) {
     console.error("Contact form error:", error);
 
