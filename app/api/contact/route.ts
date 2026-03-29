@@ -216,6 +216,166 @@ async function verifyRecaptchaToken(
 }
 
 /** Postman / server-to-server testing only. Set CONTACT_BYPASS_RECAPTCHA_SECRET (≥16 chars) and send matching X-Intraweb-Contact-Bypass header. */
+type Tier = "starter" | "growth";
+
+type ContactSyncResult = {
+  contactId: string | null;
+  contactAction: "created" | "updated" | "failed" | "skipped";
+  hubspotContactsSummary: string;
+};
+
+async function classifyPainTier(painPoint: string): Promise<Tier> {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
+    return "starter";
+  }
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 32,
+        messages: [
+          {
+            role: "user",
+            content:
+              `Reply with exactly one word: starter or growth.\n` +
+              `starter = early-stage, small/solo, simple or first website, MVP, tight budget.\n` +
+              `growth = scaling, larger org, replatform, automation, integrations, complex rebuild, enterprise.\n\n` +
+              `Pain description:\n${painPoint.slice(0, 2000)}`,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("[tier] Claude API HTTP", res.status, errText.slice(0, 300));
+      return "starter";
+    }
+    const data = (await res.json()) as {
+      content?: Array<{ text?: string }>;
+    };
+    const raw = data.content?.[0]?.text?.trim().toLowerCase() ?? "";
+    if (raw.includes("growth")) return "growth";
+    return "starter";
+  } catch (err) {
+    console.error("[tier] Claude classify error:", err);
+    return "starter";
+  }
+}
+
+async function syncHubSpotContact(params: {
+  hubspotAccessToken: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  phone: string;
+  websiteForHubSpot: string;
+  painPoint: string;
+}): Promise<ContactSyncResult> {
+  const {
+    hubspotAccessToken,
+    email,
+    firstName,
+    lastName,
+    companyName,
+    phone,
+    websiteForHubSpot,
+    painPoint,
+  } = params;
+
+  const contactProperties: Record<string, string> = {
+    email,
+    firstname: firstName,
+    lastname: lastName,
+    company: companyName,
+    phone,
+    pain_point: painPoint,
+  };
+  if (websiteForHubSpot) {
+    contactProperties.website = websiteForHubSpot;
+  }
+  const contactData = { properties: contactProperties };
+
+  console.log("Creating/updating contact via Contacts API");
+
+  try {
+    const res = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${hubspotAccessToken}`,
+      },
+      body: JSON.stringify(contactData),
+    });
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        console.log("Contact already exists, updating by email...");
+        const updateUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`;
+        const updateResponse = await fetch(updateUrl, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${hubspotAccessToken}`,
+          },
+          body: JSON.stringify(contactData),
+        });
+
+        if (!updateResponse.ok) {
+          const updateError = await updateResponse.text();
+          console.error("Failed to update contact:", updateError);
+          return {
+            contactId: null,
+            contactAction: "failed",
+            hubspotContactsSummary: `error: PATCH by email HTTP ${updateResponse.status} — ${updateError.slice(0, 400)}`,
+          };
+        }
+
+        const updateResult = (await updateResponse.json()) as { id?: string };
+        const id = updateResult.id != null ? String(updateResult.id) : null;
+        console.log("HubSpot Contact Updated:", email, id);
+        return {
+          contactId: id,
+          contactAction: "updated",
+          hubspotContactsSummary: "ok (contact updated by email)",
+        };
+      }
+
+      const errorBody = await res.text();
+      console.error("[HubSpot Contacts] Failed:", res.status, errorBody.slice(0, 800));
+      return {
+        contactId: null,
+        contactAction: "failed",
+        hubspotContactsSummary: `error: POST contact HTTP ${res.status} — ${errorBody.slice(0, 400)}${errorBody.length > 400 ? "…" : ""}`,
+      };
+    }
+
+    const created = (await res.json()) as { id?: string };
+    const id = created.id != null ? String(created.id) : null;
+    console.log("HubSpot contact processed:", id);
+    return {
+      contactId: id,
+      contactAction: "created",
+      hubspotContactsSummary: "ok (contact created)",
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("HubSpot Contacts API Error:", err);
+    return {
+      contactId: null,
+      contactAction: "failed",
+      hubspotContactsSummary: `error: ${msg}`,
+    };
+  }
+}
+
 function isRecaptchaBypassAuthorized(request: NextRequest): boolean {
   const envSecret = process.env.CONTACT_BYPASS_RECAPTCHA_SECRET?.trim();
   if (!envSecret || envSecret.length < 16) {
@@ -300,49 +460,6 @@ export async function POST(request: NextRequest) {
 
     const websiteForHubSpot = website ? normalizeWebsiteInput(website) : "";
 
-    // n8n webhooks: run in parallel with email/HubSpot so they always fire (not dependent on HubSpot success)
-    const n8nWebhookUrls: string[] = [
-      process.env.N8N_LEAD_SCORING_WEBHOOK_URL,
-      process.env.N8N_CONTACT_WEBHOOK_URL,
-    ].filter((url): url is string => Boolean(url?.trim()));
-    if (n8nWebhookUrls.length > 0) {
-      console.log("[n8n] Triggering", n8nWebhookUrls.length, "webhook(s) for", email);
-    } else {
-      console.warn(
-        "[n8n] Skipped: no webhook URLs set. Set N8N_LEAD_SCORING_WEBHOOK_URL and/or N8N_CONTACT_WEBHOOK_URL in your deployment env (e.g. Vercel)."
-      );
-    }
-    const n8nPayload = {
-      contactId: "",
-      firstName,
-      lastName,
-      companyName,
-      phone,
-      email,
-      website: websiteForHubSpot,
-      painPoint,
-      message: painPoint,
-    };
-    const n8nPromise = Promise.all(
-      n8nWebhookUrls.map((url) =>
-        fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(n8nPayload),
-        })
-          .then(async (res) => {
-            console.log("[n8n] Webhook response:", res.status, res.statusText, url.slice(-20));
-            if (!res.ok) {
-              const text = await res.text();
-              console.error("[n8n] Webhook error body:", text.slice(0, 300));
-            }
-          })
-          .catch((err) => {
-            console.error("[n8n] Webhook error:", err);
-          })
-      )
-    );
-
     // 1. Send Email via Resend
     const emailContent = `
 New Contact Form Submission:
@@ -371,6 +488,9 @@ ${painPoint}
 
     let hubspotFormsSummary = "skipped: Forms API not configured (set NEXT_PUBLIC_HUBSPOT_ID + HUBSPOT_FORM_GUID on the server)";
     let hubspotContactsSummary = "skipped: Contacts API not configured (set HUBSPOT_ACCESS_TOKEN on the server)";
+    let contactAction: ContactSyncResult["contactAction"] = "skipped";
+    let tier: Tier = "starter";
+    let n8nFired = false;
 
     let hubspotPromise = Promise.resolve();
 
@@ -430,91 +550,61 @@ ${painPoint}
         });
     }
 
-    // 3. Create/Update contact via Contacts API
-    const hubspotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN;
-    let contactsApiPromise = Promise.resolve();
+    // 3. Create/Update contact via Contacts API, then tier + n8n (requires real contactId)
+    const hubspotAccessToken = process.env.HUBSPOT_ACCESS_TOKEN?.trim();
 
     if (!hubspotAccessToken) {
       console.warn(
         "[HubSpot Contacts] Skipped: HUBSPOT_ACCESS_TOKEN not set in deployment env. Form submissions will not create/update HubSpot contacts."
       );
-    }
-    if (hubspotAccessToken) {
-      const contactProperties: Record<string, string> = {
+    } else {
+      const sync = await syncHubSpotContact({
+        hubspotAccessToken,
         email,
-        firstname: firstName,
-        lastname: lastName,
-        company: companyName,
+        firstName,
+        lastName,
+        companyName,
         phone,
-        pain_point: painPoint,
-      };
-      if (websiteForHubSpot) {
-        contactProperties.website = websiteForHubSpot;
+        websiteForHubSpot,
+        painPoint,
+      });
+      hubspotContactsSummary = sync.hubspotContactsSummary;
+      contactAction = sync.contactAction;
+
+      const n8nUrl = process.env.N8N_CONTACT_WEBHOOK_URL?.trim();
+      if (sync.contactId && n8nUrl) {
+        tier = await classifyPainTier(painPoint);
+        const n8nPayload = {
+          contactId: sync.contactId,
+          createDeal: true,
+          dealStage: "qualifiedtobuy",
+          tier,
+          painOverride: "",
+        };
+        console.log("[n8n] Firing webhook for", sync.contactId, "tier", tier);
+        try {
+          const n8nRes = await fetch(n8nUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(n8nPayload),
+          });
+          console.log("[n8n] Webhook response:", n8nRes.status, n8nRes.statusText, n8nUrl.slice(-40));
+          n8nFired = n8nRes.ok;
+          if (!n8nRes.ok) {
+            const text = await n8nRes.text();
+            console.error("[n8n] Webhook error body:", text.slice(0, 300));
+          }
+        } catch (err) {
+          console.error("[n8n] Webhook error:", err);
+        }
+      } else if (!n8nUrl) {
+        console.warn(
+          "[n8n] Skipped: N8N_CONTACT_WEBHOOK_URL not set in deployment env (e.g. Vercel)."
+        );
       }
-      const contactData = { properties: contactProperties };
-
-      hubspotContactsSummary = "pending";
-      console.log("Creating/updating contact via Contacts API");
-
-      contactsApiPromise = fetch(`https://api.hubapi.com/crm/v3/objects/contacts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${hubspotAccessToken}`,
-        },
-        body: JSON.stringify(contactData),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            // If contact exists (409), update it using email as identifier
-            if (res.status === 409) {
-              console.log("Contact already exists, updating by email...");
-
-              // Update using email as the identifier (no search API needed)
-              const updateUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`;
-              const updateResponse = await fetch(updateUrl, {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${hubspotAccessToken}`,
-                },
-                body: JSON.stringify(contactData),
-              });
-
-              if (!updateResponse.ok) {
-                const updateError = await updateResponse.text();
-                hubspotContactsSummary = `error: PATCH by email HTTP ${updateResponse.status} — ${updateError.slice(0, 400)}`;
-                console.error("Failed to update contact:", updateError);
-                return null;
-              }
-
-              const updateResult = await updateResponse.json();
-              hubspotContactsSummary = "ok (contact updated by email)";
-              console.log("HubSpot Contact Updated:", email);
-              return updateResult;
-            }
-
-            const errorBody = await res.text();
-            hubspotContactsSummary = `error: POST contact HTTP ${res.status} — ${errorBody.slice(0, 400)}${errorBody.length > 400 ? "…" : ""}`;
-            console.error("[HubSpot Contacts] Failed:", res.status, errorBody.slice(0, 800));
-            return null;
-          }
-          hubspotContactsSummary = "ok (contact created)";
-          return res.json();
-        })
-        .then(async (contactResult) => {
-          if (contactResult?.id) {
-            console.log("HubSpot contact processed:", contactResult.id);
-          }
-        })
-        .catch((err) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          hubspotContactsSummary = `error: ${msg}`;
-          console.error("HubSpot Contacts API Error:", err);
-        });
     }
 
-    await Promise.all([emailPromise, hubspotPromise, contactsApiPromise, n8nPromise]);
+    await Promise.all([emailPromise, hubspotPromise]);
 
     console.log(
       "[contact] integration summary for",
@@ -544,6 +634,9 @@ ${painPoint}
       responseBody.integrations = {
         hubspotForms: hubspotFormsSummary,
         hubspotContacts: hubspotContactsSummary,
+        n8nFired,
+        tier,
+        contactAction,
         hubspotEnv: {
           formsApiReady,
           contactsApiReady,
