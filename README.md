@@ -194,12 +194,12 @@ RECAPTCHA_ENTERPRISE_PROJECT_ID=your-gcp-project-id
 ```
 Use the same site key for both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_ENTERPRISE_SITE_KEY`. Server-side verification requires a GCP project with reCAPTCHA Enterprise API enabled and authentication via [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials) (e.g. `gcloud auth application-default login` locally, `GOOGLE_APPLICATION_CREDENTIALS`, or the default service account on GCP). The `projects.assessments.create` method also supports [API keys](https://docs.cloud.google.com/recaptcha/docs/authentication) for billing/quota. See [Authenticate to reCAPTCHA](https://docs.cloud.google.com/recaptcha/docs/authentication) for all options.
 
-For HubSpot contact sync and n8n (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API). For n8n, set one or both webhook URLs so the contact API triggers your workflows on every form submission (in parallel with email and HubSpot, so they run even if HubSpot fails). Example for n8n at `n8n.intrawebtech.com`:
+For HubSpot contact sync and n8n (optional): set `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_FORM_GUID` (Forms API). For n8n, set `N8N_CONTACT_WEBHOOK_URL` to the **SYS 01 — Website Form Lead Intake** production webhook (e.g. `https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead`). The API creates or updates the HubSpot contact first, classifies the pain description with Claude (`ANTHROPIC_API_KEY`, model `claude-haiku-4-5-20251001`), then POSTs JSON: `contactId`, `createDeal`, `dealStage`, `tier` (`starter` | `growth`), `painOverride`.
 ```
-N8N_LEAD_SCORING_WEBHOOK_URL=https://n8n.intrawebtech.com/webhook/6fZCT68dlyiXMrnK
-N8N_CONTACT_WEBHOOK_URL=https://n8n.intrawebtech.com/webhook/zJWCaaXQ0HbwYiAO
+N8N_CONTACT_WEBHOOK_URL=https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead
+ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
-Use **Production** webhook URLs from each workflow’s Webhook node (or `/webhook-test/...` for test). Both workflows receive the same JSON: `contactId`, `firstName`, `lastName`, `companyName`, `phone`, `email`, `website`, `message`.
+Use the **Production** URL from the workflow’s Webhook node (or `/webhook-test/...` for test).
 
 **HubSpot + n8n lead scoring checklist:**
 - In HubSpot: create custom contact properties `lead_score` (number), `lead_tier` (string), `scoring_breakdown` (string) if they do not exist; ensure `numberofemployees` exists on contacts (standard or custom).
@@ -209,7 +209,7 @@ Use **Production** webhook URLs from each workflow’s Webhook node (or `/webhoo
 
 - **Deployment env:** HubSpot and n8n are only used when the **deployment** (e.g. Vercel) has the env vars set. `.env.local` is for local dev only. In Vercel: Project → Settings → Environment Variables → add for Production (and Preview if needed):
   - `NEXT_PUBLIC_HUBSPOT_ID`, `HUBSPOT_FORM_GUID`, `HUBSPOT_ACCESS_TOKEN` for HubSpot
-  - `N8N_LEAD_SCORING_WEBHOOK_URL`, `N8N_CONTACT_WEBHOOK_URL` for n8n  
+  - `N8N_CONTACT_WEBHOOK_URL`, `ANTHROPIC_API_KEY` for n8n tiering + intake  
   Redeploy after changing env.
 - **reCAPTCHA blocking:** If reCAPTCHA is enabled and verification fails, the API returns 400 before any HubSpot/n8n code runs. In production, set `GOOGLE_APPLICATION_CREDENTIALS_JSON` (full service account JSON) and ensure the site domain is allowed in the reCAPTCHA key. Check deployment logs for `[reCAPTCHA] verification failed`.
 - **Postman / API clients (production):** The live site cannot use a fake `recaptchaToken`; tokens are one-time and tied to the browser. For trusted testing only, set **`CONTACT_BYPASS_RECAPTCHA_SECRET`** in the deployment env to a random string **at least 16 characters**, redeploy, then send header **`X-Intraweb-Contact-Bypass`** with that **exact** value on `POST /api/contact`. Remove the env var (or rotate the secret) when finished—anyone with the secret can submit without reCAPTCHA.
