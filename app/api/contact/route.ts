@@ -6,6 +6,7 @@ import { RecaptchaEnterpriseServiceClient } from "@google-cloud/recaptcha-enterp
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
+import { timingSafeEqual } from "crypto";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -214,6 +215,28 @@ async function verifyRecaptchaToken(
   }
 }
 
+/** Postman / server-to-server testing only. Set CONTACT_BYPASS_RECAPTCHA_SECRET (≥16 chars) and send matching X-Intraweb-Contact-Bypass header. */
+function isRecaptchaBypassAuthorized(request: NextRequest): boolean {
+  const envSecret = process.env.CONTACT_BYPASS_RECAPTCHA_SECRET?.trim();
+  if (!envSecret || envSecret.length < 16) {
+    return false;
+  }
+  const headerVal = request.headers.get("x-intraweb-contact-bypass")?.trim();
+  if (!headerVal) {
+    return false;
+  }
+  try {
+    const a = Buffer.from(headerVal, "utf8");
+    const b = Buffer.from(envSecret, "utf8");
+    if (a.length !== b.length) {
+      return false;
+    }
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -227,8 +250,15 @@ export async function POST(request: NextRequest) {
       process.env.NODE_ENV === "development" &&
       process.env.RECAPTCHA_SKIP_IN_DEV === "true";
 
+    const recaptchaBypass = isRecaptchaBypassAuthorized(request);
+    if (recaptchaBypass) {
+      console.warn(
+        "[contact] reCAPTCHA skipped: X-Intraweb-Contact-Bypass matched CONTACT_BYPASS_RECAPTCHA_SECRET (remove secret from production when done testing)"
+      );
+    }
+
     // When RECAPTCHA_SKIP_IN_DEV is set, skip token requirement and verification entirely (no token needed).
-    if (recaptchaEnabled && !skipRecaptchaInDev) {
+    if (recaptchaEnabled && !skipRecaptchaInDev && !recaptchaBypass) {
       const token = validatedData.recaptchaToken;
       if (!token || typeof token !== "string") {
         return NextResponse.json(
@@ -498,11 +528,30 @@ ${painPoint}
     const responseBody: Record<string, unknown> = {
       message: "Message sent successfully",
     };
-    if (process.env.CONTACT_INTEGRATION_DEBUG === "true") {
+
+    const includeIntegrationDetails =
+      process.env.CONTACT_INTEGRATION_DEBUG === "true" ||
+      process.env.NODE_ENV === "development";
+
+    if (includeIntegrationDetails) {
+      const formGuid = process.env.HUBSPOT_FORM_GUID?.trim();
+      const formsApiReady = Boolean(
+        process.env.NEXT_PUBLIC_HUBSPOT_ID?.trim() &&
+          formGuid &&
+          formGuid !== "TODO_FILL_THIS"
+      );
+      const contactsApiReady = Boolean(process.env.HUBSPOT_ACCESS_TOKEN?.trim());
       responseBody.integrations = {
         hubspotForms: hubspotFormsSummary,
         hubspotContacts: hubspotContactsSummary,
-        hint: "Disable CONTACT_INTEGRATION_DEBUG after troubleshooting. Fix env vars and HubSpot form field internal names (email, firstname, lastname, company, phone, pain_point; website optional). Ensure custom property pain_point exists for Contacts API.",
+        hubspotEnv: {
+          formsApiReady,
+          contactsApiReady,
+        },
+        hint:
+          process.env.NODE_ENV === "development"
+            ? "Local: add NEXT_PUBLIC_HUBSPOT_ID, HUBSPOT_FORM_GUID, and HUBSPOT_ACCESS_TOKEN to .env.local, restart dev server. Form field internal names must match: email, firstname, lastname, company, phone, pain_point (website optional). Create contact property pain_point if Contacts API returns validation errors."
+            : "Set CONTACT_INTEGRATION_DEBUG=false in production when done. Fix env vars and HubSpot form field internal names; ensure pain_point exists on contacts.",
       };
     }
 
