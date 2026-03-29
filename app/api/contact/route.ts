@@ -10,6 +10,9 @@ import { timingSafeEqual } from "crypto";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/** Vercel / serverless: allow HubSpot + Claude + n8n without cutting the request short on Pro plans */
+export const maxDuration = 60;
+
 const RECAPTCHA_ACTION = "contact";
 const RECAPTCHA_MIN_SCORE = 0.5;
 
@@ -401,6 +404,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = formSchema.parse(body);
+
+    if (!process.env.RESEND_API_KEY?.trim()) {
+      console.error("[contact] RESEND_API_KEY is not set");
+      const fallbackEmail = process.env.CONTACT_EMAIL || "contact@intrawebtech.com";
+      return NextResponse.json(
+        {
+          message: `Email delivery is not configured. Please reach us at ${fallbackEmail}.`,
+          error: "email_not_configured",
+        },
+        { status: 503 }
+      );
+    }
 
     const recaptchaProjectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
     const recaptchaSiteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;

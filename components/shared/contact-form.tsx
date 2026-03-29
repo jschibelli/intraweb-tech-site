@@ -123,7 +123,10 @@ export default function ContactForm() {
           window
             .grecaptcha!.enterprise.execute(siteKey, { action: RECAPTCHA_ACTION })
             .then(resolve)
-            .catch(() => resolve(null));
+            .catch((err: unknown) => {
+              console.error("[reCAPTCHA] enterprise.execute failed:", err);
+              resolve(null);
+            });
         });
       });
     } catch {
