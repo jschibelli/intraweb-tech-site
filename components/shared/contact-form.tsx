@@ -151,8 +151,12 @@ export default function ContactForm() {
         }),
       });
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || errData.message || "Submission failed");
+        const errData = (await response.json().catch(() => ({}))) as {
+          message?: string;
+          error?: string;
+        };
+        // API sends technical `error` and user-facing `message`; prefer the latter
+        throw new Error(errData.message || errData.error || "Submission failed");
       }
       router.push("/thank-you");
     } catch (error) {
