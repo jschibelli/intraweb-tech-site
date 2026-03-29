@@ -170,9 +170,14 @@ export default function ContactForm() {
         const errData = (await response.json().catch(() => ({}))) as {
           message?: string;
           error?: string;
+          errors?: unknown;
         };
-        // API sends technical `error` and user-facing `message`; prefer the latter
-        throw new Error(errData.message || errData.error || "Submission failed");
+        // reCAPTCHA: prefer friendly `message`. Zod: `message` is generic "Invalid form data" — use `error` for field reasons
+        const userMessage =
+          errData.message === "Invalid form data" && errData.error
+            ? errData.error
+            : errData.message || errData.error || "Submission failed";
+        throw new Error(userMessage);
       }
       router.push("/thank-you");
     } catch (error) {
