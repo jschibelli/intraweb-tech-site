@@ -68,6 +68,11 @@ type FormData = z.infer<typeof formSchema>;
 const inputStyles =
   "w-full px-4 py-3 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent";
 
+/** Google API keys start with `AIza`; reCAPTCHA Enterprise *site* keys do not — using an API key breaks `enterprise.js?render=` */
+function isGoogleApiKeyMistakenForSiteKey(key: string): boolean {
+  return key.trim().startsWith("AIza");
+}
+
 function loadRecaptchaScript(siteKey: string): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   return new Promise((resolve, reject) => {
@@ -113,6 +118,14 @@ export default function ContactForm() {
   const getRecaptchaToken = useCallback(async (): Promise<string | null> => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
     if (!siteKey) return null;
+    if (isGoogleApiKeyMistakenForSiteKey(siteKey)) {
+      console.error(
+        "[reCAPTCHA] NEXT_PUBLIC_RECAPTCHA_SITE_KEY is set to a Google API key (starts with AIza). " +
+          "Use the reCAPTCHA Enterprise key from Google Cloud → Security → reCAPTCHA Enterprise → Keys (Website key), " +
+          "and set the same value in RECAPTCHA_ENTERPRISE_SITE_KEY on the server—not an API key."
+      );
+      return null;
+    }
     try {
       if (!recaptchaReady.current) {
         await loadRecaptchaScript(siteKey);
