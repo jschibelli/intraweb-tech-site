@@ -221,11 +221,43 @@ export async function POST(req: NextRequest) {
       process.env.N8N_CONTACT_WEBHOOK_URL ||
       "https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead";
 
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-    });
+    // Do not forward reCAPTCHA token to n8n (secret, large, not part of workflow contract).
+    const { recaptchaToken: _drop, ...bodyForN8n } = parsed.data;
+
+    // Stay under `export const maxDuration = 60` (seconds) with margin for reCAPTCHA + JSON work.
+    const webhookTimeoutMs = Math.min(
+      Number(process.env.N8N_WEBHOOK_TIMEOUT_MS) || 55000,
+      57_000,
+    );
+
+    const webhookHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    const webhookSecret = process.env.N8N_WEBHOOK_SECRET?.trim();
+    if (webhookSecret) {
+      const headerName =
+        process.env.N8N_WEBHOOK_SECRET_HEADER?.trim() || "X-Intraweb-Website-Intake-Secret";
+      webhookHeaders[headerName] = webhookSecret;
+    }
+
+    let res: Response;
+    try {
+      res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: webhookHeaders,
+        body: JSON.stringify(bodyForN8n),
+        signal: AbortSignal.timeout(Math.max(5000, webhookTimeoutMs)),
+      });
+    } catch (fetchErr) {
+      const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      console.error("[website-intake] n8n fetch failed:", msg);
+      return NextResponse.json(
+        {
+          message: "Could not reach lead intake service. Please try again in a moment.",
+          error: "webhook_unreachable",
+          detail: process.env.WEBSITE_INTAKE_DEBUG_UPSTREAM === "true" ? msg : undefined,
+        },
+        { status: 503 },
+      );
+    }
 
     const text = await res.text();
     let data: unknown = null;
@@ -236,11 +268,23 @@ export async function POST(req: NextRequest) {
     }
 
     if (!res.ok) {
+      const errSnippet =
+        typeof data === "string"
+          ? data.slice(0, 500)
+          : JSON.stringify(data).slice(0, 500);
+      console.error("[website-intake] n8n webhook non-OK:", res.status, errSnippet);
       return NextResponse.json(
         {
-          message: "Upstream webhook error",
+          message: "Lead intake service returned an error. Please try again or email us.",
+          error: "upstream_webhook_error",
           status: res.status,
-          error: typeof data === "string" ? data : (data as any)?.error || (data as any)?.message,
+          upstream:
+            typeof data === "string"
+              ? data
+              : (data as { error?: string; message?: string })?.error ||
+                (data as { message?: string })?.message ||
+                undefined,
+          detail: process.env.WEBSITE_INTAKE_DEBUG_UPSTREAM === "true" ? errSnippet : undefined,
         },
         { status: 502 },
       );
