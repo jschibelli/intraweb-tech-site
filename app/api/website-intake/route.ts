@@ -226,6 +226,8 @@ export async function POST(req: NextRequest) {
     const { recaptchaToken: _drop, ...restForN8n } = parsed.data;
 
     let bodyForN8n: Record<string, unknown> = { ...restForN8n };
+    /** Set when HubSpot CRM create/update succeeded; used to avoid 502 if n8n is down. */
+    let crmContactId: string | null = null;
 
     const hubspotToken = process.env.HUBSPOT_ACCESS_TOKEN?.trim();
     if (hubspotToken) {
