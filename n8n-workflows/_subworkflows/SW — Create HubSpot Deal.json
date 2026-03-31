@@ -1,7 +1,7 @@
 {
   "id": "sw-create-hubspot-deal",
   "name": "SW: Create HubSpot Deal",
-  "description": "Subworkflow: create HubSpot deal with pipeline, stage, amount, pain, tier, owner; optional contact association. Deal name from company or contact. Consumes CONFIG owner.hubspotOwnerId and pipeline. Returns dealId or error.",
+  "description": "Subworkflow: creates a HubSpot deal with pipeline, stage, amount, pain, tier, owner; optional contact association. Deal name from company or contact. Consumes CONFIG owner.hubspotOwnerId and pipeline. Returns dealId or error.",
   "nodes": [
     {
       "parameters": {
