@@ -67,29 +67,63 @@ export async function hubspotCreateOrUpdateContact(
     contactProperties[jsonProp] = intakeJson.trim();
   }
 
-  const contactData = { properties: contactProperties };
+  const hadIntakeProps = Boolean(contactProperties[plainProp] || contactProperties[jsonProp]);
+  const withoutIntake = (): Record<string, string> => {
+    const p = { ...contactProperties };
+    delete p[plainProp];
+    delete p[jsonProp];
+    return p;
+  };
 
   try {
-    const res = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${hubspotAccessToken}`,
-      },
-      body: JSON.stringify(contactData),
-    });
+    const postContact = (props: Record<string, string>) =>
+      fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${hubspotAccessToken}`,
+        },
+        body: JSON.stringify({ properties: props }),
+      });
+
+    const patchByEmail = (props: Record<string, string>) => {
+      const updateUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`;
+      return fetch(updateUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${hubspotAccessToken}`,
+        },
+        body: JSON.stringify({ properties: props }),
+      });
+    };
+
+    let propsForRequest: Record<string, string> = contactProperties;
+    let res = await postContact(propsForRequest);
+
+    if (!res.ok && res.status === 400 && hadIntakeProps) {
+      const err400 = await res.text();
+      console.warn(
+        "[hubspotCreateOrUpdateContact] Contact POST 400 with intake fields; retrying without custom intake properties.",
+        err400.slice(0, 280),
+      );
+      propsForRequest = withoutIntake();
+      res = await postContact(propsForRequest);
+    }
 
     if (!res.ok) {
       if (res.status === 409) {
-        const updateUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(email)}?idProperty=email`;
-        const updateResponse = await fetch(updateUrl, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${hubspotAccessToken}`,
-          },
-          body: JSON.stringify(contactData),
-        });
+        let updateResponse = await patchByEmail(propsForRequest);
+
+        if (!updateResponse.ok && updateResponse.status === 400 && hadIntakeProps) {
+          const patchErr = await updateResponse.text();
+          console.warn(
+            "[hubspotCreateOrUpdateContact] Contact PATCH 400 with intake fields; retrying without them.",
+            patchErr.slice(0, 280),
+          );
+          propsForRequest = withoutIntake();
+          updateResponse = await patchByEmail(propsForRequest);
+        }
 
         if (!updateResponse.ok) {
           const updateError = await updateResponse.text();

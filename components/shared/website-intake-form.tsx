@@ -173,9 +173,17 @@ function buildPainOverride(data: WebsiteIntakeFormData): string {
   return lines.join("\n");
 }
 
+function formatReviewValue(value: unknown): string {
+  if (value === undefined || value === null) return "—";
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "—";
+  const s = String(value).trim();
+  return s || "—";
+}
+
 export default function WebsiteIntakeForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | "review">(1);
+  const [validatingStep, setValidatingStep] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ type: "error"; message: string } | null>(null);
   const recaptchaReady = useRef(false);
 
@@ -264,14 +272,21 @@ export default function WebsiteIntakeForm() {
   };
 
   const next = async () => {
-    const ok = await canGoNext();
-    if (!ok) return;
     if (step === "review") return;
     if (step === 6) {
-      setStep("review");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setValidatingStep(true);
+      try {
+        const ok = await canGoNext();
+        if (!ok) return;
+        setStep("review");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } finally {
+        setValidatingStep(false);
+      }
       return;
     }
+    const ok = await canGoNext();
+    if (!ok) return;
     const nextStep = (Number(step) + 1) as 2 | 3 | 4 | 5 | 6;
     setStep(nextStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -454,7 +469,17 @@ export default function WebsiteIntakeForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6 space-y-8">
+      <form
+        noValidate
+        className="p-6 space-y-8"
+        onSubmit={
+          step === "review"
+            ? handleSubmit(onSubmit)
+            : (e) => {
+                e.preventDefault();
+              }
+        }
+      >
         {submitStatus && (
           <div className="p-4 rounded-md bg-red-500/20 text-red-200 border border-red-500/40">
             {submitStatus.message}
@@ -787,20 +812,84 @@ export default function WebsiteIntakeForm() {
           </div>
         )}
 
-        {/* REVIEW */}
+        {/* REVIEW — full snapshot of all sections (matches payload sent to /api/website-intake) */}
         {step === "review" && (
           <div className="space-y-6">
             <h4 className="text-lg font-heading font-semibold text-white">Review</h4>
-            <div className="rounded-md border border-gray-800 bg-gray-950/30 p-4 text-sm text-gray-200 space-y-3">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div><span className="text-gray-400">Name:</span> {getValues("firstName")} {getValues("lastName")}</div>
-                <div><span className="text-gray-400">Email:</span> {getValues("email")}</div>
-                <div><span className="text-gray-400">Business:</span> {getValues("businessName")}</div>
-                <div><span className="text-gray-400">Industry:</span> {getValues("industry")}</div>
-                <div><span className="text-gray-400">Goals:</span> {(getValues("goals") || []).join(", ") || "—"}</div>
-                <div><span className="text-gray-400">Timeline:</span> {getValues("timeline") || "—"}</div>
-                <div><span className="text-gray-400">Pages:</span> {(getValues("pages") || []).join(", ") || "—"}</div>
-                <div><span className="text-gray-400">Budget:</span> {getValues("budget") || "—"}</div>
+            <p className="text-sm text-gray-400">
+              Confirm everything below before submitting. You can use <span className="text-gray-300">Back</span> to edit a section.
+            </p>
+            <div className="rounded-md border border-gray-800 bg-gray-950/30 p-4 text-sm text-gray-200 space-y-6">
+              <div>
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Business & contact</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div><span className="text-gray-400">Name:</span> {getValues("firstName")} {getValues("lastName")}</div>
+                  <div><span className="text-gray-400">Email:</span> {formatReviewValue(getValues("email"))}</div>
+                  <div><span className="text-gray-400">Phone:</span> {formatReviewValue(getValues("phone"))}</div>
+                  <div><span className="text-gray-400">Business:</span> {formatReviewValue(getValues("businessName"))}</div>
+                  <div><span className="text-gray-400">Industry:</span> {formatReviewValue(getValues("industry"))}</div>
+                  <div><span className="text-gray-400">Location:</span> {formatReviewValue(getValues("location"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Current website:</span> {formatReviewValue(getValues("currentSite"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Business description:</span> {formatReviewValue(getValues("bizDesc"))}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Goals & timeline</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="lg:col-span-2"><span className="text-gray-400">Goals:</span> {formatReviewValue(getValues("goals"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Outcome / detail:</span> {formatReviewValue(getValues("goalDetail"))}</div>
+                  <div><span className="text-gray-400">Timeline:</span> {formatReviewValue(getValues("timeline"))}</div>
+                  <div><span className="text-gray-400">Hard deadline:</span> {formatReviewValue(getValues("hardDeadline"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Audience:</span> {formatReviewValue(getValues("audience"))}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Design</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="lg:col-span-2"><span className="text-gray-400">Vibe:</span> {formatReviewValue(getValues("vibe"))}</div>
+                  <div><span className="text-gray-400">Logo:</span> {formatReviewValue(getValues("hasLogo"))}</div>
+                  <div><span className="text-gray-400">Font style:</span> {formatReviewValue(getValues("fontStyle"))}</div>
+                  <div><span className="text-gray-400">Brand colors:</span> {formatReviewValue(getValues("brandColors"))}</div>
+                  <div><span className="text-gray-400">Photos:</span> {formatReviewValue(getValues("hasPhotos"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Don’t want:</span> {formatReviewValue(getValues("dontWant"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Design notes:</span> {formatReviewValue(getValues("designNotes"))}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Content & pages</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="lg:col-span-2"><span className="text-gray-400">Pages:</span> {formatReviewValue(getValues("pages"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Other pages:</span> {formatReviewValue(getValues("otherPages"))}</div>
+                  <div><span className="text-gray-400">Copywriter:</span> {formatReviewValue(getValues("copywriter"))}</div>
+                  <div><span className="text-gray-400">CMS / blog:</span> {formatReviewValue(getValues("cms"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Features / integrations:</span> {formatReviewValue(getValues("features"))}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Budget</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div><span className="text-gray-400">Range:</span> {formatReviewValue(getValues("budget"))}</div>
+                  <div><span className="text-gray-400">Ongoing support:</span> {formatReviewValue(getValues("ongoing"))}</div>
+                  <div><span className="text-gray-400">Payment:</span> {formatReviewValue(getValues("payment"))}</div>
+                  <div><span className="text-gray-400">Funding:</span> {formatReviewValue(getValues("funding"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Budget notes:</span> {formatReviewValue(getValues("budgetNotes"))}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4">
+                <h5 className="text-xs font-semibold uppercase tracking-wide text-teal-400/90 mb-3">Competitors & inspiration</h5>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="lg:col-span-2"><span className="text-gray-400">Competitors:</span> {formatReviewValue(getValues("competitors"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Sites you love:</span> {formatReviewValue(getValues("inspiration"))}</div>
+                  <div><span className="text-gray-400">What you like:</span> {formatReviewValue(getValues("likeAbout"))}</div>
+                  <div><span className="text-gray-400">What you dislike:</span> {formatReviewValue(getValues("dislikeAbout"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Differentiator:</span> {formatReviewValue(getValues("differentiator"))}</div>
+                  <div className="lg:col-span-2"><span className="text-gray-400">Final notes:</span> {formatReviewValue(getValues("finalNotes"))}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -810,7 +899,7 @@ export default function WebsiteIntakeForm() {
           <button
             type="button"
             onClick={back}
-            disabled={step === 1 || isSubmitting}
+            disabled={step === 1 || isSubmitting || validatingStep}
             className="px-5 py-2.5 rounded-md border border-gray-700 text-gray-200 hover:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Back
@@ -826,11 +915,11 @@ export default function WebsiteIntakeForm() {
           ) : (
             <button
               type="button"
-              onClick={next}
-              disabled={isSubmitting}
+              onClick={() => void next()}
+              disabled={isSubmitting || validatingStep}
               className="px-6 py-2.5 rounded-md bg-teal-600 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {step === 6 ? "Review" : "Next"}
+              {validatingStep && step === 6 ? "Checking…" : step === 6 ? "Review" : "Next"}
             </button>
           )}
         </div>

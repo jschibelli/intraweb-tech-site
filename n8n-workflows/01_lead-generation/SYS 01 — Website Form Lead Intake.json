@@ -305,88 +305,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealOut = $input.first().json;\nconst dealId = dealOut.data?.dealId || dealOut.data?.id || '';\nif (!dealId || !pain) {\n  return [{ json: { skip: true, dealId } }];\n}\nreturn [{ json: { skip: false, dealId, pain } }];"
-      },
-      "id": "sys16-prep-pain",
-      "name": "Prep Deal Pain Points",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2670,
-        220
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "has-pain",
-              "leftValue": "={{ $json.skip === false ? 'update' : 'skip' }}",
-              "rightValue": "update",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "sys16-if-pain",
-      "name": "Set deal_pain_points?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        2890,
-        220
-      ]
-    },
-    {
-      "parameters": {
-        "authentication": "appToken",
-        "resource": "deal",
-        "operation": "update",
-        "dealId": {
-          "__rl": true,
-          "value": "={{ $('Prep Deal Pain Points').first().json.dealId }}",
-          "mode": "id"
-        },
-        "updateFields": {
-          "customPropertiesUi": {
-            "customPropertiesValues": [
-              {
-                "property": "=deal_pain_points",
-                "value": "={{ $('Prep Deal Pain Points').first().json.pain }}"
-              }
-            ]
-          }
-        },
-        "options": {}
-      },
-      "id": "sys16-update-deal-pain",
-      "name": "Update Deal Pain Points",
-      "type": "n8n-nodes-base.hubspot",
-      "typeVersion": 2.2,
-      "position": [
-        3110,
-        160
-      ],
-      "credentials": {
-        "hubspotAppToken": {
-          "id": "volH6pGD5psvPC7a",
-          "name": "HubSpot App Token account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "jsCode": "const raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nreturn [{ json: {\n  contactId: String(raw.id || ''),\n  company: v(p.company),\n  industry: v(p.industry),\n  firstName: v(p.firstname)\n}}];"
       },
       "id": "sys16-prep-enroll",
@@ -598,46 +516,6 @@
       ]
     },
     "Create Deal": {
-      "main": [
-        [
-          {
-            "node": "Prep Deal Pain Points",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prep Deal Pain Points": {
-      "main": [
-        [
-          {
-            "node": "Set deal_pain_points?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set deal_pain_points?": {
-      "main": [
-        [
-          {
-            "node": "Update Deal Pain Points",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prep Enroll Outreach",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Deal Pain Points": {
       "main": [
         [
           {
