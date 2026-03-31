@@ -6,7 +6,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { timingSafeEqual } from "crypto";
-import { hubspotCreateOrUpdateContact } from "@/lib/hubspotCreateOrUpdateContact";
+import { hubspotCreateOrUpdateContact, isHubSpotSyncFailure } from "@/lib/hubspotCreateOrUpdateContact";
 
 export const maxDuration = 60;
 
@@ -249,10 +249,7 @@ export async function POST(req: NextRequest) {
         website,
         painPoint: parsed.data.painOverride || "",
       });
-      if (hubspotResult.contactId) {
-        bodyForN8n = { ...bodyForN8n, contactId: hubspotResult.contactId };
-        console.log("[website-intake] HubSpot contact", hubspotResult.action, hubspotResult.contactId);
-      } else {
+      if (isHubSpotSyncFailure(hubspotResult)) {
         console.error("[website-intake] HubSpot sync failed:", hubspotResult.error);
         return NextResponse.json(
           {
@@ -263,6 +260,9 @@ export async function POST(req: NextRequest) {
           { status: 503 },
         );
       }
+      crmContactId = hubspotResult.contactId;
+      bodyForN8n = { ...bodyForN8n, contactId: hubspotResult.contactId };
+      console.log("[website-intake] HubSpot contact", hubspotResult.action, hubspotResult.contactId);
     }
 
     // Stay under `export const maxDuration = 60` (seconds) with margin for reCAPTCHA + JSON work.
@@ -279,6 +279,8 @@ export async function POST(req: NextRequest) {
       webhookHeaders[headerName] = webhookSecret;
     }
 
+    const strictN8n = process.env.WEBSITE_INTAKE_STRICT_N8N === "true";
+
     let res: Response;
     try {
       res = await fetch(webhookUrl, {
@@ -290,6 +292,16 @@ export async function POST(req: NextRequest) {
     } catch (fetchErr) {
       const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
       console.error("[website-intake] n8n fetch failed:", msg);
+      if (crmContactId && !strictN8n) {
+        console.error(
+          "[website-intake] accepting submission: CRM lead saved; n8n unreachable (contactId:",
+          crmContactId,
+          ")",
+        );
+        return NextResponse.json(
+          { ok: true, crmRecorded: true, automationDispatch: "unreachable" }, { status: 200 },
+        );
+      }
       return NextResponse.json(
         {
           message: "Could not reach lead intake service. Please try again in a moment.",
@@ -314,6 +326,24 @@ export async function POST(req: NextRequest) {
           ? data.slice(0, 500)
           : JSON.stringify(data).slice(0, 500);
       console.error("[website-intake] n8n webhook non-OK:", res.status, errSnippet);
+      if (crmContactId && !strictN8n) {
+        console.error(
+          "[website-intake] accepting submission: CRM lead saved; n8n returned error (contactId:",
+          crmContactId,
+          "status:",
+          res.status,
+          ")",
+        );
+        return NextResponse.json(
+          {
+            ok: true,
+            crmRecorded: true,
+            automationDispatch: "failed",
+            n8nStatus: res.status,
+          },
+          { status: 200 },
+        );
+      }
       return NextResponse.json(
         {
           message: "Lead intake service returned an error. Please try again or email us.",

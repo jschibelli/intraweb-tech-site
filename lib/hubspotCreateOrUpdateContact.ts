@@ -17,6 +17,13 @@ export type HubSpotContactSyncResult =
   | { contactId: string; action: "created" | "updated" }
   | { contactId: null; error: string };
 
+/** Narrows the union so TypeScript allows `.error` on the failure branch (CI-safe). */
+export function isHubSpotSyncFailure(
+  r: HubSpotContactSyncResult,
+): r is { contactId: null; error: string } {
+  return r.contactId === null;
+}
+
 export async function hubspotCreateOrUpdateContact(
   hubspotAccessToken: string,
   input: HubSpotContactSyncInput
