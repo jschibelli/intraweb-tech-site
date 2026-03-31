@@ -6,6 +6,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { timingSafeEqual } from "crypto";
+import { hubspotCreateOrUpdateContact } from "@/lib/hubspotCreateOrUpdateContact";
 
 export const maxDuration = 60;
 
@@ -222,7 +223,45 @@ export async function POST(req: NextRequest) {
       "https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead";
 
     // Do not forward reCAPTCHA token to n8n (secret, large, not part of workflow contract).
-    const { recaptchaToken: _drop, ...bodyForN8n } = parsed.data;
+    const { recaptchaToken: _drop, ...restForN8n } = parsed.data;
+
+    let bodyForN8n: Record<string, unknown> = { ...restForN8n };
+
+    const hubspotToken = process.env.HUBSPOT_ACCESS_TOKEN?.trim();
+    if (hubspotToken) {
+      const c = parsed.data.contact;
+      let website = "";
+      const intake = parsed.data.intake;
+      if (intake && typeof intake === "object" && !Array.isArray(intake)) {
+        const ic = (intake as { contact?: { website?: unknown } }).contact;
+        if (ic && typeof ic.website === "string") {
+          website = ic.website.trim();
+        }
+      }
+      const hubspotResult = await hubspotCreateOrUpdateContact(hubspotToken, {
+        email: c.email,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        company: c.company,
+        phone: c.phone || "",
+        website,
+        painPoint: parsed.data.painOverride || "",
+      });
+      if (hubspotResult.contactId) {
+        bodyForN8n = { ...bodyForN8n, contactId: hubspotResult.contactId };
+        console.log("[website-intake] HubSpot contact", hubspotResult.action, hubspotResult.contactId);
+      } else {
+        console.error("[website-intake] HubSpot sync failed:", hubspotResult.error);
+        return NextResponse.json(
+          {
+            message: "We could not save your request. Please try again or email us.",
+            error: "hubspot_sync_failed",
+            detail: process.env.WEBSITE_INTAKE_DEBUG_UPSTREAM === "true" ? hubspotResult.error : undefined,
+          },
+          { status: 503 },
+        );
+      }
+    }
 
     // Stay under `export const maxDuration = 60` (seconds) with margin for reCAPTCHA + JSON work.
     const webhookTimeoutMs = Math.min(

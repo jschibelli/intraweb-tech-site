@@ -803,9 +803,6 @@ export default function WebsiteIntakeForm() {
                 <div><span className="text-gray-400">Budget:</span> {getValues("budget") || "—"}</div>
               </div>
             </div>
-            <p className="text-sm text-gray-400">
-              When you submit, we’ll send your intake to our lead intake workflow and follow up within 1 business day.
-            </p>
           </div>
         )}
 
