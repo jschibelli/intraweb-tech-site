@@ -11,6 +11,10 @@ export type HubSpotContactSyncInput = {
   phone: string;
   website?: string;
   painPoint: string;
+  /** Full human-readable intake (maps to HUBSPOT_WEBSITE_INTAKE_PLAIN_PROPERTY). */
+  intakePlainText?: string;
+  /** JSON snapshot of `intake` (maps to HUBSPOT_WEBSITE_INTAKE_JSON_PROPERTY). */
+  intakeJson?: string;
 };
 
 export type HubSpotContactSyncResult =
@@ -36,7 +40,14 @@ export async function hubspotCreateOrUpdateContact(
     phone,
     website: websiteForHubSpot,
     painPoint,
+    intakePlainText,
+    intakeJson,
   } = input;
+
+  const plainProp =
+    process.env.HUBSPOT_WEBSITE_INTAKE_PLAIN_PROPERTY?.trim() || "website_intake_details";
+  const jsonProp =
+    process.env.HUBSPOT_WEBSITE_INTAKE_JSON_PROPERTY?.trim() || "website_intake_json";
 
   const contactProperties: Record<string, string> = {
     email,
@@ -48,6 +59,12 @@ export async function hubspotCreateOrUpdateContact(
   };
   if (websiteForHubSpot?.trim()) {
     contactProperties.website = websiteForHubSpot.trim();
+  }
+  if (intakePlainText?.trim()) {
+    contactProperties[plainProp] = intakePlainText.trim();
+  }
+  if (intakeJson?.trim()) {
+    contactProperties[jsonProp] = intakeJson.trim();
   }
 
   const contactData = { properties: contactProperties };

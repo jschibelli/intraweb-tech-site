@@ -7,6 +7,8 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { timingSafeEqual } from "crypto";
 import { hubspotCreateOrUpdateContact, isHubSpotSyncFailure } from "@/lib/hubspotCreateOrUpdateContact";
+import { formatWebsiteIntakeJsonSafe, formatWebsiteIntakePlainText } from "@/lib/formatWebsiteIntakeForHubSpot";
+import { hubSpotDealStageOrDefault } from "@/lib/normalizeHubSpotDealStage";
 
 export const maxDuration = 60;
 
@@ -25,7 +27,11 @@ const inputSchema = z.object({
     })
     .passthrough(),
   createDeal: z.boolean().optional().default(true),
-  dealStage: z.string().optional().default("qualifiedtobuy"),
+  dealStage: z
+    .string()
+    .optional()
+    .default("qualifiedtobuy")
+    .transform((s) => hubSpotDealStageOrDefault(s, "qualifiedtobuy")),
   tier: z.enum(["starter", "growth"]).optional().default("starter"),
   painOverride: z.string().optional().default(""),
   intake: z.unknown().optional(),
@@ -240,6 +246,9 @@ export async function POST(req: NextRequest) {
           website = ic.website.trim();
         }
       }
+      const intakePlain = formatWebsiteIntakePlainText(parsed.data.intake);
+      const intakeJson = formatWebsiteIntakeJsonSafe(parsed.data.intake);
+
       const hubspotResult = await hubspotCreateOrUpdateContact(hubspotToken, {
         email: c.email,
         firstName: c.firstName,
@@ -248,6 +257,8 @@ export async function POST(req: NextRequest) {
         phone: c.phone || "",
         website,
         painPoint: parsed.data.painOverride || "",
+        intakePlainText: intakePlain,
+        intakeJson,
       });
       if (isHubSpotSyncFailure(hubspotResult)) {
         console.error("[website-intake] HubSpot sync failed:", hubspotResult.error);

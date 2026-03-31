@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStage = pick(body, ['dealStage', 'deal_stage']) || '';\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null } }];"
+        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStageRaw = pick(body, ['dealStage', 'deal_stage']) || '';\nconst stageBuiltin = new Set(['appointmentscheduled', 'qualifiedtobuy', 'presentationscheduled', 'decisionmakerboughtin', 'contractsent', 'closedwon', 'closedlost']);\nconst normalizeDealStage = (s) => {\n  const t = String(s || '').trim();\n  if (!t) return '';\n  if (/^[0-9]+$/.test(t)) return t;\n  const lc = t.toLowerCase();\n  if (stageBuiltin.has(lc)) return lc;\n  return '';\n};\nconst dealStage = normalizeDealStage(dealStageRaw);\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null } }];"
       },
       "id": "sys16-parse",
       "name": "Parse Webhook Input",
@@ -116,7 +116,7 @@
             "lastName": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.lastName || c.lastname || c.last_name || ''; })() }}",
             "company": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.company || c.businessName || c.business || c.companyName || ''; })() }}",
             "industry": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.industry || c.niche || ''; })() }}",
-            "customProps": "={{ JSON.stringify({ pain_point: $('Parse Webhook Input').first().json.painOverride || '' }) }}"
+            "customProps": "={{ JSON.stringify({ pain_point: $('Parse Webhook Input').first().json.painOverride || '', website_intake_json: JSON.stringify((() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; return body.intake || {}; })()) }) }}"
           },
           "matchingColumns": [],
           "schema": [],
@@ -222,7 +222,7 @@
         "nodeCredentialType": "hubspotAppToken",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ properties: { lead_source: 'inbound', hs_lead_status: 'NEW' } }) }}",
+        "jsonBody": "={{ JSON.stringify({ properties: { lead_source: 'inbound' } }) }}",
         "options": {}
       },
       "id": "sys16-patch-contact",
@@ -274,7 +274,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = parse.dealStage || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: String(raw.id || parse.contactId || ''),\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = (parse.dealStage && String(parse.dealStage).trim()) || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: String(raw.id || parse.contactId || ''),\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
       },
       "id": "sys16-prep-deal",
       "name": "Prep Create Deal",
