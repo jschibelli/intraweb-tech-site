@@ -1,0 +1,328 @@
+{
+  "name": "SW: Send Email via Resend",
+  "description": "Subworkflow: send one transactional email via Resend (to, subject, html, optional attachments). From address from CONFIG; logs to Automations Log and alerts on failure. Used across outreach, sales, onboarding, and client success.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SW: Send Email via Resend\n\n**Subworkflow.** Sends a single transactional email via the Resend API. From address comes from CONFIG; used for outreach, onboarding, invoices, weekly updates, and referrals.\n\n**Input (full payload):** `to` (required), `subject` (required), `html` (required), `attachments` (optional, array of `{ filename, content }` base64), `workflowName` (optional, for logging). **n8n 2.x:** In the parent workflow, the Execute Sub-workflow node must map these fields under **Workflow Inputs** (passing only the previous node is not enough when using workflow ID).\n\n**Output:** `{ success, data: { sent, emailId, to }, error }`. Logs to Automations Log and alerts on failure.",
+        "height": 280,
+        "width": 420,
+        "color": 5
+      },
+      "id": "9082e780-217a-490f-a66c-d80d9fdaf800",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c9dbe382-aecb-4dca-a8e3-d30cdd86771d",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').first().json;\nconst config = $('Call \\'CONFIG — Global Settings\\'').first().json;\n\nif (!input.to) {\n  const keys = input && typeof input === 'object' ? Object.keys(input).join(', ') : String(input);\n  throw new Error('Missing required field \"to\". Map Workflow Inputs in the Execute Sub-workflow node: to, subject, html (and optional workflowName). Expected { to, subject, html }. Received keys: ' + keys);\n}\nif (!input.subject) {\n  throw new Error('Missing required field \"subject\". The calling workflow must pass { to, subject, html }.');\n}\nif (!input.html) {\n  throw new Error('Missing required field \"html\". The calling workflow must pass { to, subject, html }.');\n}\n\nconst from = `${config.owner.fromName} <${config.owner.fromEmail}>`;\n\nconst payload = {\n  from: from,\n  to: [input.to],\n  subject: input.subject,\n  html: input.html\n};\n\nif (input.attachments) {\n  payload.attachments = input.attachments;\n}\n\nreturn [{\n  json: {\n    payload: payload,\n    workflowName: input.workflowName || 'SW: Send Email via Resend',\n    to: input.to\n  }\n}];"
+      },
+      "id": "15a1d2ab-3522-4836-9edc-ba822d26f4d3",
+      "name": "Prepare Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "id": "61bc2b6b-a00b-4ccc-906c-4a4f8fa9cd1d",
+      "name": "Send via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        832,
+        224
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "5a3lBUTq9SU0ADbQ",
+          "name": "Resend API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Prepare Email').first().json;\n\nreturn [{\n  json: {\n    workflowName: prep.workflowName,\n    contactName: '',\n    phone: '',\n    eventType: 'email_sent',\n    status: 'success',\n    notes: `Email sent to ${prep.to}`\n  }\n}];"
+      },
+      "id": "1afa681f-864e-4549-9bd4-e62aef44f4d5",
+      "name": "Prepare Log Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id",
+          "cachedResultName": "SW: Log to Automations Log Sheet"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "02016c3d-ba96-47a7-9c06-a9cd01e184ac",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $('Send via Resend').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    data: { sent: true, emailId: response.id || null, to: $('Prepare Email').first().json.to },\n    error: null\n  }\n}];"
+      },
+      "id": "839042ad-fe8a-4a6b-a15d-4eb59d03c2c1",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Prepare Email').first().json;\n\nreturn [{\n  json: {\n    message: `Email send failed to ${prep.to} — workflow: ${prep.workflowName}`,\n    priority: 'error'\n  }\n}];"
+      },
+      "id": "a38c9dce-359a-4a2e-9269-b465cca32803",
+      "name": "Prepare Error Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PGf6jPoWtxSPlr0h",
+          "mode": "id",
+          "cachedResultName": "SW: Send Google Chat Alert"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "c05259ed-d9a5-4e34-96b6-05fb4be787c0",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: false,\n    data: null,\n    error: 'Email send failed'\n  }\n}];"
+      },
+      "id": "7600cc4c-7e4b-4783-bf02-d3c8f771d220",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1eTTVoSFSlSPvZV4",
+          "cachedResultName": "CONFIG — Global Settings"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        224
+      ],
+      "id": "95edbf69-3783-463c-bef3-4edc9e5393d2",
+      "name": "Call 'CONFIG — Global Settings'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Call 'CONFIG — Global Settings'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email": {
+      "main": [
+        [
+          {
+            "node": "Send via Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Resend": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Error Alert": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert on Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'CONFIG — Global Settings'": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "56eb2e04-a506-4a35-aeea-97ec313d2f85",
+  "meta": {
+    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+  },
+  "id": "FF6VOLCcRxI4uNYD",
+  "tags": []
+}

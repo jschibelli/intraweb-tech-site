@@ -1,0 +1,17 @@
+{
+  "id": "18472938475621",
+  "properties": {
+    "dealname": "Summit Plumbing & Heating",
+    "name": "Summit Plumbing & Heating",
+    "company": "Summit Plumbing & Heating LLC",
+    "industry": "Plumbing",
+    "deal_pain_points": "We're drowning in paper job tickets and phone calls. Dispatchers spend half the day chasing technicians for status updates. Customers call repeatedly asking when we'll arrive. We need one place to see every job, automate reminders, and get our field guys updating status from their phones so the office can stop playing telephone tag.",
+    "amount": "18500",
+    "tier": "growth",
+    "contact_email": "mike.chen@summitplumbingnj.com",
+    "contact_firstname": "Mike",
+    "firstName": "Mike",
+    "email": "mike.chen@summitplumbingnj.com",
+    "client_drive_folder_id": "REPLACE_WITH_REAL_DRIVE_FOLDER_ID"
+  }
+}

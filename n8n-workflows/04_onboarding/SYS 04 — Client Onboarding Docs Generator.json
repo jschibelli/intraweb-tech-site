@@ -1,0 +1,574 @@
+{
+  "id": "sys-13-client-onboarding-docs-generator",
+  "name": "SYS 04 — Client Onboarding Docs Generator",
+  "description": "Called by SYS 04 — Client Onboarding Logistics or another workflow via Execute Workflow with client and deal data. Generates seven separate onboarding PDFs (Welcome Letter through FAQ). Claude writes each section with mapped prompts; each section is assembled to its own HTML, converted to PDF, uploaded to the client Drive folder, and one email lists all file links.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 04 — Client Onboarding Docs Generator\n\n**Trigger:** Called by another workflow (e.g. SYS 04 — Client Onboarding Logistics) via Execute Workflow with client and deal data.\n\n**What it does:** Generates **seven separate PDFs** (Welcome Letter, Credentials & Access Guide, What We're Building, Project Timeline, How to Work With IntraWeb, Billing & Payment Terms, FAQ). Each section is written by Claude with **mapped** `systemPrompt` / `userPrompt` / `maxTokens` on **Generate Section** (empty mapping = default prompts only). Each section becomes its own HTML + PDF, uploaded to the client's Drive folder; **one email** lists all document links.\n\n**Dependencies:** CONFIG, Call Claude API, Generate PDF, Send Email, Google Drive, Log.\n\n**Execute Workflow (n8n 2.x):** Use **Database** as source and pick the sub-workflow (not **Define Below** / workflow JSON). Empty JSON under \"Define Below\" causes `Unexpected end of JSON input`. If the node says **out of date**, delete it and add a new **Execute Sub-workflow** node, then set source **Database** again.\n\n**Prep Section Prompts** and **Extract Input Data** must stay **Run once for all items** — if Prep runs **for each** incoming item it emits **7 rows per item** (hundreds of items). **Assemble** pairs **`$input`** from Generate Section (not `$('Generate Section').all()`), capped at **7**.\n\n**Generate Section** must use **Run once for each item** (mode **each**) so all 7 sections call Claude separately, with **workflow inputs** mapped from each item. **Generate PDF** must also use **each** so every section becomes its own PDF. **Attach PDF Binary** uses **Run once for all items** and returns **one output item per PDF** (`$input.all().map(...)`) so item counts stay aligned — default Code mode + a single return item caused item-linking churn (runaway executions). It rebuilds binary from `data.pdfBase64` when subworkflow binary does not reach the parent (empty ~9-byte Drive uploads otherwise).\n\n**Time saved:** **Calc Time Saved** / **Track Time Saved** record labor avoided (the **Wait 24hrs** step is clock time, not labor).\n\n**Node versions:** Sub-workflow **Trigger** and **Wait** use **typeVersion 1.1** so self-hosted n8n matches OSS (1.3 shows as \"not installed\").\n\nRepo `workflowId` values target the IntraWeb production instance — re-select workflows after import if your IDs differ.",
+        "height": 340,
+        "width": 460,
+        "color": 5
+      },
+      "id": "note-sys13",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "sys13-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').first().json;\nconst config = $('Get Config').first().json;\nconst tier = config.tiers[input.tier] || config.tiers.starter;\n\nconst clientName = String(input.clientName || input.company || '').trim() || 'Client';\nconst company = String(input.company || input.clientName || '').trim();\n\nreturn [{\n  json: {\n    clientName,\n    company,\n    industry: input.industry || '',\n    tier: input.tier || 'starter',\n    tierName: tier.name,\n    monthlyPrice: tier.monthlyPrice,\n    setupFee: tier.setupFee,\n    startDate: input.startDate || new Date().toISOString().split('T')[0],\n    dealValue: input.dealValue || 0,\n    painPoints: input.painPoints || '',\n    ownerPhone: config.owner.phone,\n    ownerEmail: config.owner.email,\n    contactEmail: input.contactEmail || '',\n    contactFirstName: input.contactFirstName || '',\n    driveFolderId: input.driveFolderId || '',\n    config\n  }\n}];"
+      },
+      "id": "sys13-extract",
+      "name": "Extract Input Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Input Data').first().json;\nconst basePrompt = `Client: ${d.clientName}\\nCompany: ${d.company}\\nIndustry: ${d.industry}\\nTier: ${d.tierName} ($${d.monthlyPrice}/mo + $${d.setupFee} setup)\\nStart Date: ${d.startDate}\\nPain Points: ${d.painPoints}\\nOwner Phone: ${d.ownerPhone}\\nOwner Email: ${d.ownerEmail}`;\n\n// ── SHARED DESIGN SYSTEM ─────────────────────────────────────────────\n// All HTML output follows this spec. Claude must not deviate.\nconst DESIGN_SYSTEM = `\nYou are generating a single-page HTML document for IntraWeb Technologies LLC.\nThis HTML will be rendered to PDF via headless Chrome (puppeteer). Follow every rule exactly.\n\n━━ BRAND ━━\nFont: DM Sans from Google Fonts — always include:\n  <link href=\"https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap\" rel=\"stylesheet\">\nColors:\n  --slate:       #1a1f2e   (headings, body text)\n  --teal:        #3d8b8b   (section titles, accents, hr)\n  --light-teal:  #e8f4f4   (highlight rows, callout backgrounds)\n  --light-gray:  #f5f6f8   (alternating rows, meta bar)\n  --mid-gray:    #6b7280   (labels, notes, footer)\n  --border:      #e2e5ea   (all borders and dividers)\n\n━━ PAGE LAYOUT ━━\n<style>\n  * { box-sizing: border-box; margin: 0; padding: 0; }\n  body {\n    font-family: 'DM Sans', sans-serif;\n    color: #1a1f2e;\n    background: #fff;\n    padding: 48px 54px;\n    font-size: 9.5pt;\n    line-height: 1.55;\n    -webkit-print-color-adjust: exact;\n  }\n</style>\n\n━━ HEADER (REQUIRED — exactly once per document) ━━\n<header style=\"margin-bottom: 10px;\">\n  <div style=\"font-size: 22pt; font-weight: 700; color: #1a1f2e; line-height: 1.2;\">IntraWeb Technologies</div>\n  <div style=\"font-size: 10pt; color: #3d8b8b; margin-top: 2px;\">[DOCUMENT TITLE HERE]</div>\n</header>\n<hr style=\"border: none; border-top: 1.5px solid #3d8b8b; margin: 10px 0;\">\n\n━━ META BAR (REQUIRED — immediately after header hr) ━━\n3-column info bar. Always present. Adjust labels/values per document.\n<div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; background: #f5f6f8; border: 0.5px solid #e2e5ea; margin-bottom: 4px;\">\n  <div style=\"padding: 8px 12px; border-right: 0.5px solid #e2e5ea;\">\n    <div style=\"font-size: 7.5pt; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em;\">SERVICE TIER</div>\n    <div style=\"font-size: 9pt; color: #1a1f2e; margin-top: 2px;\">[VALUE]</div>\n  </div>\n  <div style=\"padding: 8px 12px; border-right: 0.5px solid #e2e5ea;\">\n    <div style=\"font-size: 7.5pt; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em;\">DOCUMENT TYPE</div>\n    <div style=\"font-size: 9pt; color: #1a1f2e; margin-top: 2px;\">Client Onboarding</div>\n  </div>\n  <div style=\"padding: 8px 12px;\">\n    <div style=\"font-size: 7.5pt; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em;\">START DATE</div>\n    <div style=\"font-size: 9pt; color: #1a1f2e; margin-top: 2px;\">[VALUE]</div>\n  </div>\n</div>\n\n━━ SECTION TITLES ━━\n<div style=\"font-size: 10pt; font-weight: 700; color: #3d8b8b; text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 8px;\">Section Title</div>\n\n━━ KV TABLE (key-value rows) ━━\nUse for structured data. Keys left col (bold, mid-gray), values right col.\n<table style=\"width: 100%; border-collapse: collapse; border: 0.5px solid #e2e5ea; margin-bottom: 4px;\">\n  <tr style=\"background: #f5f6f8;\">\n    <td style=\"padding: 8px 12px; font-weight: 700; font-size: 9pt; color: #6b7280; width: 30%;\">Label</td>\n    <td style=\"padding: 8px 12px; font-size: 9pt; color: #1a1f2e; border-left: 0.5px solid #e2e5ea;\">Value</td>\n  </tr>\n  <tr style=\"background: #fff;\">\n    <td style=\"padding: 8px 12px; font-weight: 700; font-size: 9pt; color: #6b7280; border-top: 0.5px solid #e2e5ea;\">Label</td>\n    <td style=\"padding: 8px 12px; font-size: 9pt; color: #1a1f2e; border: 0.5px solid #e2e5ea; border-bottom: none; border-right: none;\">Value</td>\n  </tr>\n</table>\n\n━━ TWO-COLUMN SPLIT TABLE ━━\nFor scope, IP ownership, or any side-by-side comparison.\n<table style=\"width: 100%; border-collapse: collapse; border: 0.5px solid #e2e5ea; margin-bottom: 4px;\">\n  <tr>\n    <th style=\"padding: 9px 12px; background: #e8f4f4; font-size: 9pt; font-weight: 700; color: #1a1f2e; text-align: left; width: 50%; border-right: 0.5px solid #e2e5ea;\">Left Header</th>\n    <th style=\"padding: 9px 12px; background: #f5f6f8; font-size: 9pt; font-weight: 700; color: #1a1f2e; text-align: left;\">Right Header</th>\n  </tr>\n  <tr>\n    <td style=\"padding: 9px 12px; font-size: 9pt; color: #1a1f2e; vertical-align: top; border-right: 0.5px solid #e2e5ea; border-top: 0.5px solid #e2e5ea;\">Content</td>\n    <td style=\"padding: 9px 12px; font-size: 9pt; color: #1a1f2e; vertical-align: top; background: #f5f6f8; border-top: 0.5px solid #e2e5ea;\">Content</td>\n  </tr>\n</table>\n\n━━ CALLOUT / NOTE BOX ━━\nFor important notices, milestone warnings, or closing statements.\n<div style=\"background: #e8f4f4; border: 0.5px solid #e2e5ea; padding: 10px 14px; font-size: 8.5pt; color: #6b7280; font-style: italic; margin-top: 6px;\">\n  Note text here.\n</div>\n\n━━ FOOTER (REQUIRED — at bottom of every document) ━━\n<div style=\"margin-top: 24px; padding-top: 10px; border-top: 0.5px solid #e2e5ea; display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center;\">\n  <div style=\"font-size: 8pt; color: #6b7280;\">[Left label]</div>\n  <div style=\"font-size: 8pt; font-weight: 700; color: #1a1f2e;\">[Email]</div>\n  <div style=\"font-size: 8pt; font-weight: 700; color: #1a1f2e;\">[Phone]</div>\n</div>\n\n━━ RULES ━━\n1. Output a FULL valid HTML document: <!DOCTYPE html><html><head>...</head><body>...</body></html>\n2. ONE header only. Never repeat \"IntraWeb Technologies\" or the document title anywhere in the body.\n3. Never use markdown. Never use backticks. Never output prose outside of HTML tags.\n4. All colors must be hardcoded hex — no CSS variables (puppeteer may not resolve them).\n5. No external images. No JavaScript.\n6. Bullets use • character inside <td> or <p> tags — never <ul>/<li>.\n7. Use page-break-inside: avoid on table rows and phase blocks to prevent awkward PDF splits.\n8. For numbered steps (Credentials guide, Timeline): wrap each block in:\n   <div style=\"page-break-inside: avoid; margin-bottom: 6px;\">...</div>\n`;\n\n// ── SECTION DEFINITIONS ──────────────────────────────────────────────\nconst sections = [\n  {\n    name: 'Welcome Letter',\n    title: 'Welcome Letter',\n    prompt: `Write a personalized welcome letter for ${d.clientName} at ${d.company}.\n\nStructure:\n1. Date (${d.startDate}) — plain text, top left\n2. Warm opening paragraph — reference their specific pain points: ${d.painPoints}. Mention we're partnering on their ${d.tierName} tier.\n3. What they can expect — 2 short paragraphs about what we'll build and why it matters for ${d.industry}.\n4. \"Next Steps\" section — KV table with 4 rows: 48 hrs / Week 1 / Week 2 / Week 4–6 and what happens at each.\n5. Closing italic line in teal: \"We're not just building you a website — we're building you a tool that works as hard as you do.\"\n6. Signature block — styled left-border card (LIGHT_GRAY bg, TEAL left border 2px) containing:\n   John Schibelli / Project Lead / ${d.ownerEmail} / ${d.ownerPhone}\nFooter: \"Starter Plan\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  },\n  {\n    name: 'Credentials & Access Guide',\n    title: 'Credentials & Access Guide',\n    prompt: `Write a step-by-step credentials and access guide for ${d.clientName} on the ${d.tierName} tier.\n\nFor each tool, create a numbered block (page-break-inside: avoid) with:\n- DARK_SLATE header row: Step number (teal accent border-right) + step title\n- LIGHT_TEAL badge below: \"Required access: [email@intrawebtech.com] — [Access Level]\"\n- Bullet list of exact steps the client takes to grant access\n\nInclude only tools relevant to ${d.tierName} tier. Standard tools: Domain Registrar, Hosting/cPanel, Google Analytics, Google Search Console, Facebook Business Manager, Email Marketing Platform.\n\nUse these IntraWeb emails:\n- Domain/Hosting: admin@intrawebtech.com\n- Analytics: analytics@intrawebtech.com  \n- Search Console: seo@intrawebtech.com\n- Social: social@intrawebtech.com\n- Email platform: email@intrawebtech.com\n\nEnd with an \"Important Notes\" section as a single-column bullet table (4 bullets about ownership, 24hr acceptance, revoking access).\nFooter: \"Access setup questions?\" | admin@intrawebtech.com | ${d.ownerPhone}`\n  },\n  {\n    name: 'What We Are Building For You',\n    title: 'What We Are Building For You',\n    prompt: `Describe the automations being built for ${d.clientName} at ${d.company} (${d.industry} industry) on the ${d.tierName} tier. Their pain points: ${d.painPoints}.\n\nStart with one short intro paragraph (plain text).\n\nFor each automation, create a card block (page-break-inside: avoid) with:\n- DARK_SLATE header: 2-col table — bold number (teal right-border) + automation title\n- LIGHT_TEAL trigger row: \"TRIGGERS WHEN\" label (7.5pt teal uppercase) + trigger description\n- 2-row KV detail table: \"What It Does\" / \"Your Benefit\" — alternating WHITE/LIGHT_GRAY\n\nMake automations specific to ${d.industry} and their pain points. Standard 3 for Starter tier:\n1. Lead Capture & Follow-Up\n2. Customer Onboarding Sequence  \n3. Appointment Scheduling & Reminders\n\nEnd with a full-width LIGHT_TEAL callout summarizing the \"always-on\" value.\nFooter: \"Questions about your automations?\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  },\n  {\n    name: 'Project Timeline',\n    title: 'Project Timeline',\n    prompt: `Create an 8-week project timeline for ${d.clientName} starting ${d.startDate}.\n\nFor each of the 8 phases, create a block (page-break-inside: avoid) with:\n- Header row: Phase number, phase name, date range (right-aligned)\n  - Phases 1–2: DARK_SLATE background, white text\n  - Phase 3 (Design Approval Milestone): TEAL background, white text\n  - Phases 4–8: DARK_SLATE background, white text\n- Phase 3 only: add a LIGHT_TEAL callout row below the header — \"★ Design Approval Milestone — Design must be approved before development begins.\"\n- Body: 2-column table — \"IntraWeb Delivers\" (left, WHITE or LIGHT_TEAL for Phase 3) / \"Client Provides\" (right, LIGHT_GRAY)\n  - Each column: bold header, then bullet list of 3–5 items\n\nPhases: Discovery & Foundation, Design & Architecture, Design Refinement (milestone), Dev Phase 1, Dev Phase 2, Integration & Testing, Launch Preparation, Go-Live & Handoff.\n\nDates should flow week-by-week from ${d.startDate}.\nFooter: \"Timeline questions?\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  },\n  {\n    name: 'How to Work With IntraWeb',\n    title: 'How to Work With IntraWeb',\n    prompt: `Write the working relationship guide for ${d.clientName} on ${d.tierName} ($${d.monthlyPrice}/mo).\n\nFour sections, each with a teal section title and structured KV table or split table:\n\n1. Communication Guidelines — KV table (6 rows): Email (primary), Phone (urgent), Response Email (24 hrs), Response Phone (4 hrs), their email on file (${d.ownerEmail}), their phone on file (${d.ownerPhone})\n\n2. Submitting Change Requests — intro sentence, then KV table with 5 numbered rows (Clear Description, Location, Priority Level, Timeline, Context). Add a LIGHT_TEAL callout below: workflow after submission (acknowledge 24hrs → estimate → notify → summary).\n\n3. Scope Boundaries — 2-column split table: \"Included in ${d.tierName}\" (LIGHT_TEAL header) vs \"Outside of Scope\" (LIGHT_GRAY header). Bullet lists in each.\n\n4. Monthly Retainer Structure — KV table (6 rows): Monthly Retainer ($${d.monthlyPrice}), Setup Fee ($${d.setupFee} one-time), Payment Terms (Net 15), Hours Included (2 hrs/mo, no rollover), Overage Rate ($150/hr, 15-min increments), Time Reporting (detailed logs with monthly report).\n\n5. Reporting & Updates — KV table (3 rows): Monthly Report, Real-Time Alerts, Quarterly Reviews.\n\nFooter: \"Questions?\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  },\n  {\n    name: 'Billing & Payment Terms',\n    title: 'Billing & Payment Terms',\n    prompt: `Write the billing and payment terms document for ${d.clientName} on ${d.tierName}.\n\nSections:\n\n1. Your Pricing Structure — KV table (3 rows): Setup Fee ($${d.setupFee}), Monthly Fee ($${d.monthlyPrice}), First Month Total ($${parseInt(d.setupFee) + parseInt(d.monthlyPrice)}). Last row LIGHT_TEAL with teal bold value. Add note below about what setup fee covers.\n\n2. Invoice Schedule — KV table (4 rows): Setup Fee (due at signing), Monthly Fees (invoiced on the 28th), Payment Terms (Net 15), Late Fees (1.5%/month after 30 days). Add important callout: suspension after 45 days, $50 reactivation fee.\n\n3. Accepted Payment Methods — KV table (4 rows): ACH Bank Transfer (preferred — no fee), Wire Transfer, Business Check, Credit Card (3% fee). Note below: no cash, personal checks, or crypto.\n\n4. Cancellation Policy — KV table (4 rows): Notice (30 days written), Setup Fee (non-refundable), Monthly Fees (prorated), Final Invoice (due within 15 days). Note: final backup provided, hosting terminates 30 days after final payment.\n\n5. Intellectual Property Ownership — 2-column split table: \"You Own\" (LIGHT_TEAL) vs \"IntraWeb Retains\" (LIGHT_GRAY). 3 bullets each. Note below: full ownership transfers only after all invoices paid.\n\nFooter: \"Billing questions?\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  },\n  {\n    name: 'FAQ',\n    title: 'Frequently Asked Questions',\n    prompt: `Write an FAQ document for ${d.clientName} at ${d.company} (${d.industry}) on ${d.tierName}.\n\n5 questions. For each: teal section title (the question), one-line plain-text intro, then a KV table with 4 detail rows. Alternate KV table row starting color per question (odd = WHITE/LIGHT_GRAY, even = LIGHT_GRAY/WHITE).\n\nQuestions:\n1. What happens if something breaks?\n   Rows: Email (support@intrawebtech.com), Response Time (4 business hrs), Critical Outages (2 hr resolution), Cost (included)\n\n2. How do I add new staff members?\n   Rows: Send Us (name + email + access level needed), Turnaround (1 business day), Admin Access (discuss multi-admin), Cost (no charge for standard accounts)\n\n3. What if I want to cancel?\n   Rows: Notice (30 days written email), Data Export (provided on confirmation), Service End (active until billing period ends), Fees (no cancellation penalty; setup non-refundable)\n\n4. How do I request changes or updates?\n   Rows: Submit To (changes@intrawebtech.com), Allowance (2 hrs/month on ${d.tierName}), Turnaround (3–5 business days), Overages ($150/hr, quoted before work begins)\n\n5. Who owns my data?\n   Rows: Ownership (100% yours), Exports (standard formats, anytime), Our Usage (only to run your systems), After Cancellation (deleted 90 days post-service, or immediately on request)\n\nFooter: \"Need help?\" | ${d.ownerEmail} | ${d.ownerPhone}`\n  }\n];\n\n// ── OUTPUT ───────────────────────────────────────────────────────────\nreturn sections.map(s => ({\n  json: {\n    sectionName: s.name,\n    systemPrompt: DESIGN_SYSTEM,\n    userPrompt: `${basePrompt}\\n\\nGenerate the \"${s.title}\" document now.\\n\\n${s.prompt}`,\n    maxTokens: 3000\n  }\n}));"
+      },
+      "id": "sys13-prep-sections",
+      "name": "Prep Section Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "4PPD67ZzEON8Rxxe",
+          "mode": "id"
+        },
+        "mode": "each",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "systemPrompt": "={{ $json.systemPrompt }}",
+            "userPrompt": "={{ $json.userPrompt }}",
+            "maxTokens": "={{ $json.maxTokens }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-claude",
+      "name": "Generate Section",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1152,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const MAX = 7;\nconst d = $('Extract Input Data').first().json;\nconst prompts = $('Prep Section Prompts').all().slice(0, MAX);\nconst generated = $input.all().slice(0, MAX);\n\nconst sectionBody = (section) => {\n  const j = section.json || {};\n  if (j.data && typeof j.data.text === 'string' && j.data.text.trim()) return j.data.text;\n  if (typeof j.text === 'string' && j.text.trim()) return j.text;\n  if (j.success === false && j.error) {\n    const safe = String(j.error).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n    return `<section><p style=\\\"color:#b00020;\\\"><strong>Section failed:</strong> ${safe}</p></section>`;\n  }\n  return '<section><p style=\\\"color:#b00020;\\\">No content was returned for this section.</p></section>';\n};\n\nconst fileNameFor = (sectionTitle) => {\n  const t = String(sectionTitle || 'Section').replace(/[\\/:*?\\\"<>|]+/g, ' ').replace(/\\s+/g, ' ').trim() || 'Section';\n  return `IntraWeb — ${d.clientName} — ${t}.pdf`;\n};\n\nconst styles = `<style>\n  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');\n  body { font-family: 'DM Sans', Arial, sans-serif; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px; }\n  h1 { color: #1a1f2e; border-bottom: 3px solid #3d8b8b; padding-bottom: 10px; }\n  h2 { color: #1a1f2e; margin-top: 40px; }\n  h3 { color: #3d8b8b; }\n  a { color: #3d8b8b; }\n  .header { background: #1a1f2e; color: white; padding: 40px; margin: -40px -40px 40px -40px; text-align: center; }\n  .header h1 { color: #3d8b8b; border: none; }\n  .header p { color: #ccc; }\n  table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n  th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }\n  th { background: #f5f5f5; color: #1a1f2e; }\n</style>`;\n\nconst n = Math.min(MAX, prompts.length, generated.length);\nconst out = [];\nfor (let i = 0; i < n; i++) {\n  const sectionName = (prompts[i] && prompts[i].json && prompts[i].json.sectionName) ? prompts[i].json.sectionName : `Section ${i + 1}`;\n  const body = generated[i] ? sectionBody(generated[i]) : '<section><p style=\\\"color:#b00020;\\\">Missing generated output for this section.</p></section>';\n  const html = `<!DOCTYPE html><html><head>${styles}</head><body><div class=\\\"header\\\"><h1>IntraWeb Technologies</h1><p>${sectionName.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p><p>Onboarding — ${String(d.clientName).replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p></div>${body}</body></html>`;\n  out.push({ json: { html, fileName: fileNameFor(sectionName), sectionName } });\n}\nreturn out;"
+      },
+      "id": "a466dbaf-f6af-46af-b9e0-ffec35d39137",
+      "name": "Assemble Section Documents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "hxsCltRP81r5gLtm",
+          "mode": "id"
+        },
+        "mode": "each",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "html": "={{ $json.html }}",
+            "fileName": "={{ $json.fileName }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-pdf",
+      "name": "Generate PDF",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const MAX = 7;\nconst items = $input.all().slice(0, MAX);\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const j = item.json || {};\n  const fileName = (j.data && j.data.fileName) || j.fileName || 'onboarding-section.pdf';\n  const inlineBinary = item.binary && item.binary.data && item.binary.data.data;\n  let b64 = typeof inlineBinary === 'string' && inlineBinary !== 'filesystem-v2' ? inlineBinary : '';\n\n  if (!b64 && item.binary && item.binary.data) {\n    const pdfBuffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    b64 = pdfBuffer.toString('base64');\n  }\n\n  if (!b64 && j.data && typeof j.data.pdfBase64 === 'string') {\n    b64 = j.data.pdfBase64;\n  }\n\n  if (!b64) {\n    throw new Error(\n      'Attach PDF Binary: missing usable PDF bytes for ' +\n        fileName +\n        '. ' +\n        JSON.stringify({ success: j.success, error: j.error }).slice(0, 400),\n    );\n  }\n\n  out.push({\n    json: j,\n    binary: {\n      data: {\n        data: b64,\n        mimeType: (j.data && j.data.mimeType) || 'application/pdf',\n        fileName,\n        fileExtension: 'pdf'\n      },\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "6d43b618-daed-4922-acc6-146dcdca4e85",
+      "name": "Attach PDF Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const MAX = 7;\nconst d = $('Extract Input Data').first().json;\nconst uploads = $('Upload file').all().slice(0, MAX);\nconst items = uploads.map((u) => {\n  const id = u.json.id;\n  const nm = u.json.name || u.json.title || 'Document';\n  return { id, name: nm, href: id ? `https://drive.google.com/file/d/${id}/view` : '' };\n}).filter((x) => x.href);\n\nconst listHtml = items.length\n  ? `<ul style=\\\"margin:16px 0;padding-left:20px;\\\">${items.map((x) => `<li style=\\\"margin:8px 0;\\\"><a href=\\\"${x.href}\\\">${String(x.name).replace(/&/g, '&amp;').replace(/</g, '&lt;')}</a></li>`).join('')}</ul>`\n  : '<p><em>Documents could not be linked automatically — check your Google Drive folder.</em></p>';\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: 'Your IntraWeb onboarding documents — seven guides to get started',\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Your onboarding package is ready as <strong>separate PDFs</strong> (welcome letter, access guide, what we're building, timeline, how we work together, billing, and FAQ).</p>${listHtml}<p>Take a few minutes to review them, and let me know if you have any questions.</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 04 — Client Onboarding Docs Generator'\n  }\n}];"
+      },
+      "id": "sys13-email-prep",
+      "name": "Prep Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "FF6VOLCcRxI4uNYD",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "to": "={{ $json.to }}",
+            "subject": "={{ $json.subject }}",
+            "html": "={{ $json.html }}",
+            "workflowName": "={{ $json.workflowName }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2496,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 24,
+        "unit": "hours"
+      },
+      "id": "sys13-wait",
+      "name": "Wait 24hrs",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        0
+      ],
+      "webhookId": "b6090ef2-4287-4604-8c2d-eb8642aab041"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Input Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    body: `Hi ${d.contactFirstName || 'there'}, just checking you received your onboarding package — check your inbox and let us know if you have any questions. — John`,\n    workflowName: 'SYS 04 — Client Onboarding Docs Generator'\n  }\n}];"
+      },
+      "id": "sys13-sms-prep",
+      "name": "Prep Follow-up SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "VzxtOFmmGEitVEQk",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-sms",
+      "name": "Send Follow-up SMS",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3168,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 04 — Client Onboarding Docs Generator',\n    contactName: $('Extract Input Data').first().json.clientName,\n    phone: '', eventType: 'onboarding_started', status: 'success',\n    notes: 'Onboarding package generated and sent'\n  }\n}];"
+      },
+      "id": "sys13-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3392,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys13-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3616,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Labor only (matches sticky). The 24h Wait node is clock time, not labor.\nconst manualByTask = [\n  { task: 'Pull CONFIG + normalize client / tier / Drive context', min: 12 },\n  { task: 'Draft 7 onboarding sections (research, tone, client specifics)', min: 95 },\n  { task: 'Assemble per-section HTML + filenames + QA pass', min: 26 },\n  { task: 'Generate 7 PDFs + upload each to client Drive + verify links', min: 20 },\n  { task: 'Compose and send onboarding package email', min: 10 },\n  { task: 'Prep + send 24h follow-up SMS', min: 6 },\n  { task: 'Log doc delivery to ops sheet', min: 4 }\n];\nconst humanByTask = [\n  { task: 'Skim AI sections for wrong tier / wrong client details', min: 10 },\n  { task: 'Optional: tweak email or SMS wording', min: 5 }\n];\nconst manualLaborMinutes = manualByTask.reduce((s, t) => s + t.min, 0);\nconst residualHumanMinutes = humanByTask.reduce((s, t) => s + t.min, 0);\nconst minutesSaved = manualLaborMinutes - residualHumanMinutes;\n\nconst base = $input.first().json;\nreturn [{\n  json: {\n    ...base,\n    minutesSaved,\n    timeSavedBreakdown: {\n      manualLaborMinutes,\n      residualHumanMinutes,\n      manualByTask,\n      humanByTask\n    }\n  }\n}];"
+      },
+      "id": "ccd190f7-5ad1-421a-b72b-089fbbaa9ee0",
+      "name": "Calc Time Saved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "once",
+        "minutesSaved": "={{ $json.minutesSaved }}"
+      },
+      "id": "e1128fbb-87a8-4279-93c6-0792bb2f49c8",
+      "name": "Track Time Saved",
+      "type": "n8n-nodes-base.timeSaved",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        0
+      ],
+      "notes": "Uses minutesSaved from Calc Time Saved (manual labor total minus residual human minutes)."
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $json.data.fileName || $json.fileName || 'onboarding-section.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "value": "0ADK5JlQfsgrHUk9PVA",
+          "mode": "list",
+          "cachedResultName": "IntraWeb — Clients",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/0ADK5JlQfsgrHUk9PVA"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1TmsNtYRY9lRPHYUcfqoWhOo_GR0yTmrI",
+          "mode": "list",
+          "cachedResultName": "Onboarding Docs",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1TmsNtYRY9lRPHYUcfqoWhOo_GR0yTmrI"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "55afc6b7-179a-4829-a76d-d143a4ffdc0d",
+      "name": "Upload file"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Extract Input Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Input Data": {
+      "main": [
+        [
+          {
+            "node": "Prep Section Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Section Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Section",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Section": {
+      "main": [
+        [
+          {
+            "node": "Assemble Section Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Section Documents": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF": {
+      "main": [
+        [
+          {
+            "node": "Attach PDF Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach PDF Binary": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 24hrs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24hrs": {
+      "main": [
+        [
+          {
+            "node": "Prep Follow-up SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Follow-up SMS": {
+      "main": [
+        [
+          {
+            "node": "Send Follow-up SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Follow-up SMS": {
+      "main": [
+        [
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Calc Time Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calc Time Saved": {
+      "main": [
+        [
+          {
+            "node": "Track Time Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Prep Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "dynamic",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

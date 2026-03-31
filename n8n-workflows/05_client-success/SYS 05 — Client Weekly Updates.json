@@ -1,0 +1,398 @@
+{
+  "id": "sys-08-client-weekly-updates",
+  "name": "SYS 05 — Client Weekly Updates",
+  "description": "Runs every Friday 4PM EST. Loads closed-won clients from HubSpot, checks for recent activity. If no activity in 7 days, sends a Google Chat warning. For each client, Claude generates a weekly update email (what we did, what's next, items needed); sends via Resend. Surfaces stale accounts.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 05 — Client Weekly Updates\n\n**Trigger:** Every Friday 4PM EST (cron).\n\n**What it does:** Loads all closed-won clients from HubSpot, checks for recent activity (last 7 days). If no activity, sends a Google Chat warning before sending. For each client, uses Claude to generate a weekly update email (what we did, what's next, items needed), then sends via Resend. Keeps clients informed and surfaces stale accounts.\n\n**Dependencies:** CONFIG, HubSpot, Call Claude API, Send Email, Send Google Chat Alert, Log.",
+        "height": 320,
+        "width": 460,
+        "color": 5
+      },
+      "id": "note-sys08",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 16 * * 5"
+            }
+          ]
+        }
+      },
+      "id": "sys08-trigger",
+      "name": "Every Friday 4PM EST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": ""
+      },
+      "id": "sys08-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "getAll",
+        "filters": {
+          "values": [
+            {
+              "propertyName": "dealstage",
+              "operator": "EQ",
+              "value": "closed_won"
+            }
+          ]
+        },
+        "limit": 100,
+        "options": {
+          "properties": [
+            "dealname",
+            "tier",
+            "contact_email",
+            "contact_firstname",
+            "dealstage",
+            "monthly_retainer",
+            "last_activity_date"
+          ]
+        }
+      },
+      "id": "sys08-get-clients",
+      "name": "Get Active Clients",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const deals = $('Get Active Clients').all();\nconst config = $('Get Config').first().json;\nconst now = new Date();\nconst sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);\n\nreturn deals.map(deal => {\n  const props = deal.json.properties || deal.json;\n  const lastActivity = props.last_activity_date ? new Date(props.last_activity_date) : null;\n  const noActivity = !lastActivity || lastActivity < sevenDaysAgo;\n\n  return {\n    json: {\n      dealId: deal.json.id,\n      clientName: props.dealname || '',\n      tier: props.tier || 'starter',\n      contactEmail: props.contact_email || '',\n      contactFirstName: props.contact_firstname || '',\n      dealStage: props.dealstage || '',\n      noRecentActivity: noActivity,\n      config\n    }\n  };\n});"
+      },
+      "id": "sys08-process",
+      "name": "Process Each Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "no-activity",
+              "leftValue": "={{ $json.noRecentActivity }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys08-check-activity",
+      "name": "No Recent Activity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nreturn [{\n  json: {\n    message: `No activity logged for ${d.clientName} in 7 days — add notes before update sends`,\n    priority: 'warning'\n  }\n}];"
+      },
+      "id": "sys08-warn-prep",
+      "name": "Prep Warning",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_GOOGLE_CHAT_ALERT_WORKFLOW_ID"
+      },
+      "id": "sys08-warn",
+      "name": "Send Warning",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1570,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nreturn [{\n  json: {\n    systemPrompt: 'Write a weekly client update email for IntraWeb Technologies. Tone: direct, professional, no filler. Sections: What we did this week, What\\'s next, Items needed from you. Return HTML only. No markdown, no backticks.',\n    userPrompt: `Client: ${d.clientName}\\nTier: ${d.tier}\\nDeal stage: ${d.dealStage}\\nRecent activity: ${d.noRecentActivity ? 'No logged activity this week' : 'Activity logged this week'}\\n\\nWrite a professional weekly update email.`,\n    maxTokens: 2000\n  }\n}];"
+      },
+      "id": "sys08-claude-prep",
+      "name": "Prep Claude Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_CALL_CLAUDE_API_WORKFLOW_ID"
+      },
+      "id": "sys08-claude",
+      "name": "Generate Update",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1570,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const claude = $('Generate Update').first().json;\nconst d = $('Process Each Client').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Weekly Update — ${d.clientName}`,\n    html: claude.data.text,\n    workflowName: 'SYS 05 — Client Weekly Updates'\n  }\n}];"
+      },
+      "id": "sys08-email-prep",
+      "name": "Prep Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_EMAIL_WORKFLOW_ID"
+      },
+      "id": "sys08-email",
+      "name": "Send Update Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2010,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Process Each Client').first().json;\n\nreturn [{\n  json: {\n    workflowName: 'SYS 05 — Client Weekly Updates',\n    contactName: d.clientName,\n    phone: '',\n    eventType: 'email_sent',\n    status: 'success',\n    notes: 'Weekly client update sent'\n  }\n}];"
+      },
+      "id": "sys08-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2230,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_LOG_WORKFLOW_ID"
+      },
+      "id": "sys08-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2450,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Every Friday 4PM EST": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Get Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Clients": {
+      "main": [
+        [
+          {
+            "node": "Process Each Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Client": {
+      "main": [
+        [
+          {
+            "node": "No Recent Activity?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Recent Activity?": {
+      "main": [
+        [
+          {
+            "node": "Prep Warning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Claude Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Warning": {
+      "main": [
+        [
+          {
+            "node": "Send Warning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Warning": {
+      "main": [
+        [
+          {
+            "node": "Prep Claude Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Claude Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Update": {
+      "main": [
+        [
+          {
+            "node": "Prep Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Email": {
+      "main": [
+        [
+          {
+            "node": "Send Update Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Update Email": {
+      "main": [
+        [
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

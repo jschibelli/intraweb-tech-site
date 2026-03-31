@@ -1,0 +1,205 @@
+{
+  "id": "sw-create-hubspot-deal",
+  "name": "SW: Create HubSpot Deal",
+  "description": "Subworkflow: create HubSpot deal with pipeline, stage, amount, pain, tier, owner; optional contact association. Deal name from company or contact. Consumes CONFIG owner.hubspotOwnerId and pipeline. Returns dealId or error.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SW: Create HubSpot Deal\n\n**Subworkflow.** Creates a new deal in HubSpot via the CRM API with full \"About this deal\" fields and optionally associates a contact in the same request.\n\n**Input:**\n- `contactId` — HubSpot contact ID to associate (included in create when provided)\n- `company` / `company_name` / `business_name` — used for **deal name** first if any is set; also written to deal property `company` when present\n- `firstname`+`lastname` or `firstName`+`lastName` or `contactName` / `name` — used for deal name when company is empty\n- `dealName` (optional) — if it contains ` - `, the part after the first ` - ` is kept as the suffix (e.g. `… - Website`); the label before ` - ` is replaced by company or person when those fields are passed\n- `dealNameSuffix` (optional) — alternative to parsing `dealName`; appended as ` - {value}` when set\n- `stage`, `amount`, `industry`, `painPoint`, `tier`\n- `closeDate` (optional) — ISO date; default 90 days from now\n- `dealOwnerId` (optional) — or set CONFIG `owner.hubspotOwnerId`\n- Default `stage`: qualifiedtobuy. Valid: appointmentscheduled, qualifiedtobuy, presentationscheduled, decisionmakerboughtin, contractsent, closedwon, closedlost.\n\n**Deal name rule:** **Company** if present; else **person’s full name**; else fall back to `dealName` or `{industry} - {tier}`.\n\n**Set on create:** dealname, amount, closedate, dealstage, pipeline, dealtype, description (from painPoint), hubspot_owner_id (if set), optional `company` on deal. Contact association when contactId provided.\n\n**CONFIG:** `owner.hubspotOwnerId` for deal owner; `pipeline` for custom pipeline internal ID (e.g. Diagnostic).\n\n**Output:** `{ success, data: { dealId }, error }`.",
+        "height": 280,
+        "width": 420,
+        "color": 5
+      },
+      "id": "note-sw-deal",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sw-deal-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        256,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "options": {}
+      },
+      "id": "sw-deal-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use $input for config (from Get Config); reference trigger by name or default UI name\nconst config = $input.first().json;\nlet input;\ntry {\n  input = $('Execute Workflow Trigger').first().json;\n} catch (e) {\n  input = $('When executed by another node').first().json;\n}\nconst tierConfig = config.tiers[input.tier] || config.tiers.starter;\nconst amount = input.amount || (tierConfig.setupFee + tierConfig.monthlyPrice);\nconst closeDate = new Date();\ncloseDate.setDate(closeDate.getDate() + 90);\nconst closeDateIso = closeDate.toISOString();\nconst dealOwnerId = input.dealOwnerId || config.owner?.hubspotOwnerId || null;\n\nconst trim = (v) => {\n  if (v === undefined || v === null) return '';\n  const s = String(v).trim();\n  return s;\n};\n\nconst company = trim(input.company) || trim(input.company_name) || trim(input.business_name);\nconst first = trim(input.firstname) || trim(input.firstName);\nconst last = trim(input.lastname) || trim(input.lastName);\nconst personName = [first, last].filter(Boolean).join(' ').trim()\n  || trim(input.contactName)\n  || trim(input.name);\nconst baseLabel = company || personName;\n\nconst explicit = trim(input.dealName);\nconst suffixFromExplicit = explicit.includes(' - ') ? explicit.slice(explicit.indexOf(' - ')) : '';\nconst suffixFromField = trim(input.dealNameSuffix);\nlet suffix = ` - ${tierConfig.name}`;\nif (suffixFromExplicit) suffix = suffixFromExplicit;\nelse if (suffixFromField) suffix = ` - ${suffixFromField}`;\n\nlet dealName;\nif (baseLabel) {\n  dealName = baseLabel + suffix;\n} else if (explicit) {\n  dealName = explicit;\n} else {\n  dealName = `${trim(input.industry) || 'New'} - ${tierConfig.name}`;\n}\n\nreturn [{\n  json: {\n    contactId: input.contactId,\n    dealName,\n    dealCompany: company,\n    stage: input.stage || 'qualifiedtobuy',\n    amount,\n    industry: trim(input.industry),\n    painPoint: input.painPoint || '',\n    tier: input.tier || 'starter',\n    closeDate: input.closeDate || closeDateIso,\n    dealOwnerId: dealOwnerId ? String(dealOwnerId) : null\n  }\n}];"
+      },
+      "id": "sw-deal-prepare",
+      "name": "Prepare Deal Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst config = $('Get Config').first().json;\nconst pipeline = config.pipeline || 'default';\nconst properties = {\n  dealname: d.dealName || 'New Deal',\n  amount: String(d.amount),\n  closedate: d.closeDate,\n  dealstage: d.stage || 'qualifiedtobuy',\n  pipeline,\n  dealtype: 'newbusiness'\n};\nif (d.dealOwnerId) properties.hubspot_owner_id = d.dealOwnerId;\nif (d.painPoint && String(d.painPoint).trim()) properties.description = String(d.painPoint).trim();\nif (d.dealCompany && String(d.dealCompany).trim()) properties.company = String(d.dealCompany).trim();\nconst body = { properties };\nif (d.contactId) {\n  body.associations = [{ to: { id: String(d.contactId) }, types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 3 }] }];\n}\nreturn [{ json: body }];"
+      },
+      "id": "sw-deal-build-body",
+      "name": "Build Create Deal Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "sw-deal-create",
+      "name": "Create Deal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        304
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $input.first().json;\nconst dealId = res.id || res.dealId;\nreturn [{ json: { dealId, id: dealId } }];"
+      },
+      "id": "sw-deal-normalize",
+      "name": "Normalize Deal Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const norm = $('Normalize Deal Response').first().json;\nreturn [{\n  json: {\n    success: true,\n    data: { dealId: norm.dealId },\n    error: null\n  }\n}];"
+      },
+      "id": "sw-deal-response",
+      "name": "Return Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        304
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Prepare Deal Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Deal Data": {
+      "main": [
+        [
+          {
+            "node": "Build Create Deal Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Create Deal Request": {
+      "main": [
+        [
+          {
+            "node": "Create Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Deal": {
+      "main": [
+        [
+          {
+            "node": "Normalize Deal Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Deal Response": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {}
+}

@@ -1,0 +1,433 @@
+{
+  "id": "sys-07-linkedin-content-pipeline",
+  "name": "SYS 06 — LinkedIn Content Pipeline",
+  "description": "Runs daily at 6AM EST. Fetches RSS feeds (TechCrunch AI, VentureBeat AI, HN), parses recent stories, uses Claude to generate LinkedIn posts (hook, full post, hashtags), and appends drafts to the LinkedIn sheet for review. Keeps a queue of on-brand, timely content.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 06 — LinkedIn Content Pipeline\n\n**Trigger:** Daily 6AM EST (cron).\n\n**What it does:** Fetches RSS feeds (TechCrunch AI, VentureBeat AI, HN Best), parses and filters to recent stories, uses Claude to generate a LinkedIn post (hook, full post, hashtags) per story, and appends drafts to the LinkedIn sheet for review. Optional approval flow or manual publish. Keeps a queue of on-brand, timely content.\n\n**Dependencies:** CONFIG, Call Claude API, Google Sheets (LinkedIn tab), optional Google Chat for approval.",
+        "height": 320,
+        "width": 460,
+        "color": 5
+      },
+      "id": "note-sys07",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "sys07-trigger",
+      "name": "Daily 6AM EST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        }
+      },
+      "id": "sys07-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "sys07-rss1",
+      "name": "Fetch TechCrunch AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        690,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://venturebeat.com/category/ai/feed/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "sys07-rss2",
+      "name": "Fetch VentureBeat AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        690,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://hnrss.org/best?count=20",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "sys07-rss3",
+      "name": "Fetch HN Top",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        690,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const feeds = [\n  $('Fetch TechCrunch AI').first().json,\n  $('Fetch VentureBeat AI').first().json,\n  $('Fetch HN Top').first().json\n];\n\nconst allStories = [];\nconst now = new Date();\nconst oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);\n\nfor (const feed of feeds) {\n  const text = typeof feed === 'string' ? feed : (feed.data || feed.body || JSON.stringify(feed));\n  const items = text.match(/<item[\\s\\S]*?<\\/item>/gi) || [];\n\n  for (const item of items) {\n    const titleMatch = item.match(/<title[^>]*>(?:<!\\[CDATA\\[)?(.*?)(?:\\]\\]>)?<\\/title>/i);\n    const descMatch = item.match(/<description[^>]*>(?:<!\\[CDATA\\[)?(.*?)(?:\\]\\]>)?<\\/description>/i);\n    const linkMatch = item.match(/<link[^>]*>(.*?)<\\/link>/i);\n    const dateMatch = item.match(/<pubDate[^>]*>(.*?)<\\/pubDate>/i);\n\n    if (titleMatch) {\n      const pubDate = dateMatch ? new Date(dateMatch[1]) : now;\n      if (pubDate >= oneDayAgo) {\n        allStories.push({\n          title: titleMatch[1].replace(/<[^>]*>/g, '').trim(),\n          summary: descMatch ? descMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 300) : '',\n          link: linkMatch ? linkMatch[1].trim() : '',\n          date: pubDate.toISOString()\n        });\n      }\n    }\n  }\n}\n\nconst top5 = allStories.slice(0, 5);\n\nreturn top5.map(story => ({ json: story }));"
+      },
+      "id": "sys07-parse",
+      "name": "Parse & Filter Stories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const story = $input.first().json;\n\nreturn [{\n  json: {\n    systemPrompt: `Write LinkedIn posts for John, founder of IntraWeb Technologies. Voice: builder not talker, engineering-first, contrarian with specifics. No buzzwords, no corporate speak, no em dashes. No 'I\\'ve been thinking', no context-setting openers. Structure: Problem > Insight > Framework > Takeaway. 700-900 characters. 3-5 hashtags at bottom only. Forced-choice CTA. 0-1 emojis. Never use: game-changer, revolutionize, leverage, excited to share, delve, in today\\'s world. Return JSON only: { \"hook\": \"\", \"full_post\": \"\", \"hashtags\": \"\", \"suggested_link\": \"\", \"news_source\": \"\" }`,\n    userPrompt: `Headline: ${story.title}\\nSummary: ${story.summary}\\nSource: ${story.link}\\n\\nWrite a contrarian take, not a summary.`,\n    maxTokens: 1500\n  }\n}];"
+      },
+      "id": "sys07-claude-prep",
+      "name": "Prep Claude Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_CALL_CLAUDE_API_WORKFLOW_ID"
+      },
+      "id": "sys07-claude",
+      "name": "Generate Post",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1350,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $('Generate Post').first().json;\nconst config = $('Get Config').first().json;\nlet postData;\n\ntry {\n  postData = JSON.parse(result.data.text);\n} catch(e) {\n  postData = {\n    hook: result.data.text.substring(0, 100),\n    full_post: result.data.text,\n    hashtags: '',\n    suggested_link: '',\n    news_source: ''\n  };\n}\n\nreturn [{\n  json: {\n    sheetId: config.google.masterSheetId,\n    dateGenerated: new Date().toISOString(),\n    newsHook: postData.hook || '',\n    fullPost: postData.full_post || '',\n    hashtags: postData.hashtags || '',\n    suggestedLink: postData.suggested_link || '',\n    status: 'draft',\n    scheduledTime: '',\n    postNotes: `Source: ${postData.news_source || ''}`\n  }\n}];"
+      },
+      "id": "sys07-format",
+      "name": "Format for Sheet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $json.sheetId }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "LinkedIn"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date Generated": "={{ $json.dateGenerated }}",
+            "News Hook": "={{ $json.newsHook }}",
+            "Full Post": "={{ $json.fullPost }}",
+            "Hashtags": "={{ $json.hashtags }}",
+            "Suggested Link": "={{ $json.suggestedLink }}",
+            "Status": "={{ $json.status }}",
+            "Scheduled Time": "={{ $json.scheduledTime }}",
+            "Post Notes": "={{ $json.postNotes }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "sys07-append",
+      "name": "Add to LinkedIn Queue",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1790,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IJzDJS1jpbItegZD",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Get Config').first().json;\n\nreturn [{\n  json: {\n    message: `LinkedIn drafts ready for review: https://docs.google.com/spreadsheets/d/${config.google.masterSheetId}`,\n    priority: 'info'\n  }\n}];"
+      },
+      "id": "sys07-alert-prep",
+      "name": "Prep Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2010,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_GOOGLE_CHAT_ALERT_WORKFLOW_ID"
+      },
+      "id": "sys07-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2230,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 06 — LinkedIn Content Pipeline',\n    contactName: '',\n    phone: '',\n    eventType: 'content_generated',\n    status: 'success',\n    notes: 'LinkedIn drafts generated from RSS feeds'\n  }\n}];"
+      },
+      "id": "sys07-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_LOG_WORKFLOW_ID"
+      },
+      "id": "sys07-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2670,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 6AM EST": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Fetch TechCrunch AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch VentureBeat AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch HN Top",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch TechCrunch AI": {
+      "main": [
+        [
+          {
+            "node": "Parse & Filter Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch VentureBeat AI": {
+      "main": [
+        [
+          {
+            "node": "Parse & Filter Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch HN Top": {
+      "main": [
+        [
+          {
+            "node": "Parse & Filter Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Filter Stories": {
+      "main": [
+        [
+          {
+            "node": "Prep Claude Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Claude Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Post": {
+      "main": [
+        [
+          {
+            "node": "Format for Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Sheet": {
+      "main": [
+        [
+          {
+            "node": "Add to LinkedIn Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to LinkedIn Queue": {
+      "main": [
+        [
+          {
+            "node": "Prep Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert": {
+      "main": [
+        [
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

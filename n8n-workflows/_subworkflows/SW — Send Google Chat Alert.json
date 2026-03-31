@@ -1,0 +1,152 @@
+{
+  "id": "sw-send-google-chat-alert",
+  "name": "SW: Send Google Chat Alert",
+  "description": "Subworkflow: post message to Google Chat via CONFIG chatWebhookUrl. Input message and priority (info, warning, error). Central team notifications for automation outcomes and errors.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SW: Send Google Chat Alert\n\n**Subworkflow.** Posts a message to the team's Google Chat space via webhook. Used for errors, warnings, and info (e.g. manual generated, client health).\n\n**Input:** `message` (text), `priority`: `info` / `warning` / `error` (adds emoji). Webhook URL from CONFIG.\n\n**Output:** `{ success, data, error }`. Central place for the team to see automation alerts.",
+        "height": 280,
+        "width": 420,
+        "color": 5
+      },
+      "id": "note-sw-chat",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "sw-chat-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "1eTTVoSFSlSPvZV4"
+      },
+      "id": "sw-chat-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Config from previous node (Get Config) to avoid 'Referenced node doesn't exist'\nconst config = $input.first().json;\nlet input;\ntry {\n  input = $('Execute Workflow Trigger').first().json;\n} catch (e) {\n  input = $('When executed by another node').first().json;\n}\n\nconst priorityMap = {\n  info: '\\u2139\\uFE0F',\n  warning: '\\u26A0\\uFE0F',\n  error: '\\uD83D\\uDEA8'\n};\n\nconst priority = input.priority || 'info';\nconst emoji = priorityMap[priority] || priorityMap.info;\nconst rawMessage = input.message ?? input.text ?? '';\nconst msgText = (typeof rawMessage === 'string' ? rawMessage : String(rawMessage || '')).trim() || '(no message)';\nconst message = `${emoji} ${msgText}`;\n\nreturn [{\n  json: {\n    webhookUrl: config.google.chatWebhookUrl,\n    text: message\n  }\n}];"
+      },
+      "id": "sw-chat-format",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.webhookUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "sw-chat-send",
+      "name": "Send to Google Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        910,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: true,\n    data: { sent: true },\n    error: null\n  }\n}];"
+      },
+      "id": "sw-chat-response",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Google Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Google Chat": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

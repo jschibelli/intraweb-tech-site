@@ -1,0 +1,164 @@
+{
+  "id": "sw-call-claude-api",
+  "name": "SW: Call Claude API",
+  "description": "Subworkflow: call Anthropic Claude with systemPrompt, userPrompt, optional maxTokens. Returns data.text on success. Shared AI layer for proposals, LinkedIn, onboarding, command center, and documentation workflows.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SW: Call Claude API\n\n**Subworkflow.** Call Anthropic's Claude API with a system prompt, user prompt, and optional max tokens. Used by proposals, LinkedIn content, onboarding docs, command center, and manual generator.\n\n**Input (from trigger):**\n- `systemPrompt` — system message\n- `userPrompt` — user message\n- `maxTokens` (optional, default 2048)\n\n**Output:** Standard `{ success, data, error }`. On success, `data.text` is the model response. On failure, returns `success: false`.\n\n**Credential:** Use a **Header Auth** credential. Name: `x-api-key`, Value: your Claude API key from platform.claude.com → API keys.",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "note-sw-claude",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "sw-claude-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let input = {};\ntry {\n  input = $('Execute Workflow Trigger').first().json || {};\n} catch (e) {\n  input = {};\n}\nconst defaults = {\n  systemPrompt: 'You are a professional business consultant and writer for IntraWeb Technologies. You write in a direct, clear, and professional tone. Avoid filler and generic language. Tailor responses to the context provided.',\n  userPrompt: 'Write a 2–3 sentence introduction for a consulting proposal. The client is a local service business (e.g., HVAC or plumbing) looking to automate their operations. Mention the value of custom-built systems over generic software.'\n};\nreturn [{\n  json: {\n    systemPrompt: (input.systemPrompt && input.systemPrompt.trim()) ? input.systemPrompt : defaults.systemPrompt,\n    userPrompt: (input.userPrompt && input.userPrompt.trim()) ? input.userPrompt : defaults.userPrompt,\n    maxTokens: Number(input.maxTokens) || 2048\n  }\n}];"
+      },
+      "id": "sw-claude-prepare",
+      "name": "Prepare Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: $json.maxTokens, system: $json.systemPrompt, messages: [{ role: 'user', content: $json.userPrompt }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "sw-claude-call",
+      "name": "Call Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        690,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ANTHROPIC_API_CREDENTIAL_ID",
+          "name": "Anthropic API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $('Call Claude API').first().json;\nif (response.error) {\n  return [{\n    json: {\n      success: false,\n      data: null,\n      error: typeof response.error === 'object' ? JSON.stringify(response.error) : String(response.error),\n    },\n  }];\n}\nlet text = '';\nconst blocks = response.content || [];\nfor (const b of blocks) {\n  if (b && typeof b.text === 'string') {\n    text += b.text;\n  }\n}\ntext = text.trim();\nif (!text) {\n  return [{\n    json: {\n      success: false,\n      data: null,\n      error: 'Claude returned no text (check model name, API key, and account access).',\n    },\n  }];\n}\nreturn [{ json: { success: true, data: { text }, error: null } }];"
+      },
+      "id": "sw-claude-success",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $('Call Claude API').first();\nconst j = item.json || {};\nlet msg = '';\nif (j.error && typeof j.error === 'object') {\n  msg = j.error.message || JSON.stringify(j.error);\n} else if (typeof j.error === 'string') {\n  msg = j.error;\n} else if (j.message) {\n  msg = j.message;\n} else if (j.type === 'error') {\n  msg = j.error?.message || JSON.stringify(j);\n} else {\n  msg = 'HTTP request failed (check Anthropic API credential and API key in n8n credentials)';\n}\nreturn [{\n  json: {\n    success: false,\n    data: null,\n    error: `Claude API call failed: ${String(msg).substring(0, 400)}`\n  }\n}];"
+      },
+      "id": "sw-claude-error-return",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "Call Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Claude API": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

@@ -1,0 +1,7 @@
+{
+  "contactId": "REPLACE_WITH_HUBSPOT_CONTACT_OBJECT_ID",
+  "createDeal": true,
+  "dealStage": "qualifiedtobuy",
+  "tier": "starter",
+  "painOverride": ""
+}

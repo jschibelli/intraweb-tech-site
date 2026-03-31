@@ -1,0 +1,922 @@
+{
+  "id": "sys-06-invoice-payment-collection",
+  "name": "SYS 03 — Invoice and Payment Collection",
+  "description": "Webhook when deal enters Invoice Sent in HubSpot. Does not create invoices—automates payment reminders (days 3/7/14/21), checks HubSpot for Paid between steps, logs invoice_sent, escalates if still unpaid at day 21.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 03 — Invoice and Payment Collection\n\n### Purpose\nAutomate **collections follow-up** after an invoice is already out: scheduled reminders with a pay link, stop when the deal is **Paid**, log the run, and **escalate** if still unpaid after the last checkpoint—so nothing falls through the cracks without manual chasing.\n\n### What this workflow does *not* do\nIt **does not create or send the invoice**. You issue the invoice elsewhere, then move the HubSpot deal to **Invoice Sent**. Reminders use deal **amount** from HubSpot and a shared **`config.owner.paymentLink`** (e.g. Stripe Payment Link from CONFIG).\n\n### When it fires\n- **Webhook:** `POST` → `/webhook/hubspot-deal-invoice-sent`\n- **HubSpot:** Deal enters stage **Invoice Sent** (direct workflow action, or via **SYS 00** router from `dealstage` events).\n\n### How it works (flow)\n1. **Get Config** → **Extract Deal Data** (name, deal id, amount, email, phone).\n2. **Log** — records `invoice_sent` via the Log sub-workflow.\n3. **Wait / check loop** — after each wait, **GET deal** from HubSpot; **IF** `dealstage` ≠ Paid → send that step’s reminder; **else** → **Google Chat** “payment received” alert and **no more client nudges**.\n4. **Schedule (hardcoded Wait nodes):** Day **3** — email + SMS; Day **7** — email (overdue tone); Day **14** — SMS; Day **21** still unpaid — **internal escalation** alert only (manual follow-up).\n\n### Dependencies\nCONFIG, **Send Email**, **Send SMS**, **Log**, **Send Google Chat Alert** sub-workflows; HubSpot credential on deal GET nodes.\n\n### Ops\nEnsure IF nodes compare `dealstage` to your portal’s real **Paid** stage value (HubSpot often uses stage IDs, not the label `paid`).",
+        "height": 560,
+        "width": 520,
+        "color": 5
+      },
+      "id": "note-sys06",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Time saved (labor) — per invoice sequence\n\n**Unit:** one **Invoice Sent** enrollment through **all four unpaid checkpoints** (days **3 / 7 / 14 / 21**) plus **log**, matching what this workflow sends. If the deal goes **Paid** earlier, manual work avoided is only the **rows for checkpoints not reached** (same as automation skipping them).\n\n**Definition:** *Labor* = your minutes on CRM checks, writing, and sending. **Wait** nodes = *clock* time, not labor.\n\n### Manual baseline (same touches, no SYS 03 — Invoice and Payment Collection)\n\n| # | Task | min |\n|---|------|-----|\n| 1 | Record invoice sent / set personal reminder discipline | 5 |\n| 2 | Day ~3: HubSpot check **not Paid** + **reminder email** | 12 |\n| 3 | Day ~3: **SMS** with pay link | 4 |\n| 4 | Day ~7: HubSpot check **not Paid** + **overdue email** | 12 |\n| 5 | Day ~14: HubSpot check **not Paid** + **SMS** | 8 |\n| 6 | Day ~21: HubSpot check **not Paid** + **internal escalation** (write + send/post) | 18 |\n| 7 | **Log** / tracker update equivalent to `invoice_sent` + touches | 4 |\n\n**Manual total (full unpaid cadence)** = **63 min**\n\n### With SYS 06 (human only)\n\n| # | Task | min |\n|---|------|-----|\n| A | Occasional spot-check or respond to **day-21 escalation** in Chat | 5 |\n\n**Human total** = **5 min**  \n*(Reminders, HubSpot GETs, emails/SMS, paid-branch Chat alert, and log are automated.)*\n\n### Net\n\n**Time saved** (deal stays unpaid through day **21**) = 63 − 5 = **58 min** ≈ **1.0 h labor** per invoice **for that full sequence**.\n\nAdjust row minutes if your real cadence differs; re-sum **63 − 5**.\n\n### Insights (Track Time Saved nodes)\nWorkflow **settings** use **timeSavedMode: dynamic**. Two **`n8n-nodes-base.timeSaved`** nodes run on **mutually exclusive** ends: **Send Paid Alert** → **~40 min** (approx. mid-sequence payment; tune to your table) and **Send Escalation Alert** → **58 min** (full cadence). **No** time-saved node after the early **Log to Sheet** branch — that branch runs in the **same execution** as the reminder path; a node there would **add** to the terminal value and double-count.",
+        "height": 520,
+        "width": 480,
+        "color": 4
+      },
+      "id": "note-sys06-time-saved",
+      "name": "Note — Time saved",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hubspot-deal-invoice-sent",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "sys06-trigger",
+      "name": "Deal Invoice Sent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": ""
+      },
+      "id": "sys06-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const deal = $('Deal Invoice Sent Webhook').first().json;\nconst config = $('Get Config').first().json;\nconst props = deal.properties || deal;\n\nreturn [{\n  json: {\n    clientName: props.dealname || props.name || '',\n    dealId: deal.id || deal.dealId || '',\n    amount: props.amount || 0,\n    contactEmail: props.contact_email || props.email || '',\n    contactFirstName: props.contact_firstname || props.firstName || '',\n    contactPhone: props.contact_phone || props.phone || '',\n    config\n  }\n}];"
+      },
+      "id": "sys06-extract",
+      "name": "Extract Deal Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "sys06-wait1",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        910,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "get",
+        "dealId": "={{ $('Extract Deal Data').first().json.dealId }}",
+        "options": {}
+      },
+      "id": "sys06-check1",
+      "name": "Check Deal (Day 3)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        300
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-paid-1",
+              "leftValue": "={{ $json.properties.dealstage }}",
+              "rightValue": "paid",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys06-still-unpaid1",
+      "name": "Still Unpaid? (Day 3)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Invoice reminder — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Just a quick reminder that your invoice for $${d.amount} is due.</p><p><a href=\"${d.config.owner.paymentLink}\" style=\"display:inline-block;background:#3d8b8b;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;\">Pay Now</a></p><p>If you've already sent payment, please disregard this message.</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+      },
+      "id": "sys06-reminder1-email-prep",
+      "name": "Day 3: Prep Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_EMAIL_WORKFLOW_ID"
+      },
+      "id": "sys06-reminder1-email",
+      "name": "Day 3: Send Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1790,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, friendly reminder about your $${d.amount} invoice. Pay here: ${d.config.owner.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+      },
+      "id": "sys06-reminder1-sms-prep",
+      "name": "Day 3: Prep SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2010,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_SMS_WORKFLOW_ID"
+      },
+      "id": "sys06-reminder1-sms",
+      "name": "Day 3: Send SMS",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2230,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "days"
+      },
+      "id": "sys06-wait2",
+      "name": "Wait to Day 7",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2450,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "get",
+        "dealId": "={{ $('Extract Deal Data').first().json.dealId }}",
+        "options": {}
+      },
+      "id": "sys06-check2",
+      "name": "Check Deal (Day 7)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        2670,
+        250
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-paid-2",
+              "leftValue": "={{ $json.properties.dealstage }}",
+              "rightValue": "paid",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys06-still-unpaid2",
+      "name": "Still Unpaid? (Day 7)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2890,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Payment overdue — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Your invoice for $${d.amount} is now overdue. Please process payment at your earliest convenience.</p><p><a href=\"${d.config.owner.paymentLink}\">Pay Now</a></p><p>If there are any issues with the invoice or payment, reply to this email and we'll sort it out.</p><p>— John</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+      },
+      "id": "sys06-reminder2-prep",
+      "name": "Day 7: Prep Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3110,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_EMAIL_WORKFLOW_ID"
+      },
+      "id": "sys06-reminder2",
+      "name": "Day 7: Send Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3330,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 7,
+        "unit": "days"
+      },
+      "id": "sys06-wait3",
+      "name": "Wait to Day 14",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3550,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "get",
+        "dealId": "={{ $('Extract Deal Data').first().json.dealId }}",
+        "options": {}
+      },
+      "id": "sys06-check3",
+      "name": "Check Deal (Day 14)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        3770,
+        200
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-paid-3",
+              "leftValue": "={{ $json.properties.dealstage }}",
+              "rightValue": "paid",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys06-still-unpaid3",
+      "name": "Still Unpaid? (Day 14)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3990,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, your $${d.amount} invoice is overdue. Please process payment: ${d.config.owner.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+      },
+      "id": "sys06-reminder3-prep",
+      "name": "Day 14: Prep SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4210,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_SMS_WORKFLOW_ID"
+      },
+      "id": "sys06-reminder3",
+      "name": "Day 14: Send SMS",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4430,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 7,
+        "unit": "days"
+      },
+      "id": "sys06-wait4",
+      "name": "Wait to Day 21",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4650,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "get",
+        "dealId": "={{ $('Extract Deal Data').first().json.dealId }}",
+        "options": {}
+      },
+      "id": "sys06-check4",
+      "name": "Check Deal (Day 21)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        4870,
+        150
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-paid-4",
+              "leftValue": "={{ $json.properties.dealstage }}",
+              "rightValue": "paid",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys06-still-unpaid4",
+      "name": "Still Unpaid? (Day 21)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5090,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    message: `Invoice severely overdue (21 days): ${d.clientName} — $${d.amount}. Manual follow-up required.`,\n    priority: 'error'\n  }\n}];"
+      },
+      "id": "sys06-escalate-prep",
+      "name": "Prep Escalation Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5310,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_GOOGLE_CHAT_ALERT_WORKFLOW_ID"
+      },
+      "id": "sys06-escalate",
+      "name": "Send Escalation Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        5530,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 03 — Invoice and Payment Collection',\n    contactName: $('Extract Deal Data').first().json.clientName,\n    phone: $('Extract Deal Data').first().json.contactPhone,\n    eventType: 'invoice_sent',\n    status: 'success',\n    notes: `Amount: $${$('Extract Deal Data').first().json.amount}`\n  }\n}];"
+      },
+      "id": "sys06-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_LOG_WORKFLOW_ID"
+      },
+      "id": "sys06-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1130,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    message: `Payment received: ${d.clientName} — $${d.amount}`,\n    priority: 'info'\n  }\n}];"
+      },
+      "id": "sys06-paid-alert-prep",
+      "name": "Prep Paid Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_GOOGLE_CHAT_ALERT_WORKFLOW_ID"
+      },
+      "id": "sys06-paid-alert",
+      "name": "Send Paid Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1790,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "once",
+        "minutesSaved": 40
+      },
+      "id": "sys06-track-time-paid",
+      "name": "Track Time Saved (paid path)",
+      "type": "n8n-nodes-base.timeSaved",
+      "typeVersion": 1,
+      "position": [
+        2010,
+        450
+      ],
+      "notes": "~Mid-sequence payment: approximate labor not spent on later reminders (see sticky; tune vs your manual table)."
+    },
+    {
+      "parameters": {
+        "mode": "once",
+        "minutesSaved": 58
+      },
+      "id": "sys06-track-time-escalation",
+      "name": "Track Time Saved (21d escalation)",
+      "type": "n8n-nodes-base.timeSaved",
+      "typeVersion": 1,
+      "position": [
+        5750,
+        100
+      ],
+      "notes": "Full unpaid cadence through day 21 (sticky): 63 − 5 = 58 min."
+    }
+  ],
+  "connections": {
+    "Deal Invoice Sent Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Extract Deal Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Deal Data": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Days",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Days": {
+      "main": [
+        [
+          {
+            "node": "Check Deal (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Deal (Day 3)": {
+      "main": [
+        [
+          {
+            "node": "Still Unpaid? (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still Unpaid? (Day 3)": {
+      "main": [
+        [
+          {
+            "node": "Day 3: Prep Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Paid Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 3: Prep Email": {
+      "main": [
+        [
+          {
+            "node": "Day 3: Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 3: Send Email": {
+      "main": [
+        [
+          {
+            "node": "Day 3: Prep SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 3: Prep SMS": {
+      "main": [
+        [
+          {
+            "node": "Day 3: Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 3: Send SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait to Day 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait to Day 7": {
+      "main": [
+        [
+          {
+            "node": "Check Deal (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Deal (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "Still Unpaid? (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still Unpaid? (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "Day 7: Prep Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Paid Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 7: Prep Email": {
+      "main": [
+        [
+          {
+            "node": "Day 7: Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 7: Send Email": {
+      "main": [
+        [
+          {
+            "node": "Wait to Day 14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait to Day 14": {
+      "main": [
+        [
+          {
+            "node": "Check Deal (Day 14)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Deal (Day 14)": {
+      "main": [
+        [
+          {
+            "node": "Still Unpaid? (Day 14)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still Unpaid? (Day 14)": {
+      "main": [
+        [
+          {
+            "node": "Day 14: Prep SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Paid Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 14: Prep SMS": {
+      "main": [
+        [
+          {
+            "node": "Day 14: Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 14: Send SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait to Day 21",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait to Day 21": {
+      "main": [
+        [
+          {
+            "node": "Check Deal (Day 21)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Deal (Day 21)": {
+      "main": [
+        [
+          {
+            "node": "Still Unpaid? (Day 21)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still Unpaid? (Day 21)": {
+      "main": [
+        [
+          {
+            "node": "Prep Escalation Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Paid Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Escalation Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Escalation Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Paid Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Paid Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Paid Alert": {
+      "main": [
+        [
+          {
+            "node": "Track Time Saved (paid path)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Escalation Alert": {
+      "main": [
+        [
+          {
+            "node": "Track Time Saved (21d escalation)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "dynamic",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

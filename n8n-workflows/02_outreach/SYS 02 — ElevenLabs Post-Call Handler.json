@@ -1,0 +1,1472 @@
+{
+  "updatedAt": "2026-03-27T03:32:46.07Z",
+  "createdAt": "2026-03-01T07:34:48.212Z",
+  "id": "zJWCaaXQ0HbwYiAO",
+  "name": "SYS 02 — ElevenLabs Post-Call Handler",
+  "description": "Triggered by webhook from ElevenLabs after an outbound or inbound call. Parses and rescores post-call data, then routes by outcome: booked, callback requested, no answer, or disqualified. For each outcome, updates the HubSpot contact (and creates a deal when booked) and sends a Google Chat alert so the team can follow up. Keeps CRM and alerts in sync with voice conversations.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "elevenlabs-call-complete",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        112
+      ],
+      "id": "180cb5c5-070d-4a13-a6bd-4b0e9888582e",
+      "name": "📞 ElevenLabs Post-Call Webhook",
+      "webhookId": "c971031b-b98f-42d1-9ead-3aec875bc70a"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -608,
+        112
+      ],
+      "id": "339efd4f-21a4-45de-a620-04bed7b32ef6",
+      "name": "Respond 200 OK"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst conversationId = body.conversation_id || '';\nconst agentId = body.agent_id || '';\nconst status = body.status || '';\nconst transcript = body.transcript || '';\nconst recordingUrl = body.recording_url || '';\nconst durationSeconds = body.duration_seconds || 0;\n\nconst dataFields = body.data_collection || body.analysis?.data_collection || {};\n\nconst callOutcome = dataFields.call_outcome?.value || 'no_answer';\nconst prospectSummary = dataFields.prospect_summary?.value || '';\nconst callbackTime = dataFields.callback_requested_time?.value || '';\nconst disqualReason = dataFields.disqualification_reason?.value || '';\n\nconst companySizeRaw = dataFields.company_size?.value;\nconst companySize = parseInt(companySizeRaw) || 0;\nconst revenueRange = dataFields.revenue_range?.value || '';\nconst prospectRole = dataFields.prospect_role?.value || '';\n\nconst dynamicVars = body.conversation_initiation_client_data?.dynamic_variables || {};\nconst customerName = dynamicVars.customer_name || '';\nconst contactId = dynamicVars.contact_id || dynamicVars.contactId || '';\nconst firstName = dynamicVars.first_name || dynamicVars.firstName || customerName.split(' ')[0] || '';\nconst lastName = dynamicVars.last_name || dynamicVars.lastName || '';\nconst company = dynamicVars.company || dynamicVars.company_name || '';\nconst industry = dynamicVars.industry || '';\nconst phone = dynamicVars.phone || dynamicVars.phone_number || '';\nconst email = dynamicVars.email || '';\n\nconst revenueScores = {\n  'over_100m': 25, '25m_100m': 25, '5m_25m': 20, '1m_5m': 15, 'under_1m': 3\n};\nconst revenuePts = revenueScores[revenueRange] || 0;\n\nconst roleScores = {\n  'Owner / C-Suite': 20, 'VP / Director': 15, 'Manager': 8, 'Individual Contributor': 3\n};\nconst rolePts = roleScores[prospectRole] || 0;\n\nlet empPts = 0;\nif (companySize >= 10 && companySize <= 150) empPts = 15;\nelse if (companySize > 150) empPts = 10;\nelse if (companySize > 0) empPts = 5;\n\nconst isGrowth = (companySize >= 10 && companySize <= 150) ||\n  ['5m_25m','25m_100m','over_100m'].includes(revenueRange);\nconst leadTier = isGrowth ? 'growth' : 'starter';\n\nconst rescoreTotal = revenuePts + rolePts + empPts;\n\nlet bucket = 'cold';\nif (rescoreTotal >= 35) bucket = 'hot';\nelse if (rescoreTotal >= 20) bucket = 'warm';\n\nif (['booked', 'callback_requested'].includes(callOutcome)) bucket = 'hot';\nif (callOutcome === 'not_interested' || callOutcome === 'disqualified') bucket = 'cold';\n\nreturn [{\n  json: {\n    conversationId, agentId, status, recordingUrl, durationSeconds, transcript,\n    callOutcome, prospectSummary, callbackTime, disqualReason,\n    companySize, revenueRange, prospectRole,\n    revenuePts, rolePts, empPts, rescoreTotal, bucket, leadTier,\n    customerName, contactId, firstName, lastName, company, industry, phone, email,\n    rescoreBreakdown: `Post-call rescore: Revenue +${revenuePts} | Role +${rolePts} | Employees +${empPts} = ${rescoreTotal}pts \\u2192 ${bucket.toUpperCase()} | Outcome: ${callOutcome}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        112
+      ],
+      "id": "a0d051e9-ef23-4ec4-a8fb-b321ae22fb2e",
+      "name": "🔍 Parse & Rescore Post-Call Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "booked-check",
+              "leftValue": "={{ $json.callOutcome }}",
+              "rightValue": "booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        -208
+      ],
+      "id": "acf7048f-b843-417a-9790-abaf31a16f90",
+      "name": "📅 Booked?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "callback-check",
+              "leftValue": "={{ $json.callOutcome }}",
+              "rightValue": "callback_requested",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        -16
+      ],
+      "id": "0f2f80df-b1a5-4745-953d-4dd6ad31683c",
+      "name": "📲 Callback Requested?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "noanswer-check",
+              "leftValue": "={{ $json.callOutcome }}",
+              "rightValue": "no_answer",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        176
+      ],
+      "id": "1f0bc813-7177-40ec-a6a7-66581d54fed3",
+      "name": "📵 No Answer?"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "=call_outcome",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}"
+              },
+              {
+                "property": "=call_summary",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+              },
+              {
+                "property": "=call_recording_url",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.recordingUrl }}"
+              },
+              {
+                "property": "=last_call_timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              },
+              {
+                "property": "=lead_score",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal }}"
+              },
+              {
+                "property": "=lead_tier",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.charAt(0).toUpperCase() + $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.slice(1) }}"
+              },
+              {
+                "property": "=scoring_breakdown",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreBreakdown }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        -224
+      ],
+      "id": "0ded454e-b5ea-4566-8c36-97268bf7bf25",
+      "name": "📊 HubSpot — Update Contact (Booked)",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "ZRIrnXjLJc2Cek2l",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-create-hubspot-deal",
+          "mode": "id",
+          "cachedResultName": "SW: Create HubSpot Deal"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contactId": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactId }}",
+            "company": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.company }}",
+            "firstName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.firstName }}",
+            "lastName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.lastName }}",
+            "stage": "appointmentscheduled",
+            "tier": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier }}",
+            "industry": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.industry }}",
+            "painPoint": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        -224
+      ],
+      "id": "b4fe4390-8dce-4b04-9c18-944bc629ae82",
+      "name": "🔗 Execute SW — Create HubSpot Deal"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: '📅 *BOOKED — Discovery Call Confirmed*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Rescore:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal + 'pts → ' + $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.toUpperCase() + '\\n*Tier:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier.toUpperCase() + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n*Role collected:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.prospectRole || 'Not captured') + '\\n*Company size:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.companySize || 'Not captured') + '\\n*Revenue range:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.revenueRange || 'Not captured') + '\\n\\n💼 Deal created. HubSpot updated.' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        -224
+      ],
+      "id": "9308ad8c-bfa2-4460-a70b-9b8fd97cb7b2",
+      "name": "💬 Google Chat — Booked Alert"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "call_outcome",
+                "value": "callback_requested"
+              },
+              {
+                "property": "callback_requested_time",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime }}"
+              },
+              {
+                "property": "call_summary",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+              },
+              {
+                "property": "call_recording_url",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.recordingUrl }}"
+              },
+              {
+                "property": "last_call_timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              },
+              {
+                "property": "lead_score",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal }}"
+              },
+              {
+                "property": "scoring_breakdown",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreBreakdown }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "38a9b584-4d32-4e9a-9027-b20dec6c166d",
+      "name": "📊 HubSpot — Update Contact (Callback)",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "ZRIrnXjLJc2Cek2l",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: '📲 *CALLBACK REQUESTED*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Requested time:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime || 'Not specified') + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n*Rescore:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal + 'pts\\n\\n⚠️ Manual follow-up required. HubSpot updated.' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        -32
+      ],
+      "id": "46b5e73a-ac75-4465-8782-582f45e035a6",
+      "name": "💬 Google Chat — Callback Alert"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "call_outcome",
+                "value": "no_answer"
+              },
+              {
+                "property": "last_call_timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        160
+      ],
+      "id": "003b6c96-1b42-4e8a-9c9a-5631545423fe",
+      "name": "📊 HubSpot — Update Contact (No Answer)",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "ZRIrnXjLJc2Cek2l",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: '📵 *NO ANSWER — Follow-up Needed*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n\\nConsider SMS or email follow-up. HubSpot logged.' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        160
+      ],
+      "id": "a9f2b95d-1ca6-4868-b477-8bcdedca986b",
+      "name": "💬 Google Chat — No Answer Alert"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "call_outcome",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}"
+              },
+              {
+                "property": "disqualification_reason",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason }}"
+              },
+              {
+                "property": "call_summary",
+                "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+              },
+              {
+                "property": "last_call_timestamp",
+                "value": "={{ new Date().toISOString() }}"
+              },
+              {
+                "property": "lead_score",
+                "value": "0"
+              },
+              {
+                "property": "lead_tier",
+                "value": "Cold"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        368
+      ],
+      "id": "f28b2323-e423-4449-a84c-755eaeb93de8",
+      "name": "📊 HubSpot — Update Contact (Disqualified)",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "ZRIrnXjLJc2Cek2l",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: '🚫 *DISQUALIFIED / NOT INTERESTED*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Reason:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason || 'Not specified') + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n\\nHubSpot updated. No further action needed.' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        368
+      ],
+      "id": "1009c840-7e84-4d1d-b64f-13a4c6e26a9e",
+      "name": "💬 Google Chat — Disqualified Alert"
+    },
+    {
+      "parameters": {
+        "content": "## SYS 02 — ElevenLabs Post-Call Handler\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/elevenlabs-call-complete\n\n**Call Outcomes routed:**\n- 📅 booked → HubSpot update + SW Create Deal + Google Chat alert\n- 📲 callback_requested → HubSpot update + Google Chat alert + Enroll SYS 02 — Outbound Lead Outreach Sequence\n- 📵 no_answer → HubSpot logged + Google Chat alert + Enroll SYS 02 — Outbound Lead Outreach Sequence + SMS\n- 🚫 disqualified/not_interested → IF gate → HubSpot zeroed + Google Chat alert + Log to Sheet\n\n**Post-Call Rescore Logic:**\nUses Adam's structured data collection fields:\n- company_size (Number) → employee score 0/5/10/15pts\n- revenue_range (Enum) → revenue score 0-25pts\n- prospect_role (String) → role score 0-20pts\nMax rescore: 60pts  |  Buckets: Hot 35+, Warm 20-34, Cold <20\n\n**Outcome overrides bucket:**\n- booked or callback_requested → always Hot\n- not_interested or disqualified → always Cold\n\n**Downstream handoffs:**\n- Booked → SW — Create HubSpot Deal (contactId, company, stage, tier)\n- Callback/No Answer → SYS 03 webhook /enroll-outreach (contactId, firstName, company, industry)\n- No Answer → SW — Send SMS (phone, body)\n- Disqualified → SW — Log to Automations Log Sheet (workflowName, eventType, status, notes)\n\n**Contact fields from ElevenLabs dynamic_variables:**\ncontactId, firstName, lastName, company, industry, phone, email\n(Must be set when initiating the call from SYS 02 or other upstream)",
+        "height": 560,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        400
+      ],
+      "id": "d71e1b60-b1c0-4e84-af98-5bf7249c935f",
+      "name": "📋 Setup Notes"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "disqualified-check",
+              "leftValue": "={{ $json.callOutcome }}",
+              "rightValue": "disqualified",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "not-interested-check",
+              "leftValue": "={{ $json.callOutcome }}",
+              "rightValue": "not_interested",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -160,
+        368
+      ],
+      "id": "dq-gate-001",
+      "name": "🚫 Disqualified?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.intrawebtech.com/webhook/enroll-outreach",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $('🔍 Parse & Rescore Post-Call Data').first().json.contactId, firstName: $('🔍 Parse & Rescore Post-Call Data').first().json.firstName, company: $('🔍 Parse & Rescore Post-Call Data').first().json.company, industry: $('🔍 Parse & Rescore Post-Call Data').first().json.industry, callbackTime: $('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime, prospectSummary: $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary, bucket: $('🔍 Parse & Rescore Post-Call Data').first().json.bucket, leadTier: $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier, sourceWorkflow: 'SYS 02 — ElevenLabs Post-Call Handler', eventType: 'callback_requested' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "enroll-callback-001",
+      "name": "🔗 Enroll in SYS 02 — Outbound (Callback)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.intrawebtech.com/webhook/enroll-outreach",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $('🔍 Parse & Rescore Post-Call Data').first().json.contactId, firstName: $('🔍 Parse & Rescore Post-Call Data').first().json.firstName, company: $('🔍 Parse & Rescore Post-Call Data').first().json.company, industry: $('🔍 Parse & Rescore Post-Call Data').first().json.industry, conversationId: $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId, bucket: $('🔍 Parse & Rescore Post-Call Data').first().json.bucket, rescoreTotal: $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal, sourceWorkflow: 'SYS 02 — ElevenLabs Post-Call Handler', eventType: 'no_answer' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        120
+      ],
+      "id": "enroll-noanswer-001",
+      "name": "🔗 Enroll in SYS 02 — Outbound (No Answer)"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "VzxtOFmmGEitVEQk",
+          "mode": "id",
+          "cachedResultName": "SW: Send SMS"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "to": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.phone }}",
+            "body": "={{ 'Hi ' + $('🔍 Parse & Rescore Post-Call Data').first().json.firstName + ', we tried reaching you earlier. Would love to connect — reply here or book a quick call at your convenience.' }}",
+            "workflowName": "SYS 02 — ElevenLabs Post-Call Handler"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        220
+      ],
+      "id": "sms-noanswer-001",
+      "name": "📱 Send Follow-up SMS (No Answer)"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-log-automations-log-sheet",
+          "mode": "id",
+          "cachedResultName": "SW: Log to Automations Log Sheet"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflowName": "SYS 02 — ElevenLabs Post-Call Handler",
+            "contactName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.customerName || $('🔍 Parse & Rescore Post-Call Data').first().json.firstName }}",
+            "phone": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.phone }}",
+            "eventType": "call_disqualified",
+            "status": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}",
+            "notes": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason || 'No reason provided' }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        368
+      ],
+      "id": "log-disqualified-001",
+      "name": "📝 Log Disqualified to Sheet"
+    }
+  ],
+  "connections": {
+    "📞 ElevenLabs Post-Call Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 OK": {
+      "main": [
+        [
+          {
+            "node": "🔍 Parse & Rescore Post-Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Parse & Rescore Post-Call Data": {
+      "main": [
+        [
+          {
+            "node": "📅 Booked?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📲 Callback Requested?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📵 No Answer?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🚫 Disqualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📅 Booked?": {
+      "main": [
+        [
+          {
+            "node": "📊 HubSpot — Update Contact (Booked)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 HubSpot — Update Contact (Booked)": {
+      "main": [
+        [
+          {
+            "node": "🔗 Execute SW — Create HubSpot Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📲 Callback Requested?": {
+      "main": [
+        [
+          {
+            "node": "📊 HubSpot — Update Contact (Callback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 HubSpot — Update Contact (Callback)": {
+      "main": [
+        [
+          {
+            "node": "💬 Google Chat — Callback Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📵 No Answer?": {
+      "main": [
+        [
+          {
+            "node": "📊 HubSpot — Update Contact (No Answer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 HubSpot — Update Contact (No Answer)": {
+      "main": [
+        [
+          {
+            "node": "💬 Google Chat — No Answer Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 HubSpot — Update Contact (Disqualified)": {
+      "main": [
+        [
+          {
+            "node": "💬 Google Chat — Disqualified Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Execute SW — Create HubSpot Deal": {
+      "main": [
+        [
+          {
+            "node": "💬 Google Chat — Booked Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Google Chat — Callback Alert": {
+      "main": [
+        [
+          {
+            "node": "🔗 Enroll in SYS 02 — Outbound (Callback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Google Chat — No Answer Alert": {
+      "main": [
+        [
+          {
+            "node": "🔗 Enroll in SYS 02 — Outbound (No Answer)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📱 Send Follow-up SMS (No Answer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚫 Disqualified?": {
+      "main": [
+        [
+          {
+            "node": "📊 HubSpot — Update Contact (Disqualified)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Google Chat — Disqualified Alert": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Disqualified to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+  "activeVersionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+  "versionCounter": 37,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-01T07:34:48.216Z",
+      "createdAt": "2026-03-01T07:34:48.216Z",
+      "role": "workflow:owner",
+      "workflowId": "zJWCaaXQ0HbwYiAO",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-01T07:39:04Z",
+    "createdAt": "2026-03-01T07:37:50.995Z",
+    "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+    "workflowId": "zJWCaaXQ0HbwYiAO",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "elevenlabs-call-complete",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -800,
+          112
+        ],
+        "id": "180cb5c5-070d-4a13-a6bd-4b0e9888582e",
+        "name": "📞 ElevenLabs Post-Call Webhook",
+        "webhookId": "c971031b-b98f-42d1-9ead-3aec875bc70a"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "OK",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          -608,
+          112
+        ],
+        "id": "339efd4f-21a4-45de-a620-04bed7b32ef6",
+        "name": "Respond 200 OK"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\n\n// ElevenLabs post-call payload structure\nconst conversationId = body.conversation_id || '';\nconst agentId = body.agent_id || '';\nconst status = body.status || '';\nconst transcript = body.transcript || '';\nconst recordingUrl = body.recording_url || '';\nconst durationSeconds = body.duration_seconds || 0;\n\n// Data collection fields from ElevenLabs agent\nconst dataFields = body.data_collection || body.analysis?.data_collection || {};\n\n// Structured fields Adam collected\nconst callOutcome = dataFields.call_outcome?.value || 'no_answer';\nconst prospectSummary = dataFields.prospect_summary?.value || '';\nconst callbackTime = dataFields.callback_requested_time?.value || '';\nconst disqualReason = dataFields.disqualification_reason?.value || '';\n\n// New rescore fields\nconst companySizeRaw = dataFields.company_size?.value;\nconst companySize = parseInt(companySizeRaw) || 0;\nconst revenueRange = dataFields.revenue_range?.value || '';\nconst prospectRole = dataFields.prospect_role?.value || '';\n\n// Phone number from dynamic variables (ElevenLabs echoes these back)\nconst dynamicVars = body.conversation_initiation_client_data?.dynamic_variables || {};\nconst customerName = dynamicVars.customer_name || '';\n\n// Map revenue_range enum to score\nconst revenueScores = {\n  'over_100m': 25,\n  '25m_100m': 25,\n  '5m_25m': 20,\n  '1m_5m': 15,\n  'under_1m': 3\n};\nconst revenuePts = revenueScores[revenueRange] || 0;\n\n// Map role to score\nconst roleScores = {\n  'Owner / C-Suite': 20,\n  'VP / Director': 15,\n  'Manager': 8,\n  'Individual Contributor': 3\n};\nconst rolePts = roleScores[prospectRole] || 0;\n\n// Employee score\nlet empPts = 0;\nif (companySize >= 10 && companySize <= 150) empPts = 15;\nelse if (companySize > 150) empPts = 10;\nelse if (companySize > 0) empPts = 5;\n\n// Lead tier\nconst isGrowth = (companySize >= 10 && companySize <= 150) ||\n  ['5m_25m','25m_100m','over_100m'].includes(revenueRange);\nconst leadTier = isGrowth ? 'growth' : 'starter';\n\n// Rescore total (hard fields only — no message score needed post-call)\nconst rescoreTotal = revenuePts + rolePts + empPts;\n\n// Bucket based on rescore (these fields replace form data)\nlet bucket = 'cold';\nif (rescoreTotal >= 35) bucket = 'hot';\nelse if (rescoreTotal >= 20) bucket = 'warm';\n\n// Override bucket based on call outcome\n// If they booked or requested callback, treat as hot regardless of score\nif (['booked', 'callback_requested'].includes(callOutcome)) bucket = 'hot';\nif (callOutcome === 'not_interested' || callOutcome === 'disqualified') bucket = 'cold';\n\nreturn [{\n  json: {\n    conversationId,\n    agentId,\n    status,\n    recordingUrl,\n    durationSeconds,\n    transcript,\n    callOutcome,\n    prospectSummary,\n    callbackTime,\n    disqualReason,\n    companySize,\n    revenueRange,\n    prospectRole,\n    revenuePts,\n    rolePts,\n    empPts,\n    rescoreTotal,\n    bucket,\n    leadTier,\n    rescoreBreakdown: `Post-call rescore: Revenue +${revenuePts} | Role +${rolePts} | Employees +${empPts} = ${rescoreTotal}pts → ${bucket.toUpperCase()} | Outcome: ${callOutcome}`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -400,
+          112
+        ],
+        "id": "a0d051e9-ef23-4ec4-a8fb-b321ae22fb2e",
+        "name": "🔍 Parse & Rescore Post-Call Data"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "booked-check",
+                "leftValue": "={{ $json.callOutcome }}",
+                "rightValue": "booked",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          32,
+          -208
+        ],
+        "id": "acf7048f-b843-417a-9790-abaf31a16f90",
+        "name": "📅 Booked?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "callback-check",
+                "leftValue": "={{ $json.callOutcome }}",
+                "rightValue": "callback_requested",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          32,
+          -16
+        ],
+        "id": "0f2f80df-b1a5-4745-953d-4dd6ad31683c",
+        "name": "📲 Callback Requested?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "noanswer-check",
+                "leftValue": "={{ $json.callOutcome }}",
+                "rightValue": "no_answer",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          32,
+          176
+        ],
+        "id": "1f0bc813-7177-40ec-a6a7-66581d54fed3",
+        "name": "📵 No Answer?"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+          "additionalFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "=call_outcome",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}"
+                },
+                {
+                  "property": "=call_summary",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+                },
+                {
+                  "property": "=call_recording_url",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.recordingUrl }}"
+                },
+                {
+                  "property": "=last_call_timestamp",
+                  "value": "={{ new Date().toISOString() }}"
+                },
+                {
+                  "property": "=lead_score",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal }}"
+                },
+                {
+                  "property": "=lead_tier",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.charAt(0).toUpperCase() + $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.slice(1) }}"
+                },
+                {
+                  "property": "=scoring_breakdown",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreBreakdown }}"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2.2,
+        "position": [
+          256,
+          -224
+        ],
+        "id": "0ded454e-b5ea-4566-8c36-97268bf7bf25",
+        "name": "📊 HubSpot — Update Contact (Booked)",
+        "credentials": {
+          "hubspotOAuth2Api": {
+            "id": "ZRIrnXjLJc2Cek2l",
+            "name": "HubSpot account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "resource": "deal",
+          "stage": "=appointmentscheduled",
+          "additionalFields": {
+            "amount": "10000",
+            "dealName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId }} — AI Diagnostic (Call Booked)",
+            "pipeline": "=default"
+          }
+        },
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2.2,
+        "position": [
+          464,
+          -224
+        ],
+        "id": "b4fe4390-8dce-4b04-9c18-944bc629ae82",
+        "name": "💼 Create HubSpot Deal (Booked)",
+        "credentials": {
+          "hubspotOAuth2Api": {
+            "id": "ZRIrnXjLJc2Cek2l",
+            "name": "HubSpot account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: '📅 *BOOKED — Discovery Call Confirmed*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Rescore:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal + 'pts → ' + $('🔍 Parse & Rescore Post-Call Data').first().json.bucket.toUpperCase() + '\\n*Tier:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier.toUpperCase() + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n*Role collected:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.prospectRole || 'Not captured') + '\\n*Company size:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.companySize || 'Not captured') + '\\n*Revenue range:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.revenueRange || 'Not captured') + '\\n\\n💼 Deal created. HubSpot updated.' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          656,
+          -224
+        ],
+        "id": "9308ad8c-bfa2-4460-a70b-9b8fd97cb7b2",
+        "name": "💬 Google Chat — Booked Alert"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+          "additionalFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "call_outcome",
+                  "value": "callback_requested"
+                },
+                {
+                  "property": "callback_requested_time",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime }}"
+                },
+                {
+                  "property": "call_summary",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+                },
+                {
+                  "property": "call_recording_url",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.recordingUrl }}"
+                },
+                {
+                  "property": "last_call_timestamp",
+                  "value": "={{ new Date().toISOString() }}"
+                },
+                {
+                  "property": "lead_score",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal }}"
+                },
+                {
+                  "property": "scoring_breakdown",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreBreakdown }}"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2.2,
+        "position": [
+          256,
+          -32
+        ],
+        "id": "38a9b584-4d32-4e9a-9027-b20dec6c166d",
+        "name": "📊 HubSpot — Update Contact (Callback)",
+        "credentials": {
+          "hubspotOAuth2Api": {
+            "id": "ZRIrnXjLJc2Cek2l",
+            "name": "HubSpot account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: '📲 *CALLBACK REQUESTED*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Requested time:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime || 'Not specified') + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n*Rescore:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal + 'pts\\n\\n⚠️ Manual follow-up required. HubSpot updated.' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          464,
+          -32
+        ],
+        "id": "46b5e73a-ac75-4465-8782-582f45e035a6",
+        "name": "💬 Google Chat — Callback Alert"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+          "additionalFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "call_outcome",
+                  "value": "no_answer"
+                },
+                {
+                  "property": "last_call_timestamp",
+                  "value": "={{ new Date().toISOString() }}"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2.2,
+        "position": [
+          256,
+          160
+        ],
+        "id": "003b6c96-1b42-4e8a-9c9a-5631545423fe",
+        "name": "📊 HubSpot — Update Contact (No Answer)",
+        "credentials": {
+          "hubspotOAuth2Api": {
+            "id": "ZRIrnXjLJc2Cek2l",
+            "name": "HubSpot account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: '📵 *NO ANSWER — Follow-up Needed*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n\\nConsider SMS or email follow-up. HubSpot logged.' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          464,
+          160
+        ],
+        "id": "a9f2b95d-1ca6-4868-b477-8bcdedca986b",
+        "name": "💬 Google Chat — No Answer Alert"
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "email": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactEmail || '' }}",
+          "additionalFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "call_outcome",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}"
+                },
+                {
+                  "property": "disqualification_reason",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason }}"
+                },
+                {
+                  "property": "call_summary",
+                  "value": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+                },
+                {
+                  "property": "last_call_timestamp",
+                  "value": "={{ new Date().toISOString() }}"
+                },
+                {
+                  "property": "lead_score",
+                  "value": "0"
+                },
+                {
+                  "property": "lead_tier",
+                  "value": "Cold"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2.2,
+        "position": [
+          32,
+          368
+        ],
+        "id": "f28b2323-e423-4449-a84c-755eaeb93de8",
+        "name": "📊 HubSpot — Update Contact (Disqualified)",
+        "credentials": {
+          "hubspotOAuth2Api": {
+            "id": "ZRIrnXjLJc2Cek2l",
+            "name": "HubSpot account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=8k0OJoMEPfnorVu33gwgOEm05DP7Vk0lwDX5jkShhh4",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: '🚫 *DISQUALIFIED / NOT INTERESTED*\\n\\n*Conversation ID:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId + '\\n*Reason:* ' + ($('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason || 'Not specified') + '\\n*Summary:* ' + $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary + '\\n\\nHubSpot updated. No further action needed.' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          256,
+          368
+        ],
+        "id": "1009c840-7e84-4d1d-b64f-13a4c6e26a9e",
+        "name": "💬 Google Chat — Disqualified Alert"
+      },
+      {
+        "parameters": {
+          "content": "## IntraWeb — ElevenLabs Post-Call Handler\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/elevenlabs-call-complete\n\n**Call Outcomes routed:**\n- 📅 booked → HubSpot update + Deal created + Google Chat alert\n- 📲 callback_requested → HubSpot update + Google Chat alert (manual follow-up)\n- 📵 no_answer → HubSpot logged + Google Chat alert\n- 🚫 not_interested / disqualified → HubSpot zeroed + Google Chat alert\n\n**Post-Call Rescore Logic:**\nUses Adam's structured data collection fields:\n- company_size (Number) → employee score 0/5/10/15pts\n- revenue_range (Enum) → revenue score 0-25pts\n- prospect_role (String) → role score 0-20pts\nMax rescore: 60pts\nBuckets: Hot 35+, Warm 20-34, Cold <20\n\n**Outcome overrides bucket:**\n- booked or callback_requested → always Hot\n- not_interested or disqualified → always Cold\n\n**⚠️ Known limitation:**\nHubSpot update nodes use contactEmail field — ElevenLabs\npost-call payload doesn't always include email.\nYou may need to look up the contact by conversationId\nor phone number. Add a HubSpot search node if needed.",
+          "height": 420,
+          "width": 500,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -800,
+          400
+        ],
+        "id": "d71e1b60-b1c0-4e84-af98-5bf7249c935f",
+        "name": "📋 Setup Notes"
+      }
+    ],
+    "connections": {
+      "📞 ElevenLabs Post-Call Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond 200 OK",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond 200 OK": {
+        "main": [
+          [
+            {
+              "node": "🔍 Parse & Rescore Post-Call Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "🔍 Parse & Rescore Post-Call Data": {
+        "main": [
+          [
+            {
+              "node": "📅 Booked?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "📲 Callback Requested?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "📵 No Answer?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "📊 HubSpot — Update Contact (Disqualified)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📅 Booked?": {
+        "main": [
+          [
+            {
+              "node": "📊 HubSpot — Update Contact (Booked)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📊 HubSpot — Update Contact (Booked)": {
+        "main": [
+          [
+            {
+              "node": "💼 Create HubSpot Deal (Booked)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "💼 Create HubSpot Deal (Booked)": {
+        "main": [
+          [
+            {
+              "node": "💬 Google Chat — Booked Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📲 Callback Requested?": {
+        "main": [
+          [
+            {
+              "node": "📊 HubSpot — Update Contact (Callback)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📊 HubSpot — Update Contact (Callback)": {
+        "main": [
+          [
+            {
+              "node": "💬 Google Chat — Callback Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📵 No Answer?": {
+        "main": [
+          [
+            {
+              "node": "📊 HubSpot — Update Contact (No Answer)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📊 HubSpot — Update Contact (No Answer)": {
+        "main": [
+          [
+            {
+              "node": "💬 Google Chat — No Answer Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📊 HubSpot — Update Contact (Disqualified)": {
+        "main": [
+          [
+            {
+              "node": "💬 Google Chat — Disqualified Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": "Version 27a1fdcb",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-01T07:39:04.783Z",
+        "id": 84,
+        "workflowId": "zJWCaaXQ0HbwYiAO",
+        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-03-01T08:18:43.81Z",
+        "id": 88,
+        "workflowId": "zJWCaaXQ0HbwYiAO",
+        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-03-01T08:18:43.798Z",
+        "id": 87,
+        "workflowId": "zJWCaaXQ0HbwYiAO",
+        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
+}

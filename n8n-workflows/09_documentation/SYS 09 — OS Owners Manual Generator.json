@@ -1,0 +1,406 @@
+{
+  "id": "sys-14-os-owners-manual-generator",
+  "name": "SYS 09 — OS Owner's Manual Generator",
+  "description": "Manual or Execute Workflow trigger. Generates the full IntraWeb OS owner's manual: architecture overview, credentials reference, system-by-system runbook, daily/weekly/monthly checklist, HubSpot/Sheets reference, adding/offboarding clients, troubleshooting, scaling guide, changelog template. Claude writes each section; output as markdown/HTML, PDF, uploaded to Drive, Google Chat alert with link.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 09 — OS Owner's Manual Generator\n\n**Trigger:** Manual run or Execute Workflow (no input required).\n\n**What it does:** Generates the full IntraWeb OS owner's manual: architecture overview, credentials reference, system-by-system runbook, daily/weekly/monthly checklist, HubSpot config, Google Sheets reference, adding/offboarding clients, troubleshooting, scaling guide, changelog template. Claude writes each section from CONFIG and workflow knowledge; output is assembled as markdown/HTML, converted to PDF, uploaded to the configured Drive folder, and a Google Chat alert with the link is sent.\n\n**Dependencies:** CONFIG, Call Claude API, Generate PDF, Send Google Chat Alert, Google Drive.\n\n**n8n 2.12.x:** **Execute Sub-workflow** uses **Database** + `workflowId` (`__rl`). **Generate Section** runs **once per item** (`each`) with mapped Claude inputs. **Assemble Manual** is **Run once for all items** and pairs **`$input`** from Generate Section with **Prep Section Prompts** (10 sections). **Attach PDF Binary** rebuilds binary for Drive when the PDF subworkflow returns base64 only. **Upload to Drive** uses **folderId** / **driveId** (v3), not legacy `parents`. Repo workflow IDs target IntraWeb production — re-select after import if yours differ.",
+        "height": 420,
+        "width": 480,
+        "color": 5
+      },
+      "id": "note-sys14",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "sys14-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys14-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Get Config').first().json;\nconst today = new Date().toISOString().split('T')[0];\n\nconst sections = [\n  { name: 'System Architecture Overview', prompt: 'Write a comprehensive overview of the IntraWeb OS. Cover all 17 systems, how they connect to each other, the data flow between them, the full tech stack (n8n, HubSpot, Google Sheets, Google Drive, Twilio, Resend, Anthropic Claude, ElevenLabs, Google Chat). Include a narrative description of how a lead flows through the entire system from sourcing to project completion.' },\n  { name: 'Credentials & Access Master Reference', prompt: 'Document every credential used: HubSpot API, Twilio Account, Google Service Account, ElevenLabs API, Resend API, Anthropic API, Google Chat Webhook, Google Maps API. For each: where to find it, which systems use it, how to rotate it safely without breaking workflows.' },\n  { name: 'System by System Runbook', prompt: 'For each of the 17 systems (Lead Sourcing, Voice Qualification, Outreach Sequence, Onboarding, Proposals, Invoicing, LinkedIn Content, Weekly Updates, Reporting Dashboard, Health Monitoring, Referral/Reactivation, Command Center, Docs Generator, Manual Generator): plain English description, trigger mechanism, expected outputs, dependencies on other systems, how to test it, common failure modes, how to fix failures, how to modify behavior.' },\n  { name: 'Daily Weekly Monthly Operating Checklist', prompt: 'Create a structured checklist. Daily: what to check (Google Chat alerts, failed executions). Weekly: what to review (pipeline status, client health scores, LinkedIn queue). Monthly: what actions to take (credential rotation check, sheet cleanup, performance review). Mark what is fully automated vs needs human attention.' },\n  { name: 'HubSpot Configuration Reference', prompt: 'Document every custom property (lead_score, lead_source, lead_status, industry, pain_point, outreach_sequence_status, replied_flag, booking_flag, decision_maker, budget_mentioned, employee_count, tier, proposal_sent_date, contract_signed_date, client_health_score, last_activity_date, monthly_retainer, deal_pain_points, client_drive_folder_id), all deal stages, pipeline structure, how to add clients manually.' },\n  { name: 'Google Sheets Reference', prompt: 'Document every tab (Automations Log, Leads, Pipeline, Clients, Revenue, LinkedIn, Summary, Proposals), every column, what populates each tab, how to manually log entries, how to read the dashboard, data retention policies.' },\n  { name: 'Adding & Offboarding Clients', prompt: 'Step-by-step for adding a new client: HubSpot deal creation, stage progression, what triggers automatically, pre-launch checklist. For offboarding: how to deactivate a client, archive data, stop automated communications, update billing.' },\n  { name: 'Troubleshooting Guide', prompt: 'How to read n8n execution logs, test webhook endpoints, resend failed messages, restart stuck workflows, identify cascading failures when one sub-workflow goes down, common error patterns and their fixes.' },\n  { name: 'Scaling Guide', prompt: 'How to add contractors to the workflow (permissions, access, what they can modify), how to add new industry verticals, how to clone the client stack for additional businesses, when to upgrade service tiers, capacity planning.' },\n  { name: 'Changelog Template', prompt: 'Provide a changelog template with columns: Date, System/Workflow Modified, Change Description, Changed By, Reason, Rollback Instructions. Include instructions for keeping the changelog current.' }\n];\n\nreturn sections.map(s => ({\n  json: {\n    sectionName: s.name,\n    systemPrompt: 'You are writing the owner\\'s manual for the IntraWeb Technologies internal operating system. This is a technical reference document for the sole operator (John, the founder). Tone: clear, direct, practical. No corporate speak. Write in markdown format. Be specific and actionable. Include exact property names, workflow names, and configuration values where relevant.',\n    userPrompt: s.prompt,\n    maxTokens: 4000\n  }\n}));"
+      },
+      "id": "sys14-prep",
+      "name": "Prep Section Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "4PPD67ZzEON8Rxxe",
+          "mode": "id"
+        },
+        "mode": "each",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "systemPrompt": "={{ $json.systemPrompt }}",
+            "userPrompt": "={{ $json.userPrompt }}",
+            "maxTokens": "={{ $json.maxTokens }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys14-claude",
+      "name": "Generate Section",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        910,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const MAX = 10;\nconst sectionPrompts = $('Prep Section Prompts').all().slice(0, MAX);\nconst sections = $input.all().slice(0, MAX);\nconst config = $('Get Config').first().json;\nconst today = new Date().toISOString().split('T')[0];\n\nconst sectionMarkdown = (item) => {\n  const j = item.json || {};\n  if (j.data && typeof j.data.text === 'string' && j.data.text.trim()) return j.data.text.trim();\n  if (typeof j.text === 'string' && j.text.trim()) return j.text.trim();\n  if (j.success === false && j.error) return `**Section failed:** ${String(j.error)}`;\n  return '*No content was returned for this section.*';\n};\n\nlet markdown = `# IntraWeb OS — Owner's Manual\\n\\n`;\nmarkdown += `**Generated:** ${today}\\n`;\nmarkdown += `**Version:** 1.0\\n`;\nmarkdown += `**Owner:** ${config.owner.name} | ${config.owner.companyName}\\n\\n`;\nmarkdown += `---\\n\\n`;\nmarkdown += `## Table of Contents\\n\\n`;\n\nfor (let i = 0; i < sectionPrompts.length; i++) {\n  markdown += `${i + 1}. ${sectionPrompts[i].json.sectionName}\\n`;\n}\n\nmarkdown += `\\n---\\n\\n`;\n\nconst n = Math.min(sectionPrompts.length, sections.length);\nfor (let i = 0; i < n; i++) {\n  const content = sectionMarkdown(sections[i]);\n  markdown += `## ${i + 1}. ${sectionPrompts[i].json.sectionName}\\n\\n`;\n  markdown += content;\n  markdown += `\\n\\n---\\n\\n`;\n}\n\nconst escapeHtml = (s) =>\n  String(s)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n\nconst html = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><style>\n  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');\n  body { font-family: 'DM Sans', Arial, sans-serif; color: #333; line-height: 1.55; max-width: 900px; margin: 0 auto; padding: 40px; }\n  pre.manual-md { white-space: pre-wrap; word-wrap: break-word; font-family: 'DM Sans', Arial, sans-serif; font-size: 14px; }\n  .header { background: #1a1f2e; color: white; padding: 40px; margin: -40px -40px 40px; text-align: center; }\n  .header h1 { color: #3d8b8b; margin: 0; }\n</style></head><body><div class=\"header\"><h1>IntraWeb OS</h1><p>Owner's Manual</p><p>${today}</p></div><pre class=\"manual-md\">${escapeHtml(markdown)}</pre></body></html>`;\n\nreturn [{\n  json: {\n    markdown,\n    html,\n    fileName: `IntraWeb-OS-Owners-Manual-${today}.pdf`\n  }\n}];"
+      },
+      "id": "sys14-assemble",
+      "name": "Assemble Manual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "hxsCltRP81r5gLtm",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "html": "={{ $json.html }}",
+            "fileName": "={{ $json.fileName }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys14-pdf",
+      "name": "Generate PDF",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1350,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all().slice(0, 1);\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const j = item.json || {};\n  const fileName =\n    (j.data && j.data.fileName) ||\n    j.fileName ||\n    $('Assemble Manual').first().json.fileName ||\n    'IntraWeb-OS-Owners-Manual.pdf';\n  const inlineBinary = item.binary && item.binary.data && item.binary.data.data;\n  let b64 = typeof inlineBinary === 'string' && inlineBinary !== 'filesystem-v2' ? inlineBinary : '';\n\n  if (!b64 && item.binary && item.binary.data) {\n    const pdfBuffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    b64 = pdfBuffer.toString('base64');\n  }\n\n  if (!b64 && j.data && typeof j.data.pdfBase64 === 'string') {\n    b64 = j.data.pdfBase64;\n  }\n\n  if (!b64) {\n    throw new Error(\n      'Attach PDF Binary: missing usable PDF bytes for ' +\n        fileName +\n        '. ' +\n        JSON.stringify({ success: j.success, error: j.error }).slice(0, 400),\n    );\n  }\n\n  out.push({\n    json: j,\n    binary: {\n      data: {\n        data: b64,\n        mimeType: (j.data && j.data.mimeType) || 'application/pdf',\n        fileName,\n        fileExtension: 'pdf'\n      }\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "sys14-attach-pdf-binary",
+      "name": "Attach PDF Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $json.data && $json.data.fileName || $json.fileName || $('Assemble Manual').first().json.fileName || 'IntraWeb-OS-Owners-Manual.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Get Config').first().json.google.clientFolderParentId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "sys14-upload",
+      "name": "Upload to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1570,
+        300
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "IJzDJS1jpbItegZD",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const driveLink = 'https://drive.google.com/file/d/' + $('Upload to Drive').first().json.id;\n\nreturn [{\n  json: {\n    message: `Owner's manual generated: ${driveLink}`,\n    priority: 'info'\n  }\n}];"
+      },
+      "id": "sys14-alert-prep",
+      "name": "Prep Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "PGf6jPoWtxSPlr0h",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys14-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2010,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 09 — OS Owner\\'s Manual Generator',\n    contactName: '', phone: '', eventType: 'manual_generated', status: 'success',\n    notes: 'Owner\\'s manual PDF generated and uploaded'\n  }\n}];"
+      },
+      "id": "sys14-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2230,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys14-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2450,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Prep Section Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Section Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Section",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Section": {
+      "main": [
+        [
+          {
+            "node": "Assemble Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Manual": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF": {
+      "main": [
+        [
+          {
+            "node": "Attach PDF Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach PDF Binary": {
+      "main": [
+        [
+          {
+            "node": "Upload to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Drive": {
+      "main": [
+        [
+          {
+            "node": "Prep Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert": {
+      "main": [
+        [
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

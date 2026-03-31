@@ -1,0 +1,585 @@
+{
+  "id": "sys-11-referral-reactivation-engine",
+  "name": "SYS 05 — Referral & Reactivation Engine",
+  "description": "Referral path: webhook when deal reaches project complete; waits CONFIG delay, sends referral request email, then optional SMS. Reactivation path: daily 9AM EST, finds clients inactive per CONFIG, sends re-engagement email. Both paths log to Automations Log.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 05 — Referral & Reactivation Engine\n\n**Triggers:** (1) Webhook when deal reaches \"project complete\"; (2) Daily 9AM EST for reactivation.\n\n**What it does:** **Referral path:** After project complete, waits CONFIG's referral delay, sends referral request email, then optional SMS follow-up. **Reactivation path:** Finds clients inactive for CONFIG's reactivation days, sends a re-engagement email. Both paths log to Automations Log and use CONFIG for copy and timing.\n\n**Dependencies:** CONFIG, Send Email, Send SMS, HubSpot, Log.",
+        "height": 320,
+        "width": 460,
+        "color": 5
+      },
+      "id": "note-sys11",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hubspot-deal-project-complete",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "sys11-referral-trigger",
+      "name": "Deal Project Complete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "sys11-reactivation-trigger",
+      "name": "Daily 9AM EST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        250,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": ""
+      },
+      "id": "sys11-config-ref",
+      "name": "Get Config (Referral)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": ""
+      },
+      "id": "sys11-config-react",
+      "name": "Get Config (Reactivation)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const deal = $('Deal Project Complete').first().json;\nconst config = $('Get Config (Referral)').first().json;\nconst props = deal.properties || deal;\n\nreturn [{\n  json: {\n    clientName: props.dealname || '',\n    contactEmail: props.contact_email || '',\n    contactFirstName: props.contact_firstname || '',\n    contactPhone: props.contact_phone || '',\n    industry: props.industry || '',\n    tier: props.tier || '',\n    dealId: deal.id || deal.dealId || '',\n    config\n  }\n}];"
+      },
+      "id": "sys11-ref-extract",
+      "name": "Extract Referral Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.config.timing.referralDelayDays }}",
+        "unit": "days"
+      },
+      "id": "sys11-ref-wait",
+      "name": "Wait Referral Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        910,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Referral Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Quick ask, ${d.contactFirstName}`,\n    html: `<p>Hi ${d.contactFirstName},</p><p>Now that we've wrapped up your project, I wanted to ask — do you know anyone else in the ${d.industry || 'business'} space who might benefit from the kind of automation we built for ${d.clientName}?</p><p>A warm intro goes a long way. If someone comes to mind, just reply with their name and I'll take it from there. No pressure at all.</p><p>Thanks for trusting us with your operations. It's been a great project.</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 05 — Referral & Reactivation Engine'\n  }\n}];"
+      },
+      "id": "sys11-ref-email-prep",
+      "name": "Prep Referral Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_EMAIL_WORKFLOW_ID"
+      },
+      "id": "sys11-ref-email",
+      "name": "Send Referral Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1350,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "sys11-ref-wait2",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1570,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Extract Referral Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName}, sent you an email about referring someone for automation. Know anyone who might be a good fit? — John`,\n    workflowName: 'SYS 05 — Referral & Reactivation Engine'\n  }\n}];"
+      },
+      "id": "sys11-ref-sms-prep",
+      "name": "Prep Referral SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_SMS_WORKFLOW_ID"
+      },
+      "id": "sys11-ref-sms",
+      "name": "Send Referral SMS",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2010,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 05 — Referral & Reactivation Engine',\n    contactName: $('Extract Referral Data').first().json.clientName,\n    phone: '', eventType: 'referral_requested', status: 'success', notes: 'Referral sequence completed'\n  }\n}];"
+      },
+      "id": "sys11-ref-log-prep",
+      "name": "Prep Referral Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2230,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_LOG_WORKFLOW_ID"
+      },
+      "id": "sys11-ref-log",
+      "name": "Log Referral",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "getAll",
+        "filters": {
+          "values": [
+            {
+              "propertyName": "lifecyclestage",
+              "operator": "EQ",
+              "value": "customer"
+            }
+          ]
+        },
+        "limit": 100,
+        "options": {
+          "properties": [
+            "firstname",
+            "lastname",
+            "email",
+            "phone",
+            "company",
+            "last_activity_date"
+          ]
+        }
+      },
+      "id": "sys11-react-get",
+      "name": "Get Inactive Customers",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        690,
+        600
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const contacts = $('Get Inactive Customers').all();\nconst config = $('Get Config (Reactivation)').first().json;\nconst now = new Date();\nconst threshold = config.timing.reactivationDays * 24 * 60 * 60 * 1000;\n\nconst inactive = contacts.filter(c => {\n  const p = c.json.properties || c.json;\n  const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;\n  return !lastActivity || (now - lastActivity) > threshold;\n});\n\nreturn inactive.map(c => {\n  const p = c.json.properties || c.json;\n  return {\n    json: {\n      contactId: c.json.id,\n      firstName: p.firstname || '',\n      lastName: p.lastname || '',\n      email: p.email || '',\n      phone: p.phone || '',\n      company: p.company || '',\n      config\n    }\n  };\n});"
+      },
+      "id": "sys11-react-filter",
+      "name": "Filter Inactive",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nreturn [{\n  json: {\n    to: d.email,\n    subject: `Checking in — ${d.company}`,\n    html: `<p>Hi ${d.firstName || 'there'},</p><p>It's been a while since we last worked together, and I wanted to check in.</p><p>A lot has changed in the AI automation space since our last project. We've built some powerful new systems — from AI-powered lead qualification to automated client reporting — that could make a real difference for ${d.company}.</p><p>Would you be open to a quick 15-minute catch-up? I'd love to hear what's new on your end and share what we've been building.</p><p>${d.config.owner.calendarLink}</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 05 — Referral & Reactivation Engine'\n  }\n}];"
+      },
+      "id": "sys11-react-email-prep",
+      "name": "Prep Reactivation Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_EMAIL_WORKFLOW_ID"
+      },
+      "id": "sys11-react-email",
+      "name": "Send Reactivation Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1350,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "days"
+      },
+      "id": "sys11-react-wait",
+      "name": "Wait 4 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1570,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Filter Inactive').first().json;\n\nreturn [{\n  json: {\n    to: d.phone,\n    body: `Hi ${d.firstName || 'there'}, sent you an email about catching up on new automation capabilities for ${d.company}. Worth a quick chat? — John`,\n    workflowName: 'SYS 05 — Referral & Reactivation Engine'\n  }\n}];"
+      },
+      "id": "sys11-react-sms-prep",
+      "name": "Prep Reactivation SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_SEND_SMS_WORKFLOW_ID"
+      },
+      "id": "sys11-react-sms",
+      "name": "Send Reactivation SMS",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2010,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Filter Inactive').first().json;\n\nreturn [{\n  json: {\n    workflowName: 'SYS 05 — Referral & Reactivation Engine',\n    contactName: `${d.firstName} ${d.lastName}`.trim(),\n    phone: d.phone, eventType: 'reactivation_sent', status: 'success', notes: `Company: ${d.company}`\n  }\n}];"
+      },
+      "id": "sys11-react-log-prep",
+      "name": "Prep Reactivation Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2230,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowId": "REPLACE_WITH_LOG_WORKFLOW_ID"
+      },
+      "id": "sys11-react-log",
+      "name": "Log Reactivation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2450,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Deal Project Complete": {
+      "main": [
+        [
+          {
+            "node": "Get Config (Referral)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 9AM EST": {
+      "main": [
+        [
+          {
+            "node": "Get Config (Reactivation)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config (Referral)": {
+      "main": [
+        [
+          {
+            "node": "Extract Referral Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Referral Data": {
+      "main": [
+        [
+          {
+            "node": "Wait Referral Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Referral Delay": {
+      "main": [
+        [
+          {
+            "node": "Prep Referral Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Referral Email": {
+      "main": [
+        [
+          {
+            "node": "Send Referral Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Referral Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Days": {
+      "main": [
+        [
+          {
+            "node": "Prep Referral SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Referral SMS": {
+      "main": [
+        [
+          {
+            "node": "Send Referral SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Referral SMS": {
+      "main": [
+        [
+          {
+            "node": "Prep Referral Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Referral Log": {
+      "main": [
+        [
+          {
+            "node": "Log Referral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config (Reactivation)": {
+      "main": [
+        [
+          {
+            "node": "Get Inactive Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Inactive Customers": {
+      "main": [
+        [
+          {
+            "node": "Filter Inactive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Inactive": {
+      "main": [
+        [
+          {
+            "node": "Prep Reactivation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Reactivation Email": {
+      "main": [
+        [
+          {
+            "node": "Send Reactivation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reactivation Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 4 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 4 Days": {
+      "main": [
+        [
+          {
+            "node": "Prep Reactivation SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Reactivation SMS": {
+      "main": [
+        [
+          {
+            "node": "Send Reactivation SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reactivation SMS": {
+      "main": [
+        [
+          {
+            "node": "Prep Reactivation Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Reactivation Log": {
+      "main": [
+        [
+          {
+            "node": "Log Reactivation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

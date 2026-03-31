@@ -1,0 +1,612 @@
+{
+  "id": "sys-02-ai-voice-lead-qualification",
+  "name": "SYS 01 — AI Voice Lead Qualification",
+  "description": "Triggered by webhook at /voice-lead-qualification from ElevenLabs after a call. Receives structured call data (name, company, pain point, budget, decision maker), scores the lead, creates/updates HubSpot contact, creates deal for hot/warm leads, and can enroll in outreach sequence. Returns outcome to the voice agent for next steps.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 01 — AI Voice Lead Qualification\n\n**Trigger:** Webhook POST at `/voice-lead-qualification` (called by ElevenLabs conversational AI after a call).\n\n**What it does:** Receives structured call data (name, company, pain point, budget, decision maker, etc.), scores the lead via the Score and Route subworkflow, creates/updates the HubSpot contact, creates a deal for hot/warm leads, and can trigger the outreach sequence. Responds to the webhook with outcome so the voice agent can give the prospect next steps.\n\n**Dependencies:** CONFIG, Score and Route Lead, Create/Update Contact, Create Deal, Send Email, Log, Google Chat Alert.",
+        "height": 320,
+        "width": 460,
+        "color": 5
+      },
+      "id": "note-sys02",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice-lead-qualification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "sys02-trigger",
+      "name": "ElevenLabs Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('ElevenLabs Webhook').first().json;\nlet input = raw;\nif (raw?.body !== undefined && raw.body !== null) {\n  if (typeof raw.body === 'string') {\n    try { input = JSON.parse(raw.body); } catch { input = raw; }\n  } else if (typeof raw.body === 'object' && !Array.isArray(raw.body)) {\n    input = raw.body;\n  }\n}\nconst bool = (v) => v === true || v === 'true' || v === 1 || v === '1';\nconst num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };\n\nreturn [{\n  json: {\n    firstName: input.firstName || input.name || '',\n    lastName: input.lastName || '',\n    company: input.company || '',\n    email: input.email || '',\n    phone: input.phone || '',\n    painPoint: input.painPoint || input.challenge || '',\n    employeeCount: num(input.employeeCount ?? input.employees, 0),\n    budgetMentioned: bool(input.budgetMentioned) || bool(input.hasBudget),\n    decisionMaker: bool(input.decisionMaker) || bool(input.isDecisionMaker) || bool(input.descisionMaker),\n    preferredDay: input.preferredDay || '',\n    preferredTime: input.preferredTime || '',\n    industry: input.industry || '',\n    hasWebsite: bool(input.hasWebsite),\n    rating: num(input.rating, 0),\n    reviewCount: num(input.reviewCount, 0),\n    hasPhoneFlag: bool(input.hasPhone)\n  }\n}];"
+      },
+      "id": "sys02-extract",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst bool = (v) => v === true || v === 'true' || v === 1 || v === '1';\nconst num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };\n\nreturn [{\n  json: {\n    decisionMaker: bool(data.decisionMaker),\n    budgetMentioned: bool(data.budgetMentioned),\n    employeeCount: num(data.employeeCount, 0),\n    painPoint: data.painPoint || '',\n    reviewCount: num(data.reviewCount, 0),\n    hasWebsite: bool(data.hasWebsite),\n    rating: num(data.rating, 0),\n    hasPhone: bool(data.hasPhoneFlag) || !!(data.phone && String(data.phone).trim())\n  }\n}];"
+      },
+      "id": "sys02-prep-score",
+      "name": "Prepare Score Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "6RgyAmGi1MSWbuQb",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-score",
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1130,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.tier }}",
+                    "rightValue": "hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": "Hot"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.tier }}",
+                    "rightValue": "warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": "Warm"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.tier }}",
+                    "rightValue": "cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": "Cold"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sys02-route",
+      "name": "Route by Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1350,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst score = $('Score Lead').first().json;\n\nreturn [{\n  json: {\n    email: data.email,\n    phone: data.phone,\n    firstName: data.firstName,\n    lastName: data.lastName,\n    company: data.company,\n    industry: data.industry,\n    leadScore: score.data.score,\n    source: 'voice_qualification',\n    customProps: {\n      lead_status: 'qualified',\n      pain_point: data.painPoint,\n      decision_maker: data.decisionMaker,\n      budget_mentioned: data.budgetMentioned,\n      employee_count: data.employeeCount\n    }\n  }\n}];"
+      },
+      "id": "sys02-hot-contact-prep",
+      "name": "Prep Hot Contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "HbPxMMcf5tGERxEr",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-hot-create-contact",
+      "name": "Create Hot Contact",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1790,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst contactResult = $('Create Hot Contact').first().json;\nconst company = (data.company || '').trim();\nconst firstName = (data.firstName || '').trim();\nconst lastName = (data.lastName || '').trim();\n\nreturn [{\n  json: {\n    contactId: contactResult.data.contactId,\n    dealName: `${company || firstName || 'Voice lead'} - Voice Qualified`,\n    company,\n    firstName,\n    lastName,\n    stage: 'discovery_call_requested',\n    amount: 0,\n    industry: data.industry,\n    painPoint: data.painPoint,\n    tier: 'growth'\n  }\n}];"
+      },
+      "id": "sys02-hot-deal-prep",
+      "name": "Prep Hot Deal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2010,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "r3XBl1iiKYzSOFWF",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-hot-create-deal",
+      "name": "Create Hot Deal",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2230,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst score = $('Score Lead').first().json;\n\nreturn [{\n  json: {\n    message: `Hot lead: ${data.firstName} at ${data.company} — Score: ${score.data.score}. Pain: ${data.painPoint}`,\n    priority: 'warning'\n  }\n}];"
+      },
+      "id": "sys02-hot-alert-prep",
+      "name": "Prep Hot Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2450,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "PGf6jPoWtxSPlr0h",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-hot-alert",
+      "name": "Send Hot Alert",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2670,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst score = $('Score Lead').first().json;\n\nreturn [{\n  json: {\n    email: data.email,\n    phone: data.phone,\n    firstName: data.firstName,\n    lastName: data.lastName,\n    company: data.company,\n    industry: data.industry,\n    leadScore: score.data.score,\n    source: 'voice_qualification',\n    customProps: { lead_status: 'new', pain_point: data.painPoint }\n  }\n}];"
+      },
+      "id": "sys02-warm-contact-prep",
+      "name": "Prep Warm Contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "HbPxMMcf5tGERxEr",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-warm-create-contact",
+      "name": "Create Warm Contact",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1790,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Get Config').first().json.n8nBaseUrl || 'https://your-n8n-domain.com' }}/webhook/enroll-outreach",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $json.data.contactId, company: $('Extract Call Data').first().json.company, industry: $('Extract Call Data').first().json.industry, firstName: $('Extract Call Data').first().json.firstName }) }}",
+        "options": {}
+      },
+      "id": "sys02-warm-enroll",
+      "name": "Enroll in SYS 02 — Outbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2010,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst score = $('Score Lead').first().json;\n\nreturn [{\n  json: {\n    email: data.email,\n    phone: data.phone,\n    firstName: data.firstName,\n    lastName: data.lastName,\n    company: data.company,\n    industry: data.industry,\n    leadScore: score.data.score,\n    source: 'voice_qualification',\n    customProps: { lead_status: 'cold' }\n  }\n}];"
+      },
+      "id": "sys02-cold-contact-prep",
+      "name": "Prep Cold Contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "HbPxMMcf5tGERxEr",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-cold-create-contact",
+      "name": "Create Cold Contact",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1790,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Extract Call Data').first().json;\nconst score = $('Score Lead').first().json;\n\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — AI Voice Lead Qualification',\n    contactName: `${data.firstName} ${data.lastName}`.trim(),\n    phone: data.phone,\n    eventType: 'lead_scored',\n    status: 'success',\n    notes: `Score: ${score.data.score}, Tier: ${score.data.tier}, Company: ${data.company}`\n  }\n}];"
+      },
+      "id": "sys02-log-prep",
+      "name": "Prepare Log Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2670,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        }
+      },
+      "id": "sys02-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2890,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Lead processed' }) }}",
+        "options": {}
+      },
+      "id": "sys02-respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        3110,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "ElevenLabs Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Score Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Score Input": {
+      "main": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Route by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Tier": {
+      "main": [
+        [
+          {
+            "node": "Prep Hot Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Warm Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Cold Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Hot Contact": {
+      "main": [
+        [
+          {
+            "node": "Create Hot Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Hot Contact": {
+      "main": [
+        [
+          {
+            "node": "Prep Hot Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Hot Deal": {
+      "main": [
+        [
+          {
+            "node": "Create Hot Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Hot Deal": {
+      "main": [
+        [
+          {
+            "node": "Prep Hot Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Hot Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Hot Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Hot Alert": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Warm Contact": {
+      "main": [
+        [
+          {
+            "node": "Create Warm Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Warm Contact": {
+      "main": [
+        [
+          {
+            "node": "Enroll in SYS 02 — Outbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in SYS 02 — Outbound": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Cold Contact": {
+      "main": [
+        [
+          {
+            "node": "Create Cold Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Cold Contact": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

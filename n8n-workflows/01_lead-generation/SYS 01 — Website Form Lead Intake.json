@@ -1,0 +1,606 @@
+{
+  "id": "sys-16-website-form-lead-intake",
+  "name": "SYS 01 — Website Form Lead Intake",
+  "description": "Webhook after HubSpot form creates a contact: tags lead_source + hs_lead_status (NEW), optionally creates an associated deal (pain on deal for SYS 03 — Proposal and Contract Delivery), POSTs to /enroll-outreach (SYS 02 — Outbound Lead Outreach Sequence). HubSpot workflow should call this with contactId. Patched: tier field added to Parse Webhook Input and Prep Create Deal. pain_point fallback to painOverride added. Upstream contactId now always real (never empty).",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SYS 01 — Website Form Lead Intake\n\n### Purpose\n**Start the OS path for website leads** after your **HubSpot form** creates the contact. Updates CRM fields, optionally **creates a deal** (so pipeline + proposals have a deal record), then enrolls the contact in **SYS 02 — Outbound Lead Outreach Sequence**.\n\n### HubSpot setup (required)\n1. **Form** creates/updates the contact (native HubSpot form).\n2. **Contact-based workflow** — trigger: *Form submission* (your form). Re-enrollment: your choice (e.g. allow re-enroll only if no open deal).\n3. **Action: Send webhook** (POST) to  \n   `{{your n8n base URL}}/webhook/hubspot-website-form-lead`  \n   Body (JSON), e.g.:\n   ```json\n   { \"contactId\": \"{{ contact.hs_object_id }}\" }\n   ```\n   Optional: `\"createDeal\": false` if a deal is already created elsewhere; `\"dealStage\": \"qualifiedtobuy\"` (use your portal’s first-stage internal ID); `\"tier\": \"starter\"`; `\"painOverride\": \"...\"` if not stored on `pain_point`.\n\n### What it does\n1. **Parse** `contactId` from JSON (`contactId`, `contact_id`, `hs_object_id`, `vid`).\n2. **Get Contact** (firstname, company, industry, pain_point).\n3. **Tag Contact Inbound** (**HTTP PATCH** to HubSpot CRM v3): sets `lead_source=inbound` and `hs_lead_status=NEW` on the contact by ID (avoids n8n’s HubSpot upsert property picker, which does not list `hs_lead_status`). Values must match your portal’s option internals; edit the JSON body if needed (see `docs/hubspot-setup.md`).\n4. If **`createDeal`** (default true): **Create HubSpot Deal** (SW) + set **`deal_pain_points`** on the deal when pain text exists.\n5. **POST** `/webhook/enroll-outreach` with `contactId`, `firstName`, `company`, `industry` (same shape as SYS 01 — AI Voice Lead Qualification).\n6. **Log** to Automations Log.\n\n### Dependencies\nCONFIG, **SW: Create HubSpot Deal** (set Execute Workflow ID), HubSpot credential, **Log** sub-workflow, active **SYS 02 — Outbound Lead Outreach Sequence**.",
+        "height": 580,
+        "width": 520,
+        "color": 5
+      },
+      "id": "note-sys16",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        60,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hubspot-website-form-lead",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "sys16-webhook",
+      "name": "Website Form Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        }
+      },
+      "id": "sys16-config",
+      "name": "Get Config",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        470,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStage = pick(body, ['dealStage', 'deal_stage']) || '';\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null } }];"
+      },
+      "id": "sys16-parse",
+      "name": "Parse Webhook Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-id",
+              "leftValue": "={{ $json.contactId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys16-has-id",
+      "name": "Has Contact ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        910,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. HubSpot workflow must POST JSON with contactId (e.g. {{ contact.hs_object_id }}).' } }];"
+      },
+      "id": "sys16-missing",
+      "name": "Missing Contact ID Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        910,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "contact",
+        "operation": "get",
+        "contactId": {
+          "__rl": true,
+          "value": "={{ $('Parse Webhook Input').first().json.contactId }}",
+          "mode": "id"
+        },
+        "additionalFields": {
+          "propertiesCollection": {
+            "propertiesValues": {
+              "properties": [
+                "firstname",
+                "lastname",
+                "company",
+                "industry",
+                "email"
+              ],
+              "propertyMode": "valueOnly"
+            }
+          }
+        },
+        "options": {}
+      },
+      "id": "sys16-get-contact",
+      "name": "Get Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1130,
+        220
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Parse Webhook Input').first().json.contactId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { lead_source: 'inbound', hs_lead_status: 'NEW' } }) }}",
+        "options": {}
+      },
+      "id": "sys16-patch-contact",
+      "name": "Tag Contact Inbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1350,
+        220
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "create-yes",
+              "leftValue": "={{ $('Parse Webhook Input').first().json.createDeal === false ? 'no' : 'yes' }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys16-if-deal",
+      "name": "Create Deal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = parse.dealStage || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: parse.contactId,\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
+      },
+      "id": "sys16-prep-deal",
+      "name": "Prep Create Deal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "r3XBl1iiKYzSOFWF",
+          "mode": "id"
+        }
+      },
+      "id": "sys16-create-deal",
+      "name": "Create Deal",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2010,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealOut = $input.first().json;\nconst dealId = dealOut.data?.dealId || dealOut.data?.id || '';\nif (!dealId || !pain) {\n  return [{ json: { skip: true, dealId } }];\n}\nreturn [{ json: { skip: false, dealId, pain } }];"
+      },
+      "id": "sys16-prep-pain",
+      "name": "Prep Deal Pain Points",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2230,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-pain",
+              "leftValue": "={{ $json.skip === false ? 'update' : 'skip' }}",
+              "rightValue": "update",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys16-if-pain",
+      "name": "Set deal_pain_points?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2450,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "update",
+        "dealId": {
+          "__rl": true,
+          "value": "={{ $('Prep Deal Pain Points').first().json.dealId }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "=deal_pain_points",
+                "value": "={{ $('Prep Deal Pain Points').first().json.pain }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "id": "sys16-update-deal-pain",
+      "name": "Update Deal Pain Points",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2670,
+        60
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst parse = $('Parse Webhook Input').first().json;\nreturn [{ json: {\n  contactId: parse.contactId,\n  company: v(p.company),\n  industry: v(p.industry),\n  firstName: v(p.firstname)\n}}];"
+      },
+      "id": "sys16-prep-enroll",
+      "name": "Prep Enroll Outreach",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2890,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($('Get Config').first().json.n8nBaseUrl || $('Get Config').first().json.owner?.n8nBaseUrl || 'https://n8n.intrawebtech.com').replace(/\\/$/, '') + '/webhook/enroll-outreach' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contactId: $json.contactId, company: $json.company, industry: $json.industry, firstName: $json.firstName }) }}",
+        "options": {}
+      },
+      "id": "sys16-enroll",
+      "name": "Enroll in SYS 02 — Outbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3110,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = '';\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n} catch (e) {}\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || parse.contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: parse.createDeal ? `contact ${parse.contactId}; deal ${dealId || 'n/a'}` : `contact ${parse.contactId}; no deal created`\n}}];"
+      },
+      "id": "sys16-log-prep",
+      "name": "Prep Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3330,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        }
+      },
+      "id": "sys16-log",
+      "name": "Log to Sheet",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3550,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nlet dealId = null;\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n} catch (e) {}\nreturn [{ json: { success: true, contactId: parse.contactId, dealId, enrolledInOutreach: true } }];"
+      },
+      "id": "sys16-done",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3770,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "Website Form Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Config": {
+      "main": [
+        [
+          {
+            "node": "Parse Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Has Contact ID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Contact ID?": {
+      "main": [
+        [
+          {
+            "node": "Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing Contact ID Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact": {
+      "main": [
+        [
+          {
+            "node": "Tag Contact Inbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Contact Inbound": {
+      "main": [
+        [
+          {
+            "node": "Create Deal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Deal?": {
+      "main": [
+        [
+          {
+            "node": "Prep Create Deal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Enroll Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Create Deal": {
+      "main": [
+        [
+          {
+            "node": "Create Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Deal": {
+      "main": [
+        [
+          {
+            "node": "Prep Deal Pain Points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Deal Pain Points": {
+      "main": [
+        [
+          {
+            "node": "Set deal_pain_points?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set deal_pain_points?": {
+      "main": [
+        [
+          {
+            "node": "Update Deal Pain Points",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Enroll Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Deal Pain Points": {
+      "main": [
+        [
+          {
+            "node": "Prep Enroll Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Enroll Outreach": {
+      "main": [
+        [
+          {
+            "node": "Enroll in SYS 02 — Outbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll in SYS 02 — Outbound": {
+      "main": [
+        [
+          {
+            "node": "Prep Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

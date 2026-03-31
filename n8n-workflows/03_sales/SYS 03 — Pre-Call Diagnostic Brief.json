@@ -1,0 +1,1231 @@
+{
+  "updatedAt": "2026-03-27T03:51:57.556Z",
+  "createdAt": "2026-02-23T02:02:11.116Z",
+  "id": "mH67fjS4eC9amV4n",
+  "name": "SYS 03 — Pre-Call Diagnostic Brief",
+  "description": "Triggered by a Cal.com booking, sends an intake form to the prospect, waits 24 hours for a response, then uses AI to generate a pre-call diagnostic brief delivered as a Google Doc and emailed to John before the call.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intraweb-cal-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2368,
+        192
+      ],
+      "id": "3282c553-1e85-47d0-90b7-17ce74b48559",
+      "name": "📅 Cal.com Booking Webhook",
+      "webhookId": "7a169507-88e1-432e-a657-16dd7b80dc02"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2144,
+        192
+      ],
+      "id": "61c4d420-b0de-4d23-9f00-6ca7d26e04d3",
+      "name": "Respond 200 OK"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst payload = input.payload || input.body || input;\n\n// Cal.com sends attendees as an array\nconst attendee = payload?.attendees?.[0] || {};\nconst organizer = payload?.organizer || {};\n\nconst firstName = attendee.name?.split(' ')[0] || attendee.firstName || '';\nconst lastName = attendee.name?.split(' ').slice(1).join(' ') || attendee.lastName || '';\nconst email = attendee.email || '';\nconst timezone = attendee.timeZone || 'US/Eastern';\nconst eventTitle = payload.title || payload.type || 'Discovery Call';\nconst startTime = payload.startTime || '';\nconst endTime = payload.endTime || '';\nconst meetingUrl = payload.metadata?.videoCallUrl || payload.videoCallUrl || '';\nconst bookingUid = payload.uid || '';\n\n// Format date nicely\nlet formattedDate = '';\ntry {\n  const d = new Date(startTime);\n  formattedDate = d.toLocaleDateString('en-US', { \n    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',\n    hour: '2-digit', minute: '2-digit', timeZone: timezone\n  });\n} catch(e) {\n  formattedDate = startTime;\n}\n\nreturn [{\n  json: {\n    firstName,\n    lastName,\n    fullName: `${firstName} ${lastName}`.trim(),\n    email,\n    timezone,\n    eventTitle,\n    startTime,\n    formattedDate,\n    meetingUrl,\n    bookingUid\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1920,
+        192
+      ],
+      "id": "c1ce54d1-51a4-4e77-bed0-e0439f0f11aa",
+      "name": "📋 Parse Booking Data"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Quick prep for our call, {{ $json.firstName }} (takes 3 min)",
+        "message": "<p>Hi {{ $json.firstName }},</p>\n\n<p>Looking forward to our call on <strong>{{ $json.formattedDate }}</strong>.</p>\n\n<p>To make sure we use the time well, I put together 6 quick questions. Your answers help me walk in with specific ideas for your situation — not a generic pitch.</p>\n\n<p><strong>It takes about 3 minutes:</strong></p>\n\n<p>👉 <a href=\"https://YOUR_TYPEFORM_URL\">Complete your pre-call prep here</a></p>\n\n<p>If you'd rather just talk through it live, no worries — we'll cover it on the call.</p>\n\n<p>See you soon,<br>John Schibelli<br>Founder, IntraWeb Technologies<br><a href=\"https://intrawebtech.com\">intrawebtech.com</a></p>",
+        "options": {
+          "replyTo": "john.schibelli@intrawebtech.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1696,
+        192
+      ],
+      "id": "c7215fd2-2e45-4e92-aaf4-6450da5fc2c3",
+      "name": "📧 Send Intake Form Email",
+      "webhookId": "3e2f11f4-ffa9-4216-a4c3-9d106b42b424",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "q0R87wvDrXfMypYW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1472,
+        192
+      ],
+      "id": "7a410ee8-5eff-423e-a2f5-f0771e462d72",
+      "name": "⏳ Wait 24hrs for Response",
+      "webhookId": "aac3b193-a570-4d0d-b4fe-a78f041a470d"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": {
+          "__rl": true,
+          "value": "1045Srb-IOkEU_qHjvGzJD_C42m2_a_0ffd_8HwIZrjs",
+          "mode": "list",
+          "cachedResultName": "IntraWeb — Pre-Call Diagnostic Brief",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1045Srb-IOkEU_qHjvGzJD_C42m2_a_0ffd_8HwIZrjs/edit?usp=drivesdk"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1248,
+        192
+      ],
+      "id": "2a854935-32da-48b3-b604-8c1ab9268349",
+      "name": "🔍 Check Form Submitted",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "affNvPsxISKxcDzM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "form-check",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1024,
+        192
+      ],
+      "id": "3e5a4514-aec7-4824-8092-bc6b4bb4de51",
+      "name": "✅ Form Submitted?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('📋 Parse Booking Data').first().json.email }}",
+        "subject": "One quick thing before our call, {{ $('📋 Parse Booking Data').first().json.firstName }}",
+        "message": "<p>Hi {{ $('📋 Parse Booking Data').first().json.firstName }},</p>\n\n<p>Just a quick nudge — our call is coming up and I want to make sure I have enough context to be genuinely useful to you.</p>\n\n<p>👉 <a href=\"https://YOUR_TYPEFORM_URL\">Complete your 3-minute prep form here</a></p>\n\n<p>No pressure if you'd rather just wing it — I'll see you on the call either way.</p>\n\n<p>John</p>",
+        "options": {
+          "replyTo": "john@intrawebtech.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        288
+      ],
+      "id": "9cab96db-8986-45af-aa59-5b30fa308c2b",
+      "name": "📧 Send Nudge Email",
+      "webhookId": "050545e9-9b8a-483c-870e-c975c0772293",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "q0R87wvDrXfMypYW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a senior AI transformation consultant at IntraWeb Technologies. IntraWeb helps mid-market companies ($10M-$100M revenue, 10-150 employees) implement AI that delivers real ROI — not pilots that fail. Your $10,000 diagnostic assessment identifies the highest-leverage automation opportunities in a business. Your $8,000/month retainer implements them.\n\nYour core message: 95% of AI pilots fail to deliver ROI. IntraWeb fixes that through a human-in-the-loop implementation approach.\n\nGenerate a pre-call diagnostic brief for John Schibelli to review before a discovery call. Be specific, sharp, and avoid generic consulting language. Focus on business impact and ROI framing.",
+              "role": "system"
+            },
+            {
+              "content": "=Generate a pre-call diagnostic brief for this prospect:\n\nName: {{ $('📋 Parse Booking Data').first().json.fullName }}\nCall time: {{ $('📋 Parse Booking Data').first().json.formattedDate }}\n\nIntake Form Responses:\n- Revenue model: {{ $json['What is your company revenue model?'] || 'Not provided' }}\n- Team size: {{ $json['How many employees or contractors are on your team?'] || 'Not provided' }}\n- Biggest time drain: {{ $json['Where does your team lose the most time each week?'] || 'Not provided' }}\n- AI experience: {{ $json['Have you tried AI tools before? What happened?'] || 'Not provided' }}\n- 90-day win: {{ $json['What would a win look like 90 days from now?'] || 'Not provided' }}\n- Tech stack: {{ $json['What is your current tech stack?'] || 'Not provided' }}\n\nGenerate a brief with these exact sections:\n\n## Company Snapshot\n(2-3 sentences on what you know about their situation based on responses)\n\n## Primary Pain Points\n(Rank top 3 by ROI impact with a one-line explanation each)\n\n## Quick Wins (30 Days)\n(2-3 specific workflows IntraWeb could automate immediately)\n\n## Diagnostic Focus Areas\n(What the $10K assessment would investigate for this company)\n\n## Cost of Inaction\n(Specific framing of what staying the same costs them — time, money, competitive position)\n\n## Suggested Talking Points\n(3-4 specific questions John should ask on this call to qualify and advance the deal)\n\nBe direct and specific. No fluff."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -800,
+        96
+      ],
+      "id": "89e7046f-eb68-40bf-ab36-221198187230",
+      "name": "🤖 Generate Diagnostic Brief",
+      "credentials": {
+        "openAiApi": {
+          "id": "3W5Kyj3ksFlPlXpf",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const booking = $('📋 Parse Booking Data').first().json;\nconst formData = $('🔍 Check Form Submitted').first().json;\nconst aiResponse = $input.first().json;\n\n// Extract the brief text from OpenAI response\nconst briefText = aiResponse?.message?.content \n  || aiResponse?.text \n  || aiResponse?.choices?.[0]?.message?.content\n  || 'Brief generation failed — please generate manually.';\n\nconst docTitle = `${booking.fullName} — Pre-Call Diagnostic Brief — ${new Date().toLocaleDateString('en-US')}`;\n\nreturn [{\n  json: {\n    ...booking,\n    briefText,\n    docTitle,\n    formSubmitted: !!formData.email,\n    formData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "65e1836e-5c6e-4dc9-a110-fb469f84db33",
+      "name": "📄 Assemble Brief"
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "={{ $json.docTitle }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "5d30dd7d-8133-424e-9917-d6b7ca4ec096",
+      "name": "📝 Create Google Doc Brief",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "ItHxPnaB3vZj0oLj",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "john.schibelli@intrawebtech.com",
+        "subject": "🔥 Pre-Call Brief Ready: {{ $('📋 Parse Booking Data').first().json.fullName }} — {{ $('📋 Parse Booking Data').first().json.formattedDate }}",
+        "message": "<p><strong>Your pre-call diagnostic brief is ready.</strong></p>\n\n<table style='border-collapse:collapse;width:100%;margin-bottom:16px'>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold;width:140px'>Prospect</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.fullName }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Email</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.email }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Call Time</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.formattedDate }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Form Submitted</td><td style='padding:8px'>{{ $('📄 Assemble Brief').first().json.formSubmitted ? '✅ Yes' : '⚠️ No — brief generated from booking data only' }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Meeting Link</td><td style='padding:8px'><a href='{{ $('📋 Parse Booking Data').first().json.meetingUrl }}'>{{ $('📋 Parse Booking Data').first().json.meetingUrl }}</a></td></tr>\n</table>\n\n<p>📄 <strong><a href='{{ $json.webViewLink }}'>Open Full Diagnostic Brief in Google Docs</a></strong></p>\n\n<hr>\n\n<div style='background:#f9f9f9;padding:16px;border-left:4px solid #333;white-space:pre-wrap;font-family:monospace;font-size:13px'>{{ $('📄 Assemble Brief').first().json.briefText }}</div>\n\n<hr>\n<p style='color:#999;font-size:12px'>Generated by IntraWeb n8n automation</p>",
+        "options": {
+          "replyTo": "john@intrawebtech.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "56fc431e-1772-43b7-9a8c-8268182359dd",
+      "name": "📧 Email Brief to John",
+      "webhookId": "99421c76-9882-4777-bf9a-96e1eb7258bc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "q0R87wvDrXfMypYW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=SWSpRvXlmJiiiyod2Tokimbsq58yoVPp7g08y5T-DrE",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: '📋 *Pre-Call Brief Ready*\\n\\n*Prospect:* ' + $('📋 Parse Booking Data').first().json.fullName + '\\n*Call:* ' + $('📋 Parse Booking Data').first().json.formattedDate + '\\n*Form submitted:* ' + ($('📄 Assemble Brief').first().json.formSubmitted ? '✅ Yes' : '⚠️ No') + '\\n\\n📄 Brief sent to your inbox.' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "0df7df6d-5d25-4678-9485-b8d470261963",
+      "name": "💬 Google Chat — Brief Ready"
+    },
+    {
+      "parameters": {
+        "content": "## SYS 03 — Pre-Call Diagnostic Brief\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/intraweb-cal-booking\n\n**Trigger:** Cal.com fires when prospect books a Discovery Call.\n\n**Flow:**\n1. Parse booking data (name, email, time, meeting link)\n2. Upsert HubSpot contact (SW — Create or Update HubSpot Contact)\n3. Send intake form email to prospect\n4. Wait 24hrs for form response\n5. Check Google Sheets for submission\n6. Branch:\n   - Form submitted: Generate AI brief (GPT-4o) -> Google Doc -> Email + Chat alert -> Log\n   - No response: Send nudge email -> Log\n\n**Downstream handoffs:**\n- HubSpot upsert: SW — Create or Update HubSpot Contact (email, firstName, lastName)\n- Logging: SW — Log to Automations Log Sheet (brief_generated / nudge_sent)\n- Google Chat: inline alert to team space\n\n**System position:**\n- Upstream: SYS 02 — ElevenLabs Post-Call Handler booked branch (Cal.com booking auto-triggers this)\n- Downstream: SYS 03 — Proposal and Contract Delivery (after discovery call)\n- CRM: HubSpot contact created/updated on booking\n\n**Before activating:**\n1. Replace YOUR_TYPEFORM_URL in both email nodes\n2. Connect Google Sheets (set spreadsheet ID for form responses)\n3. Set Cal.com webhook to POST to this workflow's production URL\n4. Connect Google Docs credentials",
+        "height": 560,
+        "width": 540,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        432
+      ],
+      "id": "9737ad18-ef0f-48a8-9e0d-c262aa90ecf7",
+      "name": "📋 Setup Notes"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-create-update-hubspot-contact",
+          "mode": "id",
+          "cachedResultName": "SW: Create or Update HubSpot Contact"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('📋 Parse Booking Data').first().json.email }}",
+            "firstName": "={{ $('📋 Parse Booking Data').first().json.firstName }}",
+            "lastName": "={{ $('📋 Parse Booking Data').first().json.lastName }}",
+            "company": "",
+            "industry": "",
+            "customProps": "={{ JSON.stringify({ booking_uid: $('📋 Parse Booking Data').first().json.bookingUid, last_booking_date: new Date().toISOString() }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1696,
+        384
+      ],
+      "id": "hs-upsert-booking-001",
+      "name": "🔗 Upsert HubSpot Contact"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-log-automations-log-sheet",
+          "mode": "id",
+          "cachedResultName": "SW: Log to Automations Log Sheet"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflowName": "SYS 03 — Pre-Call Diagnostic Brief",
+            "contactName": "={{ $('📋 Parse Booking Data').first().json.fullName }}",
+            "phone": "",
+            "eventType": "brief_generated",
+            "status": "={{ $('📄 Assemble Brief').first().json.formSubmitted ? 'with_form_data' : 'booking_data_only' }}",
+            "notes": "={{ 'Pre-call brief generated for ' + $('📋 Parse Booking Data').first().json.fullName + ' — call on ' + $('📋 Parse Booking Data').first().json.formattedDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "log-brief-001",
+      "name": "📝 Log Brief Generated"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-log-automations-log-sheet",
+          "mode": "id",
+          "cachedResultName": "SW: Log to Automations Log Sheet"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflowName": "SYS 03 — Pre-Call Diagnostic Brief",
+            "contactName": "={{ $('📋 Parse Booking Data').first().json.fullName }}",
+            "phone": "",
+            "eventType": "nudge_sent",
+            "status": "success",
+            "notes": "={{ 'Intake form nudge sent to ' + $('📋 Parse Booking Data').first().json.email + ' — form not submitted within 24hrs' }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        288
+      ],
+      "id": "log-nudge-001",
+      "name": "📝 Log Nudge Sent"
+    }
+  ],
+  "connections": {
+    "📅 Cal.com Booking Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 Parse Booking Data": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Intake Form Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔗 Upsert HubSpot Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Intake Form Email": {
+      "main": [
+        [
+          {
+            "node": "⏳ Wait 24hrs for Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏳ Wait 24hrs for Response": {
+      "main": [
+        [
+          {
+            "node": "🔍 Check Form Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Check Form Submitted": {
+      "main": [
+        [
+          {
+            "node": "✅ Form Submitted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Form Submitted?": {
+      "main": [
+        [
+          {
+            "node": "🤖 Generate Diagnostic Brief",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📧 Send Nudge Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Generate Diagnostic Brief": {
+      "main": [
+        [
+          {
+            "node": "📄 Assemble Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📄 Assemble Brief": {
+      "main": [
+        [
+          {
+            "node": "📝 Create Google Doc Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Create Google Doc Brief": {
+      "main": [
+        [
+          {
+            "node": "📧 Email Brief to John",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 Google Chat — Brief Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 OK": {
+      "main": [
+        [
+          {
+            "node": "📋 Parse Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Email Brief to John": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Brief Generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Nudge Email": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Nudge Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+  "activeVersionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+  "versionCounter": 71,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-23T02:02:11.133Z",
+      "createdAt": "2026-02-23T02:02:11.133Z",
+      "role": "workflow:owner",
+      "workflowId": "mH67fjS4eC9amV4n",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-02-23T08:01:22Z",
+    "createdAt": "2026-02-23T07:46:18.724Z",
+    "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+    "workflowId": "mH67fjS4eC9amV4n",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "intraweb-cal-booking",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -2368,
+          192
+        ],
+        "id": "3282c553-1e85-47d0-90b7-17ce74b48559",
+        "name": "📅 Cal.com Booking Webhook",
+        "webhookId": "7a169507-88e1-432e-a657-16dd7b80dc02"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "OK",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          -2144,
+          192
+        ],
+        "id": "61c4d420-b0de-4d23-9f00-6ca7d26e04d3",
+        "name": "Respond 200 OK"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst payload = input.payload || input.body || input;\n\n// Cal.com sends attendees as an array\nconst attendee = payload?.attendees?.[0] || {};\nconst organizer = payload?.organizer || {};\n\nconst firstName = attendee.name?.split(' ')[0] || attendee.firstName || '';\nconst lastName = attendee.name?.split(' ').slice(1).join(' ') || attendee.lastName || '';\nconst email = attendee.email || '';\nconst timezone = attendee.timeZone || 'US/Eastern';\nconst eventTitle = payload.title || payload.type || 'Discovery Call';\nconst startTime = payload.startTime || '';\nconst endTime = payload.endTime || '';\nconst meetingUrl = payload.metadata?.videoCallUrl || payload.videoCallUrl || '';\nconst bookingUid = payload.uid || '';\n\n// Format date nicely\nlet formattedDate = '';\ntry {\n  const d = new Date(startTime);\n  formattedDate = d.toLocaleDateString('en-US', { \n    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',\n    hour: '2-digit', minute: '2-digit', timeZone: timezone\n  });\n} catch(e) {\n  formattedDate = startTime;\n}\n\nreturn [{\n  json: {\n    firstName,\n    lastName,\n    fullName: `${firstName} ${lastName}`.trim(),\n    email,\n    timezone,\n    eventTitle,\n    startTime,\n    formattedDate,\n    meetingUrl,\n    bookingUid\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1920,
+          192
+        ],
+        "id": "c1ce54d1-51a4-4e77-bed0-e0439f0f11aa",
+        "name": "📋 Parse Booking Data"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "Quick prep for our call, {{ $json.firstName }} (takes 3 min)",
+          "message": "<p>Hi {{ $json.firstName }},</p>\n\n<p>Looking forward to our call on <strong>{{ $json.formattedDate }}</strong>.</p>\n\n<p>To make sure we use the time well, I put together 6 quick questions. Your answers help me walk in with specific ideas for your situation — not a generic pitch.</p>\n\n<p><strong>It takes about 3 minutes:</strong></p>\n\n<p>👉 <a href=\"https://YOUR_TYPEFORM_URL\">Complete your pre-call prep here</a></p>\n\n<p>If you'd rather just talk through it live, no worries — we'll cover it on the call.</p>\n\n<p>See you soon,<br>John Schibelli<br>Founder, IntraWeb Technologies<br><a href=\"https://intrawebtech.com\">intrawebtech.com</a></p>",
+          "options": {
+            "replyTo": "john.schibelli@intrawebtech.com"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -1696,
+          192
+        ],
+        "id": "c7215fd2-2e45-4e92-aaf4-6450da5fc2c3",
+        "name": "📧 Send Intake Form Email",
+        "webhookId": "3e2f11f4-ffa9-4216-a4c3-9d106b42b424",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "q0R87wvDrXfMypYW",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 1,
+          "unit": "days"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1472,
+          192
+        ],
+        "id": "7a410ee8-5eff-423e-a2f5-f0771e462d72",
+        "name": "⏳ Wait 24hrs for Response",
+        "webhookId": "aac3b193-a570-4d0d-b4fe-a78f041a470d"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "documentId": {
+            "__rl": true,
+            "value": "1045Srb-IOkEU_qHjvGzJD_C42m2_a_0ffd_8HwIZrjs",
+            "mode": "list",
+            "cachedResultName": "IntraWeb — Pre-Call Diagnostic Brief",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1045Srb-IOkEU_qHjvGzJD_C42m2_a_0ffd_8HwIZrjs/edit?usp=drivesdk"
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          -1248,
+          192
+        ],
+        "id": "2a854935-32da-48b3-b604-8c1ab9268349",
+        "name": "🔍 Check Form Submitted",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "affNvPsxISKxcDzM",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "form-check",
+                "leftValue": "={{ $json.email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -1024,
+          192
+        ],
+        "id": "3e5a4514-aec7-4824-8092-bc6b4bb4de51",
+        "name": "✅ Form Submitted?"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('📋 Parse Booking Data').first().json.email }}",
+          "subject": "One quick thing before our call, {{ $('📋 Parse Booking Data').first().json.firstName }}",
+          "message": "<p>Hi {{ $('📋 Parse Booking Data').first().json.firstName }},</p>\n\n<p>Just a quick nudge — our call is coming up and I want to make sure I have enough context to be genuinely useful to you.</p>\n\n<p>👉 <a href=\"https://YOUR_TYPEFORM_URL\">Complete your 3-minute prep form here</a></p>\n\n<p>No pressure if you'd rather just wing it — I'll see you on the call either way.</p>\n\n<p>John</p>",
+          "options": {
+            "replyTo": "john@intrawebtech.com"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -736,
+          288
+        ],
+        "id": "9cab96db-8986-45af-aa59-5b30fa308c2b",
+        "name": "📧 Send Nudge Email",
+        "webhookId": "050545e9-9b8a-483c-870e-c975c0772293",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "q0R87wvDrXfMypYW",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "GPT-4O"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "You are a senior AI transformation consultant at IntraWeb Technologies. IntraWeb helps mid-market companies ($10M-$100M revenue, 10-150 employees) implement AI that delivers real ROI — not pilots that fail. Your $10,000 diagnostic assessment identifies the highest-leverage automation opportunities in a business. Your $8,000/month retainer implements them.\n\nYour core message: 95% of AI pilots fail to deliver ROI. IntraWeb fixes that through a human-in-the-loop implementation approach.\n\nGenerate a pre-call diagnostic brief for John Schibelli to review before a discovery call. Be specific, sharp, and avoid generic consulting language. Focus on business impact and ROI framing.",
+                "role": "system"
+              },
+              {
+                "content": "=Generate a pre-call diagnostic brief for this prospect:\n\nName: {{ $('📋 Parse Booking Data').first().json.fullName }}\nCall time: {{ $('📋 Parse Booking Data').first().json.formattedDate }}\n\nIntake Form Responses:\n- Revenue model: {{ $json['What is your company revenue model?'] || 'Not provided' }}\n- Team size: {{ $json['How many employees or contractors are on your team?'] || 'Not provided' }}\n- Biggest time drain: {{ $json['Where does your team lose the most time each week?'] || 'Not provided' }}\n- AI experience: {{ $json['Have you tried AI tools before? What happened?'] || 'Not provided' }}\n- 90-day win: {{ $json['What would a win look like 90 days from now?'] || 'Not provided' }}\n- Tech stack: {{ $json['What is your current tech stack?'] || 'Not provided' }}\n\nGenerate a brief with these exact sections:\n\n## Company Snapshot\n(2-3 sentences on what you know about their situation based on responses)\n\n## Primary Pain Points\n(Rank top 3 by ROI impact with a one-line explanation each)\n\n## Quick Wins (30 Days)\n(2-3 specific workflows IntraWeb could automate immediately)\n\n## Diagnostic Focus Areas\n(What the $10K assessment would investigate for this company)\n\n## Cost of Inaction\n(Specific framing of what staying the same costs them — time, money, competitive position)\n\n## Suggested Talking Points\n(3-4 specific questions John should ask on this call to qualify and advance the deal)\n\nBe direct and specific. No fluff."
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          -800,
+          96
+        ],
+        "id": "89e7046f-eb68-40bf-ab36-221198187230",
+        "name": "🤖 Generate Diagnostic Brief",
+        "credentials": {
+          "openAiApi": {
+            "id": "3W5Kyj3ksFlPlXpf",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('📋 Parse Booking Data').first().json;\nconst formData = $('🔍 Check Form Submitted').first().json;\nconst aiResponse = $input.first().json;\n\n// Extract the brief text from OpenAI response\nconst briefText = aiResponse?.message?.content \n  || aiResponse?.text \n  || aiResponse?.choices?.[0]?.message?.content\n  || 'Brief generation failed — please generate manually.';\n\nconst docTitle = `${booking.fullName} — Pre-Call Diagnostic Brief — ${new Date().toLocaleDateString('en-US')}`;\n\nreturn [{\n  json: {\n    ...booking,\n    briefText,\n    docTitle,\n    formSubmitted: !!formData.email,\n    formData\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -448,
+          96
+        ],
+        "id": "65e1836e-5c6e-4dc9-a110-fb469f84db33",
+        "name": "📄 Assemble Brief"
+      },
+      {
+        "parameters": {
+          "folderId": "default",
+          "title": "={{ $json.docTitle }}"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -224,
+          96
+        ],
+        "id": "5d30dd7d-8133-424e-9917-d6b7ca4ec096",
+        "name": "📝 Create Google Doc Brief",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "ItHxPnaB3vZj0oLj",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "john.schibelli@intrawebtech.com",
+          "subject": "🔥 Pre-Call Brief Ready: {{ $('📋 Parse Booking Data').first().json.fullName }} — {{ $('📋 Parse Booking Data').first().json.formattedDate }}",
+          "message": "<p><strong>Your pre-call diagnostic brief is ready.</strong></p>\n\n<table style='border-collapse:collapse;width:100%;margin-bottom:16px'>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold;width:140px'>Prospect</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.fullName }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Email</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.email }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Call Time</td><td style='padding:8px'>{{ $('📋 Parse Booking Data').first().json.formattedDate }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Form Submitted</td><td style='padding:8px'>{{ $('📄 Assemble Brief').first().json.formSubmitted ? '✅ Yes' : '⚠️ No — brief generated from booking data only' }}</td></tr>\n  <tr><td style='padding:8px;background:#f5f5f5;font-weight:bold'>Meeting Link</td><td style='padding:8px'><a href='{{ $('📋 Parse Booking Data').first().json.meetingUrl }}'>{{ $('📋 Parse Booking Data').first().json.meetingUrl }}</a></td></tr>\n</table>\n\n<p>📄 <strong><a href='{{ $json.webViewLink }}'>Open Full Diagnostic Brief in Google Docs</a></strong></p>\n\n<hr>\n\n<div style='background:#f9f9f9;padding:16px;border-left:4px solid #333;white-space:pre-wrap;font-family:monospace;font-size:13px'>{{ $('📄 Assemble Brief').first().json.briefText }}</div>\n\n<hr>\n<p style='color:#999;font-size:12px'>Generated by IntraWeb n8n automation</p>",
+          "options": {
+            "replyTo": "john@intrawebtech.com"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "56fc431e-1772-43b7-9a8c-8268182359dd",
+        "name": "📧 Email Brief to John",
+        "webhookId": "99421c76-9882-4777-bf9a-96e1eb7258bc",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "q0R87wvDrXfMypYW",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://chat.googleapis.com/v1/spaces/AAQAaHc_yMI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=SWSpRvXlmJiiiyod2Tokimbsq58yoVPp7g08y5T-DrE",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: '📋 *Pre-Call Brief Ready*\\n\\n*Prospect:* ' + $('📋 Parse Booking Data').first().json.fullName + '\\n*Call:* ' + $('📋 Parse Booking Data').first().json.formattedDate + '\\n*Form submitted:* ' + ($('📄 Assemble Brief').first().json.formSubmitted ? '✅ Yes' : '⚠️ No') + '\\n\\n📄 Brief sent to your inbox.' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          0,
+          192
+        ],
+        "id": "0df7df6d-5d25-4678-9485-b8d470261963",
+        "name": "💬 Google Chat — Brief Ready"
+      },
+      {
+        "parameters": {
+          "content": "## IntraWeb — Workflow: Pre-Call Diagnostic Brief\n\n**Trigger:** Cal.com webhook fires when prospect books Discovery Call\n\n**Flow:**\n1. Parse booking data (name, email, time, meeting link)\n2. Send intake form email to prospect\n3. Wait 24hrs for form response\n4. Check Google Sheets for submission\n5. If no response → send nudge email\n6. Generate AI diagnostic brief (GPT-4o)\n7. Create Google Doc in Drive\n8. Email brief to John with full details\n9. Google Chat notification\n\n**⚠️ Before activating:**\n1. Replace YOUR_TYPEFORM_URL in both email nodes\n2. Connect Google Sheets (set spreadsheet ID for form responses)\n3. Move Google Doc to correct Drive folder\n4. Update Google Chat webhook URL (rotate token!)\n5. Set Cal.com webhook to POST to this workflow's production URL\n6. Connect Google Docs credentials",
+          "height": 460,
+          "width": 520,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -2224,
+          432
+        ],
+        "id": "9737ad18-ef0f-48a8-9e0d-c262aa90ecf7",
+        "name": "📋 Setup Notes"
+      }
+    ],
+    "connections": {
+      "📅 Cal.com Booking Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond 200 OK",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📋 Parse Booking Data": {
+        "main": [
+          [
+            {
+              "node": "📧 Send Intake Form Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📧 Send Intake Form Email": {
+        "main": [
+          [
+            {
+              "node": "⏳ Wait 24hrs for Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "⏳ Wait 24hrs for Response": {
+        "main": [
+          [
+            {
+              "node": "🔍 Check Form Submitted",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "🔍 Check Form Submitted": {
+        "main": [
+          [
+            {
+              "node": "✅ Form Submitted?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "✅ Form Submitted?": {
+        "main": [
+          [
+            {
+              "node": "🤖 Generate Diagnostic Brief",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "📧 Send Nudge Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "🤖 Generate Diagnostic Brief": {
+        "main": [
+          [
+            {
+              "node": "📄 Assemble Brief",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📄 Assemble Brief": {
+        "main": [
+          [
+            {
+              "node": "📝 Create Google Doc Brief",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📝 Create Google Doc Brief": {
+        "main": [
+          [
+            {
+              "node": "📧 Email Brief to John",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "💬 Google Chat — Brief Ready",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond 200 OK": {
+        "main": [
+          [
+            {
+              "node": "📋 Parse Booking Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": "Version 2229de58",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-02-23T08:01:22.061Z",
+        "id": 11,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:01:28.373Z",
+        "id": 13,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:02:14.701Z",
+        "id": 18,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:02:55.926Z",
+        "id": 22,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-26T04:37:46.196Z",
+        "id": 27,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T02:11:16.046Z",
+        "id": 33,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:31:05.434Z",
+        "id": 41,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:32:04.627Z",
+        "id": 49,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:39:11.452Z",
+        "id": 59,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:47:15.886Z",
+        "id": 61,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:52:18.45Z",
+        "id": 71,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T04:00:05.829Z",
+        "id": 77,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-03-27T03:34:02.061Z",
+        "id": 425,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:01:28.347Z",
+        "id": 12,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:02:14.634Z",
+        "id": 17,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-23T08:02:55.907Z",
+        "id": 21,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-26T04:37:46.161Z",
+        "id": 26,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T02:11:16.022Z",
+        "id": 32,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:31:05.395Z",
+        "id": 40,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:32:04.61Z",
+        "id": 48,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:39:11.433Z",
+        "id": 58,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:47:15.866Z",
+        "id": 60,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T03:52:18.429Z",
+        "id": 70,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-02-27T04:00:05.707Z",
+        "id": 76,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-03-27T03:34:02.035Z",
+        "id": 424,
+        "workflowId": "mH67fjS4eC9amV4n",
+        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
+}

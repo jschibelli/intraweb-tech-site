@@ -1,0 +1,96 @@
+{
+  "name": "CONFIG — Global Settings",
+  "description": "Single source of truth for the IntraWeb OS: owner, Google (Sheets, Drive, Maps, Chat), timing, scoring, tier pricing, leadSourcing.minScoreForHubSpot, Hunter, industries, and leadSourcingQueries. Called via Execute Workflow from every system workflow.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## CONFIG — Global Settings\n\nThis workflow is the **single source of truth** for all shared settings used by the IntraWeb OS. It is called by every other workflow via *Execute Workflow*.\n\n**Testing:** Use **Manual Trigger** → *Test workflow* on this canvas. n8n does not allow standalone runs when the only entry point is *Execute Workflow Trigger*.\n\n**What it does:**\n- Exposes owner info (name, phone, email, company, Calendly, payment link + Stripe test payment links by offer)\n- Google settings (master sheet ID, Drive folder, Chat webhook)\n- Timing (follow-up delays, invoice reminders, health check cadence)\n- Scoring thresholds (hot/warm lead, health warning)\n- **Lead sourcing:** `leadSourcing.minScoreForHubSpot` — minimum Maps lead score (0–10) before SYS 01 syncs a scraped lead to HubSpot (`0` = all leads; `4` = warm+ only, legacy)\n- **HubSpot:** `hubspot.pipelineId` (optional) and `hubspot.dealStageIds` — values must match what HubSpot sends on **dealstage** webhooks (usually **numeric** IDs from Pipelines API, or strings like `closedwon` / `closedlost`). **Never** use display names or guesses like `contractsent` for `contractSent` — paste the real stage **id** from **Settings → Deals → Pipelines** or `GET .../pipelines/deals/{id}/stages`. Leave `contractSent` as `''` until set.\n- Tier pricing (Starter, Growth, Ops)\n- Lead sourcing queries and industry list\n\n**Usage:** Import this workflow first. Replace no hardcoded values in other workflows — they all read from here.",
+        "height": 340,
+        "width": 440,
+        "color": 5
+      },
+      "id": "54821348-cde2-4a85-95d9-49b3400de9ea",
+      "name": "Note — About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        640
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a7c3e8b1-2d4f-4e6a-9c0d-1b2e3f4a5b6c",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "f4462f2f-4de9-48e8-84aa-68c263592374",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    owner: {\n      name: 'John Schibelli',\n      phone: '+18622079004',\n      email: 'john.schibelli@intrawebtech.com',\n      companyName: 'IntraWeb Technologies LLC',\n      fromEmail: 'john.schibelli@intrawebtech.com',\n      fromName: 'John Schibelli| IntraWeb Technologies',\n      calendarLink: 'https://cal.com/intraweb/discovery?overlayCalendar=true',\n      googleReviewLink: 'https://g.page/r/PLACEHOLDER/review',\n      paymentLink: 'https://buy.stripe.com/test_6oU3cv0vu0S0gungkq2Ry08',\n      stripePaymentLinksTest: {\n        starterMonthly: 'https://buy.stripe.com/test_6oU3cv0vu0S0gungkq2Ry08',\n        growthMonthly: 'https://buy.stripe.com/test_cNi00j6TS6ck7XR2tA2Ry09',\n        starterSetup: 'https://buy.stripe.com/test_4gM7sLba89ow5PJfgm2Ry0a',\n        growthSetup: 'https://buy.stripe.com/test_5kQ8wP0vu9ow91V5FM2Ry0b'\n      },\n      hubspotOwnerId: '80526695',\n      n8nBaseUrl:'https://n8n.intrawebtech.com'\n    },\n    pipeline: 'default',\n    hubspot: {\n      pipelineId: 'default',\n      dealStageIds: {\n        leadQualified: '3382756081',\n        discoveryCallRequested: '3382756082',\n        discoveryCallScheduled: '3382756083',\n        discoveryCallComplete: '3382756084',\n        proposal: '3382756085',\n        contractSent: '',\n        closedWon: 'closedwon',\n        invoiceSent: '3382756086',\n        paid: '3382756087',\n        projectComplete: '3382756088',\n        lost: 'closedlost'\n      }\n    },\n    hunter: {\n      apiKey: '27e45d96e6cd62bfd38731b37be0a24f193027e6'\n    },\n    google: {\n      masterSheetId: '1_87jlkLaowo1wwYV5DjoAXOJciYbmcNPOrPnLHJ1ntQ',\n      clientFolderParentId: '1T6UkRAh7H1H5fQfs271byfLUzIWagKZf',\n      mapsApiKey: 'AIzaSyAR7dWyOvXGWNkerVP5F8WkJzUr3DO-W_o',\n      chatWebhookUrl: 'https://chat.googleapis.com/v1/spaces/AAQAyignKMU/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=Pr7GY0SuteoygoE-FhMcTd3Vg-jnwzID0_TIxjtZTQ0'\n    },\n    branding: { logoUrl: '' },\n    timing: {\n      followUpDelayHours: 48,\n      invoiceReminderDays: [3, 7, 14, 21],\n      reactivationDays: 60,\n      healthCheckDays: 14,\n      reviewRequestDelayMinutes: 60,\n      referralDelayDays: 7\n    },\n    scoring: {\n      hotLeadThreshold: 7,\n      warmLeadThreshold: 4,\n      healthScoreWarningThreshold: 4\n    },\n    leadSourcing: {\n      minScoreForHubSpot: 0\n    },\n    tiers: {\n      starter: { name: 'Starter', monthlyPrice: 300, setupFee: 2500 },\n      growth: { name: 'Growth', monthlyPrice: 450, setupFee: 4000 },\n      ops: { name: 'Ops', monthlyPrice: 1000, setupFee: 2500 }\n    },\n    industries: ['HVAC', 'Plumbing', 'Electrical', 'Accounting', 'Insurance', 'Landscaping', 'Med Spa', 'Dental'],\n    leadSourcingQueries: [\n      'HVAC company NJ', 'plumbing company NJ', 'accounting firm NJ',\n      'insurance agency NJ', 'landscaping company NJ', 'med spa NJ', 'dental practice NJ'\n    ]\n  }\n}];"
+      },
+      "id": "bdc13b14-d54d-408b-9545-3d8fb554c6af",
+      "name": "Return Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        1040
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Return Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Return Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "4b0a9fa1-0b5c-45f4-9b36-63e1223d7d0a",
+  "meta": {
+    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+  },
+  "id": "1eTTVoSFSlSPvZV4",
+  "tags": []
+}
