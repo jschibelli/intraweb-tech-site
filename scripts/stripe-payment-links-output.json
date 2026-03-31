@@ -1,0 +1,112 @@
+[
+  {
+    "name": "IntraWeb Starter Tier",
+    "sku": "IW-AS-TIER",
+    "priceId": "price_1TGrfiFFObU2Nf6zLOeGE3Tq",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zt7lGxwCR",
+    "url": "https://buy.stripe.com/7sY4gz1zy6ck1zteci2Ry06",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Starter Setup",
+    "sku": "IW-AS-SETUP",
+    "priceId": "price_1TGrfkFFObU2Nf6z33apk1kF",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zoqNthcko",
+    "url": "https://buy.stripe.com/cNi00j6TS6ck7XR2tA2Ry09",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Starter - RETAINER",
+    "sku": "IW-AS-MRR",
+    "priceId": "price_1TGrfpFFObU2Nf6ziLmjJiso",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zvwwSSBnm",
+    "url": "https://buy.stripe.com/4gM7sLba89ow5PJfgm2Ry0a",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Growth Tier",
+    "sku": "IW-AG-TIER",
+    "priceId": "price_1TGrgoFFObU2Nf6zyqlI4xxc",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zEbrIQjMF",
+    "url": "https://buy.stripe.com/5kQ8wP0vu9ow91V5FM2Ry0b",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Growth Setup",
+    "sku": "IW-AG-SETUP",
+    "priceId": "price_1TGrgqFFObU2Nf6zcjrjC4rL",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zAQOVEkWI",
+    "url": "https://buy.stripe.com/6oU3cv0vu0S0gungkq2Ry08",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Growth - RETAINER",
+    "sku": "IW-AG-MRR",
+    "priceId": "price_1TGrgwFFObU2Nf6z2bdTO0Sj",
+    "paymentLinkId": "plink_1TGrmRFFObU2Nf6zBPoe74Y6",
+    "url": "https://buy.stripe.com/8x2bJ1a64gQY4LFb062Ry07",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Starter - SETUP",
+    "sku": "IW-WS-SETUP",
+    "priceId": "price_1TGrh2FFObU2Nf6znhAomQpj",
+    "paymentLinkId": "plink_1TGrmXFFObU2Nf6ztcJmHw9p",
+    "url": "https://buy.stripe.com/4gM28r1zy3084LFgkq2Ry0c",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Starter - RETAINER",
+    "sku": "IW-WS-MRR",
+    "priceId": "price_1TGrh7FFObU2Nf6zoIWil3yJ",
+    "paymentLinkId": "plink_1TGrmXFFObU2Nf6zUGIEMQYS",
+    "url": "https://buy.stripe.com/9B6eVddig8ksba3b062Ry0d",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Growth - SETUP",
+    "sku": "IW-WG-SETUP",
+    "priceId": "price_1TGrhCFFObU2Nf6zh7rFMvWf",
+    "paymentLinkId": "plink_1TGrmXFFObU2Nf6zH0zMDtRw",
+    "url": "https://buy.stripe.com/4gMdR9920asAdib2tA2Ry0e",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Growth - RETAINER",
+    "sku": "IW-WG-MRR",
+    "priceId": "price_1TGrhIFFObU2Nf6zKktzOwW1",
+    "paymentLinkId": "plink_1TGrmXFFObU2Nf6za6fKbRLE",
+    "url": "https://buy.stripe.com/14A3cv2DC8ks6TN5FM2Ry0h",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Copywriting Add-on",
+    "sku": "IW-COPY-ADDON",
+    "priceId": "price_1TGrhUFFObU2Nf6ziEihCAJO",
+    "paymentLinkId": "plink_1TGrmXFFObU2Nf6zt2JT84ER",
+    "url": "https://buy.stripe.com/eVqaEXemk44cdibc4a2Ry0f",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  }
+]

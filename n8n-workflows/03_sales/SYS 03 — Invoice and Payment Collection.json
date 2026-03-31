@@ -5,7 +5,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## SYS 03 — Invoice and Payment Collection\n\n### Purpose\nAutomate **collections follow-up** after an invoice is already out: scheduled reminders with a pay link, stop when the deal is **Paid**, log the run, and **escalate** if still unpaid after the last checkpoint—so nothing falls through the cracks without manual chasing.\n\n### What this workflow does *not* do\nIt **does not create or send the invoice**. You issue the invoice elsewhere, then move the HubSpot deal to **Invoice Sent**. Reminders use deal **amount** from HubSpot and a shared **`config.owner.paymentLink`** (e.g. Stripe Payment Link from CONFIG).\n\n### When it fires\n- **Webhook:** `POST` → `/webhook/hubspot-deal-invoice-sent`\n- **HubSpot:** Deal enters stage **Invoice Sent** (direct workflow action, or via **SYS 00** router from `dealstage` events).\n\n### How it works (flow)\n1. **Get Config** → **Extract Deal Data** (name, deal id, amount, email, phone).\n2. **Log** — records `invoice_sent` via the Log sub-workflow.\n3. **Wait / check loop** — after each wait, **GET deal** from HubSpot; **IF** `dealstage` ≠ Paid → send that step’s reminder; **else** → **Google Chat** “payment received” alert and **no more client nudges**.\n4. **Schedule (hardcoded Wait nodes):** Day **3** — email + SMS; Day **7** — email (overdue tone); Day **14** — SMS; Day **21** still unpaid — **internal escalation** alert only (manual follow-up).\n\n### Dependencies\nCONFIG, **Send Email**, **Send SMS**, **Log**, **Send Google Chat Alert** sub-workflows; HubSpot credential on deal GET nodes.\n\n### Ops\nEnsure IF nodes compare `dealstage` to your portal’s real **Paid** stage value (HubSpot often uses stage IDs, not the label `paid`).",
+        "content": "## SYS 03 — Invoice and Payment Collection\n\n### Purpose\nAutomate **collections follow-up** after an invoice is already out: scheduled reminders with a pay link, stop when the deal is **Paid**, log the run, and **escalate** if still unpaid after the last checkpoint—so nothing falls through the cracks without manual chasing.\n\n### What this workflow does *not* do\nIt **does not create or send the invoice**. You issue the invoice elsewhere, then move the HubSpot deal to **Invoice Sent**.\n\n### Payment link selection (v1)\nReminders use deal **amount** from HubSpot plus a Stripe Payment Link chosen in this order:\n1. HubSpot deal property `selected_sku` → `config.stripe.paymentLinksBySku[selected_sku]`\n2. Fallback: `config.owner.paymentLink`\n\n### When it fires\n- **Webhook:** `POST` → `/webhook/hubspot-deal-invoice-sent`\n- **HubSpot:** Deal enters stage **Invoice Sent** (direct workflow action, or via **SYS 00** router from `dealstage` events).\n\n### How it works (flow)\n1. **Get Config** → **Extract Deal Data** (name, deal id, amount, email, phone, selected_sku).\n2. **Log** — records `invoice_sent` via the Log sub-workflow.\n3. **Wait / check loop** — after each wait, **GET deal** from HubSpot; **IF** `dealstage` ≠ Paid → send that step’s reminder; **else** → **Google Chat** “payment received” alert and **no more client nudges**.\n4. **Schedule (hardcoded Wait nodes):** Day **3** — email + SMS; Day **7** — email (overdue tone); Day **14** — SMS; Day **21** still unpaid — **internal escalation** alert only (manual follow-up).\n\n### Dependencies\nCONFIG, **Send Email**, **Send SMS**, **Log**, **Send Google Chat Alert** sub-workflows; HubSpot credential on deal GET nodes.\n\n### Ops\nEnsure IF nodes compare `dealstage` to your portal’s real **Paid** stage value (HubSpot often uses stage IDs, not the label `paid`).",
         "height": 560,
         "width": 520,
         "color": 5
@@ -67,7 +67,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const deal = $('Deal Invoice Sent Webhook').first().json;\nconst config = $('Get Config').first().json;\nconst props = deal.properties || deal;\n\nreturn [{\n  json: {\n    clientName: props.dealname || props.name || '',\n    dealId: deal.id || deal.dealId || '',\n    amount: props.amount || 0,\n    contactEmail: props.contact_email || props.email || '',\n    contactFirstName: props.contact_firstname || props.firstName || '',\n    contactPhone: props.contact_phone || props.phone || '',\n    config\n  }\n}];"
+        "jsCode": "const deal = $('Deal Invoice Sent Webhook').first().json;\nconst config = $('Get Config').first().json;\nconst props = deal.properties || deal;\n\nconst sku = props.selected_sku || props.deal_sku || props.sku || '';\nconst paymentLink = (sku && config?.stripe?.paymentLinksBySku?.[sku]) || config?.owner?.paymentLink || '';\n\nreturn [{\n  json: {\n    clientName: props.dealname || props.name || '',\n    dealId: deal.id || deal.dealId || '',\n    amount: props.amount || 0,\n    contactEmail: props.contact_email || props.email || '',\n    contactFirstName: props.contact_firstname || props.firstName || '',\n    contactPhone: props.contact_phone || props.phone || '',\n    sku,\n    paymentLink,\n    config\n  }\n}];"
       },
       "id": "sys06-extract",
       "name": "Extract Deal Data",
@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Invoice reminder — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Just a quick reminder that your invoice for $${d.amount} is due.</p><p><a href=\"${d.config.owner.paymentLink}\" style=\"display:inline-block;background:#3d8b8b;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;\">Pay Now</a></p><p>If you've already sent payment, please disregard this message.</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Invoice reminder — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Just a quick reminder that your invoice for $${d.amount} is due.</p><p><a href=\"${d.paymentLink}\" style=\"display:inline-block;background:#3d8b8b;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;\">Pay Now</a></p><p>If you've already sent payment, please disregard this message.</p><p>— John<br/>${d.config.owner.companyName}</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
       },
       "id": "sys06-reminder1-email-prep",
       "name": "Day 3: Prep Email",
@@ -175,7 +175,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, friendly reminder about your $${d.amount} invoice. Pay here: ${d.config.owner.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, friendly reminder about your $${d.amount} invoice. Pay here: ${d.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
       },
       "id": "sys06-reminder1-sms-prep",
       "name": "Day 3: Prep SMS",
@@ -270,7 +270,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Payment overdue — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Your invoice for $${d.amount} is now overdue. Please process payment at your earliest convenience.</p><p><a href=\"${d.config.owner.paymentLink}\">Pay Now</a></p><p>If there are any issues with the invoice or payment, reply to this email and we'll sort it out.</p><p>— John</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Payment overdue — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Your invoice for $${d.amount} is now overdue. Please process payment at your earliest convenience.</p><p><a href=\"${d.paymentLink}\">Pay Now</a></p><p>If there are any issues with the invoice or payment, reply to this email and we'll sort it out.</p><p>— John</p>`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
       },
       "id": "sys06-reminder2-prep",
       "name": "Day 7: Prep Email",
@@ -365,7 +365,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, your $${d.amount} invoice is overdue. Please process payment: ${d.config.owner.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
+        "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactPhone,\n    body: `Hi ${d.contactFirstName || 'there'}, your $${d.amount} invoice is overdue. Please process payment: ${d.paymentLink} — John, IntraWeb`,\n    workflowName: 'SYS 03 — Invoice and Payment Collection'\n  }\n}];"
       },
       "id": "sys06-reminder3-prep",
       "name": "Day 14: Prep SMS",

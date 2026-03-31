@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Website Project Intake — IntraWeb Technologies</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Roboto:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --charcoal-950: #071628;
+    --charcoal-900: #0B1F36;
+    --charcoal-800: #13293d;
+    --charcoal-700: #1e3a5f;
+    --charcoal-600: #2b4a6b;
+    --slate-400: #94a3b8;
+    --slate-300: #cbd5e1;
+    --slate-200: #e2e8f0;
+    --slate-100: #f1f5f9;
+    --slate-50:  #f8fafc;
+    --teal-600:  #0D9488;
+    --teal-500:  #15B8A1;
+    --teal-400:  #2dd4bf;
+    --teal-100:  #ccfbf1;
+    --teal-50:   #f0fdfa;
+    --orange-600: #EA580C;
+    --orange-500: #F97316;
+    --white:     #ffffff;
+    --error:     #ef4444;
+    --error-bg:  #fef2f2;
+    --radius:    10px;
+    --shadow:    0 4px 24px rgba(0,0,0,0.08);
+    --transition: 0.2s ease;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background:
+      radial-gradient(1100px 600px at 20% 0%, rgba(21, 184, 161, 0.10), transparent 60%),
+      radial-gradient(900px 520px at 90% 10%, rgba(249, 115, 22, 0.10), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+    color: var(--charcoal-900);
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Shell ── */
+  .form-shell {
+    max-width: 740px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .form-header {
+    margin-bottom: 36px;
+  }
+  .form-header .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .logo-mark .dot-grid {
+    display: grid;
+    grid-template-columns: repeat(3,6px);
+    gap: 3px;
+  }
+  .dot-grid span {
+    display: block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal-500);
+  }
+  .dot-grid span:nth-child(5) { background: var(--slate-300); }
+  .logo-mark .brand {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--charcoal-700);
+    letter-spacing: -0.01em;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .form-header h1 {
+    font-size: clamp(22px, 4vw, 28px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--charcoal-900);
+    line-height: 1.2;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .form-header p {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--charcoal-600);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* ── Progress ── */
+  .progress-bar-wrap {
+    margin-bottom: 32px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--slate-600);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'DM Mono', monospace;
+  }
+  .step-counter {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--teal-600);
+    font-family: 'DM Mono', monospace;
+  }
+  .progress-track {
+    height: 4px;
+    background: var(--slate-200);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-600), var(--teal-400));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .step-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--slate-200);
+    transition: background var(--transition), transform var(--transition);
+    cursor: pointer;
+  }
+  .step-dot.active { background: var(--teal-500); transform: scale(1.25); }
+  .step-dot.done   { background: var(--teal-600); }
+
+  /* ── Card ── */
+  .form-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--slate-200);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-section-label {
+    background: var(--slate-50);
+    border-bottom: 1px solid var(--slate-200);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--teal-50);
+    border: 1px solid var(--teal-100);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .section-title-text h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--slate-900);
+    letter-spacing: -0.01em;
+  }
+  .section-title-text p {
+    font-size: 13px;
+    color: var(--slate-500);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  /* ── Step Panels ── */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .fields-grid {
+    padding: 28px;
+    display: grid;
+    gap: 20px;
+  }
+  .fields-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .fields-grid.cols-2 { grid-template-columns: 1fr; } }
+
+  /* ── Field ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.span-2 { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--slate-700);
+    letter-spacing: -0.01em;
+  }
+  label .req { color: var(--teal-500); margin-left: 2px; }
+  label .hint {
+    font-weight: 400;
+    color: var(--slate-400);
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  select,
+  textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--slate-900);
+    background: var(--white);
+    border: 1.5px solid var(--slate-200);
+    border-radius: 8px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(20,184,166,0.12);
+  }
+  input.error, select.error, textarea.error {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+  }
+  .field-error {
+    font-size: 12px;
+    color: var(--error);
+    display: none;
+  }
+  .field-error.visible { display: block; }
+
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+  textarea { resize: vertical; min-height: 96px; line-height: 1.55; }
+
+  /* ── Checkbox / Radio Groups ── */
+  .check-group, .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .check-group.inline, .radio-group.inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .check-item, .radio-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+    font-size: 14px;
+    color: var(--slate-700);
+    user-select: none;
+  }
+  .check-item:hover, .radio-item:hover {
+    border-color: var(--teal-400);
+    background: var(--teal-50);
+  }
+  .check-item input, .radio-item input { display: none; }
+  .check-item.selected, .radio-item.selected {
+    border-color: var(--teal-500);
+    background: var(--teal-50);
+    color: var(--teal-600);
+    font-weight: 500;
+  }
+  .check-box, .radio-circle {
+    width: 16px; height: 16px;
+    border: 2px solid var(--slate-300);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--transition);
+    font-size: 10px;
+    color: white;
+  }
+  .radio-circle { border-radius: 50%; }
+  .selected .check-box, .selected .radio-circle {
+    background: var(--teal-500);
+    border-color: var(--teal-500);
+  }
+
+  /* ── Inspiration URL rows ── */
+  .url-list { display: flex; flex-direction: column; gap: 8px; }
+  .url-row { display: flex; gap: 8px; align-items: center; }
+  .url-row input { flex: 1; }
+  .url-remove {
+    width: 32px; height: 32px;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 7px;
+    background: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-400);
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .url-remove:hover { border-color: var(--error); color: var(--error); }
+  .add-url-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--teal-600);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: 'DM Sans', sans-serif;
+    transition: color var(--transition);
+  }
+  .add-url-btn:hover { color: var(--teal-500); }
+
+  /* ── Range slider ── */
+  .range-wrap { position: relative; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--slate-200);
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--teal-500);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+  }
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--slate-400);
+    font-family: 'DM Mono', monospace;
+    margin-top: 6px;
+  }
+  .range-value {
+    display: inline-block;
+    background: var(--teal-50);
+    border: 1px solid var(--teal-100);
+    color: var(--teal-600);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+
+  /* ── Divider ── */
+  .field-divider {
+    grid-column: 1 / -1;
+    border: none;
+    border-top: 1px solid var(--slate-100);
+    margin: 4px 0;
+  }
+
+  /* ── Navigation ── */
+  .form-nav {
+    padding: 20px 28px;
+    border-top: 1px solid var(--slate-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--slate-50);
+  }
+  .btn {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 22px;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition);
+    letter-spacing: -0.01em;
+  }
+  .btn-ghost {
+    background: none;
+    border: 1.5px solid var(--slate-200);
+    color: var(--slate-600);
+  }
+  .btn-ghost:hover { border-color: var(--slate-400); color: var(--slate-800); }
+  .btn-primary {
+    background: linear-gradient(90deg, var(--teal-600), var(--teal-500));
+    color: white;
+  }
+  .btn-primary:hover { filter: brightness(1.03); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ── Summary / Confirmation ── */
+  .summary-panel { display: none; }
+  .summary-panel.active { display: block; }
+  .summary-grid { padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+  .summary-section h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal-600);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .summary-rows { display: flex; flex-direction: column; gap: 6px; }
+  .summary-row {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .summary-key {
+    color: var(--slate-500);
+    min-width: 180px;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .summary-val { color: var(--slate-800); font-weight: 500; flex: 1; word-break: break-word; }
+  .summary-val.empty { color: var(--slate-300); font-weight: 400; font-style: italic; }
+
+  .confirm-banner {
+    padding: 28px;
+    text-align: center;
+    border-top: 1px solid var(--slate-100);
+    background: var(--teal-50);
+  }
+  .confirm-banner .check-circle {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--teal-500);
+    color: white;
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .confirm-banner h3 { font-size: 18px; font-weight: 700; color: var(--slate-900); letter-spacing: -0.02em; }
+  .confirm-banner p { font-size: 14px; color: var(--slate-600); margin-top: 6px; font-weight: 300; }
+
+  .summary-actions {
+    padding: 20px 28px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+
+  /* ── Char counter ── */
+  .char-counter {
+    font-size: 11px;
+    color: var(--slate-400);
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Submit status */
+  .submit-status {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--charcoal-600);
+    line-height: 1.5;
+  }
+  .submit-status.error { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="form-shell">
+
+  <!-- Header -->
+  <div class="form-header">
+    <div class="logo-mark">
+      <div class="dot-grid">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <span class="brand">IntraWeb Technologies</span>
+    </div>
+    <h1>Website Project Intake</h1>
+    <p>Fill this out so we can scope your project accurately. Takes about 10 minutes.</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap">
+    <div class="progress-meta">
+      <span class="step-label" id="stepLabel">Section 1 of 6</span>
+      <span class="step-counter" id="stepCounter">17%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:17%"></div>
+    </div>
+    <div class="step-dots" id="stepDots"></div>
+  </div>
+
+  <!-- Card -->
+  <div class="form-card" id="formCard">
+
+    <!-- ═══ STEP 1: Business & Contact ═══ -->
+    <div class="step-panel active" data-step="1">
+      <div class="card-section-label">
+        <div class="section-icon">🏢</div>
+        <div class="section-title-text">
+          <h2>Business &amp; Contact Info</h2>
+          <p>Tell us who you are and how to reach you</p>
+        </div>
+      </div>
+      <div class="fields-grid cols-2">
+        <div class="field">
+          <label>First Name <span class="req">*</span></label>
+          <input type="text" id="firstName" placeholder="Jane" />
+          <span class="field-error" id="firstName-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Last Name <span class="req">*</span></label>
+          <input type="text" id="lastName" placeholder="Smith" />
+          <span class="field-error" id="lastName-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="jane@company.com" />
+          <span class="field-error" id="email-err">Enter a valid email</span>
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" placeholder="(555) 000-0000" />
+        </div>
+        <div class="field span-2">
+          <label>Business Name <span class="req">*</span></label>
+          <input type="text" id="businessName" placeholder="Acme HVAC Services" />
+          <span class="field-error" id="businessName-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Industry / Niche <span class="req">*</span></label>
+          <select id="industry">
+            <option value="">Select industry…</option>
+            <option>HVAC</option>
+            <option>Plumbing</option>
+            <option>Electrical</option>
+            <option>Landscaping</option>
+            <option>Accounting / Finance</option>
+            <option>Insurance</option>
+            <option>Med Spa / Aesthetics</option>
+            <option>Dental</option>
+            <option>Legal</option>
+            <option>Real Estate</option>
+            <option>Retail / E-Commerce</option>
+            <option>Restaurant / Food</option>
+            <option>Health &amp; Fitness</option>
+            <option>Other</option>
+          </select>
+          <span class="field-error" id="industry-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Business Location <span class="hint">(city, state)</span></label>
+          <input type="text" id="location" placeholder="Newark, NJ" />
+        </div>
+        <div class="field span-2">
+          <label>Current Website <span class="hint">(if any)</span></label>
+          <input type="url" id="currentSite" placeholder="https://yoursite.com" />
+        </div>
+        <div class="field span-2">
+          <label>Briefly describe your business</label>
+          <textarea id="bizDesc" placeholder="What do you do, who do you serve, what makes you different…" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 2: Goals & Timeline ═══ -->
+    <div class="step-panel" data-step="2">
+      <div class="card-section-label">
+        <div class="section-icon">🎯</div>
+        <div class="section-title-text">
+          <h2>Project Goals &amp; Timeline</h2>
+          <p>What success looks like and when you need it</p>
+        </div>
+      </div>
+      <div class="fields-grid">
+        <div class="field">
+          <label>Primary Goal <span class="req">*</span></label>
+          <div class="check-group" id="goalGroup">
+            <div class="check-item" onclick="toggleCheck(this,'goals','Generate more leads')"><span class="check-box">✓</span>Generate more leads</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Sell products / services online')"><span class="check-box">✓</span>Sell products / services online</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Build brand credibility')"><span class="check-box">✓</span>Build brand credibility</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Replace / redesign existing site')"><span class="check-box">✓</span>Replace / redesign existing site</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Rank higher on Google (SEO)')"><span class="check-box">✓</span>Rank higher on Google (SEO)</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Automate booking / scheduling')"><span class="check-box">✓</span>Automate booking / scheduling</div>
+            <div class="check-item" onclick="toggleCheck(this,'goals','Other')"><span class="check-box">✓</span>Other</div>
+          </div>
+          <span class="field-error" id="goals-err">Select at least one goal</span>
+        </div>
+        <div class="field">
+          <label>Describe the outcome you want from this project</label>
+          <textarea id="goalDetail" placeholder="In 6 months, I want my site to be generating 10+ inbound leads per month…" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label>Target Launch Date <span class="req">*</span></label>
+          <select id="timeline">
+            <option value="">Select timeframe…</option>
+            <option>ASAP (within 2 weeks)</option>
+            <option>1 month</option>
+            <option>6–8 weeks</option>
+            <option>2–3 months</option>
+            <option>3–6 months</option>
+            <option>Flexible / no hard deadline</option>
+          </select>
+          <span class="field-error" id="timeline-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Are there any hard deadlines driving this?</label>
+          <input type="text" id="hardDeadline" placeholder="e.g. trade show on June 15, product launch…" />
+        </div>
+        <div class="field">
+          <label>Who is this site primarily for?</label>
+          <textarea id="audience" placeholder="Homeowners in the tri-state area looking for HVAC service, age 35–65…" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 3: Design Preferences ═══ -->
+    <div class="step-panel" data-step="3">
+      <div class="card-section-label">
+        <div class="section-icon">🎨</div>
+        <div class="section-title-text">
+          <h2>Design Preferences</h2>
+          <p>Your visual direction and brand assets</p>
+        </div>
+      </div>
+      <div class="fields-grid">
+        <div class="field">
+          <label>Overall vibe <span class="req">*</span></label>
+          <div class="check-group inline" id="vibeGroup">
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Clean &amp; minimal')"><span class="check-box">✓</span>Clean &amp; minimal</div>
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Bold &amp; modern')"><span class="check-box">✓</span>Bold &amp; modern</div>
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Professional / corporate')"><span class="check-box">✓</span>Professional / corporate</div>
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Friendly &amp; approachable')"><span class="check-box">✓</span>Friendly &amp; approachable</div>
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Luxury / premium')"><span class="check-box">✓</span>Luxury / premium</div>
+            <div class="check-item" onclick="toggleCheck(this,'vibe','Technical / industrial')"><span class="check-box">✓</span>Technical / industrial</div>
+          </div>
+          <span class="field-error" id="vibe-err">Select at least one</span>
+        </div>
+        <div class="field">
+          <label>Do you have an existing logo?</label>
+          <div class="radio-group inline" id="hasLogoGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'hasLogo','Yes — I will provide files')"><span class="radio-circle"></span>Yes — I will provide files</div>
+            <div class="radio-item" onclick="toggleRadio(this,'hasLogo','No — I need a logo designed')"><span class="radio-circle"></span>No — I need one designed</div>
+            <div class="radio-item" onclick="toggleRadio(this,'hasLogo','I have a rough logo')"><span class="radio-circle"></span>I have a rough version</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Brand Colors <span class="hint">(hex codes or describe)</span></label>
+          <input type="text" id="brandColors" placeholder="#1e3a8a, #f59e0b — or 'navy blue and gold'" />
+        </div>
+        <div class="field">
+          <label>Preferred Font Style</label>
+          <div class="radio-group inline" id="fontStyleGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'fontStyle','Serif (traditional, editorial)')"><span class="radio-circle"></span>Serif</div>
+            <div class="radio-item" onclick="toggleRadio(this,'fontStyle','Sans-serif (modern, clean)')"><span class="radio-circle"></span>Sans-serif</div>
+            <div class="radio-item" onclick="toggleRadio(this,'fontStyle','No preference')"><span class="radio-circle"></span>No preference</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Do you have brand photography / images?</label>
+          <div class="radio-group inline" id="hasPhotosGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'hasPhotos','Yes — professional photos')"><span class="radio-circle"></span>Yes — professional</div>
+            <div class="radio-item" onclick="toggleRadio(this,'hasPhotos','Yes — phone photos only')"><span class="radio-circle"></span>Yes — phone photos</div>
+            <div class="radio-item" onclick="toggleRadio(this,'hasPhotos','No — need stock photos')"><span class="radio-circle"></span>No — need stock</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Anything specific you DON'T want in the design?</label>
+          <textarea id="dontWant" placeholder="No dark backgrounds, avoid clip art, don't use blue…" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Additional design notes</label>
+          <textarea id="designNotes" placeholder="Any other preferences, ideas, or references to share…" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 4: Content & Pages ═══ -->
+    <div class="step-panel" data-step="4">
+      <div class="card-section-label">
+        <div class="section-icon">📄</div>
+        <div class="section-title-text">
+          <h2>Content &amp; Pages</h2>
+          <p>What pages you need and who's writing the copy</p>
+        </div>
+      </div>
+      <div class="fields-grid">
+        <div class="field">
+          <label>Which pages do you need? <span class="req">*</span></label>
+          <div class="check-group" id="pagesGroup">
+            <div class="check-item" onclick="toggleCheck(this,'pages','Home')"><span class="check-box">✓</span>Home</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','About')"><span class="check-box">✓</span>About</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Services / Offerings')"><span class="check-box">✓</span>Services / Offerings</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Pricing')"><span class="check-box">✓</span>Pricing</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Blog / Resources')"><span class="check-box">✓</span>Blog / Resources</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Portfolio / Gallery')"><span class="check-box">✓</span>Portfolio / Gallery</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Testimonials / Reviews')"><span class="check-box">✓</span>Testimonials / Reviews</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Contact / Quote Request')"><span class="check-box">✓</span>Contact / Quote Request</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Booking / Scheduling')"><span class="check-box">✓</span>Booking / Scheduling</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','FAQs')"><span class="check-box">✓</span>FAQs</div>
+            <div class="check-item" onclick="toggleCheck(this,'pages','Legal / Privacy / Terms')"><span class="check-box">✓</span>Legal / Privacy / Terms</div>
+          </div>
+          <span class="field-error" id="pages-err">Select at least one page</span>
+        </div>
+        <div class="field">
+          <label>Any other pages not listed?</label>
+          <input type="text" id="otherPages" placeholder="e.g. Employee Portal, Custom Calculator, Event Registration…" />
+        </div>
+        <div class="field">
+          <label>Who is writing the copy / text? <span class="req">*</span></label>
+          <div class="radio-group" id="copywriterGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'copywriter','I will write all copy')"><span class="radio-circle"></span>I will write all copy</div>
+            <div class="radio-item" onclick="toggleRadio(this,'copywriter','I need you to write the copy')"><span class="radio-circle"></span>I need you to write the copy</div>
+            <div class="radio-item" onclick="toggleRadio(this,'copywriter','Split — I have some, need help with the rest')"><span class="radio-circle"></span>Split — I have some, need help with the rest</div>
+          </div>
+          <span class="field-error" id="copywriter-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Do you need a blog / content management system?</label>
+          <div class="radio-group inline" id="cmsGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'cms','Yes')"><span class="radio-circle"></span>Yes</div>
+            <div class="radio-item" onclick="toggleRadio(this,'cms','No')"><span class="radio-circle"></span>No</div>
+            <div class="radio-item" onclick="toggleRadio(this,'cms','Not sure')"><span class="radio-circle"></span>Not sure</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Special features or integrations needed?</label>
+          <div class="check-group inline" id="featuresGroup">
+            <div class="check-item" onclick="toggleCheck(this,'features','Contact / Lead Forms')"><span class="check-box">✓</span>Contact / Lead Forms</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','Online Payments')"><span class="check-box">✓</span>Online Payments</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','Live Chat')"><span class="check-box">✓</span>Live Chat</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','Appointment Booking')"><span class="check-box">✓</span>Appointment Booking</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','Email Marketing Integration')"><span class="check-box">✓</span>Email Marketing</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','CRM Integration')"><span class="check-box">✓</span>CRM Integration</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','Google Reviews Widget')"><span class="check-box">✓</span>Google Reviews</div>
+            <div class="check-item" onclick="toggleCheck(this,'features','AI Chatbot')"><span class="check-box">✓</span>AI Chatbot</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 5: Budget ═══ -->
+    <div class="step-panel" data-step="5">
+      <div class="card-section-label">
+        <div class="section-icon">💰</div>
+        <div class="section-title-text">
+          <h2>Budget</h2>
+          <p>Help us scope the right solution for your investment</p>
+        </div>
+      </div>
+      <div class="fields-grid">
+        <div class="field">
+          <label>Project Budget Range <span class="req">*</span></label>
+          <div class="radio-group" id="budgetGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'budget','Under $2,500')"><span class="radio-circle"></span>Under $2,500</div>
+            <div class="radio-item" onclick="toggleRadio(this,'budget','$2,500 – $5,000')"><span class="radio-circle"></span>$2,500 – $5,000</div>
+            <div class="radio-item" onclick="toggleRadio(this,'budget','$5,000 – $10,000')"><span class="radio-circle"></span>$5,000 – $10,000</div>
+            <div class="radio-item" onclick="toggleRadio(this,'budget','$10,000 – $20,000')"><span class="radio-circle"></span>$10,000 – $20,000</div>
+            <div class="radio-item" onclick="toggleRadio(this,'budget','$20,000+')"><span class="radio-circle"></span>$20,000+</div>
+            <div class="radio-item" onclick="toggleRadio(this,'budget','Not sure — need guidance')"><span class="radio-circle"></span>Not sure — need guidance</div>
+          </div>
+          <span class="field-error" id="budget-err">Required</span>
+        </div>
+        <div class="field">
+          <label>Do you need ongoing monthly support after launch?</label>
+          <div class="radio-group inline" id="ongoingGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'ongoing','Yes')"><span class="radio-circle"></span>Yes</div>
+            <div class="radio-item" onclick="toggleRadio(this,'ongoing','No')"><span class="radio-circle"></span>No</div>
+            <div class="radio-item" onclick="toggleRadio(this,'ongoing','Possibly')"><span class="radio-circle"></span>Possibly</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>How are you funding this project?</label>
+          <div class="radio-group inline" id="fundingGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'funding','Business funds')"><span class="radio-circle"></span>Business funds</div>
+            <div class="radio-item" onclick="toggleRadio(this,'funding','Personal funds')"><span class="radio-circle"></span>Personal funds</div>
+            <div class="radio-item" onclick="toggleRadio(this,'funding','Grant / loan')"><span class="radio-circle"></span>Grant / loan</div>
+            <div class="radio-item" onclick="toggleRadio(this,'funding','Prefer not to say')"><span class="radio-circle"></span>Prefer not to say</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Payment preference</label>
+          <div class="radio-group inline" id="paymentGroup">
+            <div class="radio-item" onclick="toggleRadio(this,'payment','Upfront / milestone')"><span class="radio-circle"></span>Upfront / milestone</div>
+            <div class="radio-item" onclick="toggleRadio(this,'payment','Monthly retainer')"><span class="radio-circle"></span>Monthly retainer</div>
+            <div class="radio-item" onclick="toggleRadio(this,'payment','Flexible')"><span class="radio-circle"></span>Flexible</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Anything else about budget we should know?</label>
+          <textarea id="budgetNotes" placeholder="e.g. have approval for X but need ROI justification, waiting on funding…" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 6: Competitors & Inspiration ═══ -->
+    <div class="step-panel" data-step="6">
+      <div class="card-section-label">
+        <div class="section-icon">🔍</div>
+        <div class="section-title-text">
+          <h2>Competitors &amp; Inspiration</h2>
+          <p>Sites you love, hate, or compete with</p>
+        </div>
+      </div>
+      <div class="fields-grid">
+        <div class="field">
+          <label>Top Competitors <span class="hint">(list names or URLs)</span></label>
+          <div class="url-list" id="competitorList">
+            <div class="url-row"><input type="text" placeholder="Competitor name or URL" /><button class="url-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+            <div class="url-row"><input type="text" placeholder="Competitor name or URL" /><button class="url-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+          </div>
+          <button class="add-url-btn" onclick="addRow('competitorList','Competitor name or URL')">+ Add competitor</button>
+        </div>
+        <div class="field">
+          <label>Sites You Love <span class="hint">(outside your industry is fine)</span></label>
+          <div class="url-list" id="inspirationList">
+            <div class="url-row"><input type="url" placeholder="https://example.com" /><button class="url-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+            <div class="url-row"><input type="url" placeholder="https://example.com" /><button class="url-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+          </div>
+          <button class="add-url-btn" onclick="addRow('inspirationList','https://example.com')">+ Add site</button>
+        </div>
+        <div class="field">
+          <label>What do you like about those sites?</label>
+          <textarea id="likeAbout" placeholder="Clean layout, strong CTAs, fast load time, great mobile experience…" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>What do you dislike about your current site or competitors?</label>
+          <textarea id="dislikeAbout" placeholder="Outdated look, hard to navigate, no mobile version, no contact form…" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>What makes you different from your competitors?</label>
+          <textarea id="differentiator" placeholder="We offer same-day service with a price-match guarantee…" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Anything else we should know before the kickoff call?</label>
+          <textarea id="finalNotes" placeholder="Any concerns, constraints, previous bad experiences with web agencies, or must-haves…" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Summary Panel ═══ -->
+    <div class="summary-panel" id="summaryPanel">
+      <div class="confirm-banner">
+        <div class="check-circle">✓</div>
+        <h3>Ready to submit</h3>
+        <p>Review your answers below, then hit Submit when you're ready.</p>
+      </div>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="summary-actions">
+        <button class="btn btn-ghost" onclick="goBack()">← Edit</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Submit Intake →</button>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="form-nav" id="formNav">
+      <button class="btn btn-ghost" id="backBtn" onclick="goBack()" disabled>← Back</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="goNext()">Next →</button>
+    </div>
+
+  </div><!-- /form-card -->
+
+</div><!-- /form-shell -->
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────
+  const TOTAL_STEPS = 6;
+  let currentStep = 1;
+  const formData = {
+    goals: [], vibe: [], pages: [], features: [],
+    hasLogo: '', fontStyle: '', hasPhotos: '', copywriter: '', cms: '',
+    budget: '', ongoing: '', funding: '', payment: ''
+  };
+
+  // ── Init dots ──────────────────────────────────────────────────────────
+  const dotsEl = document.getElementById('stepDots');
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (i === 1 ? ' active' : '');
+    d.title = `Step ${i}`;
+    dotsEl.appendChild(d);
+  }
+
+  // ── Progress ───────────────────────────────────────────────────────────
+  function updateProgress(step) {
+    const pct = Math.round((step / TOTAL_STEPS) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('stepLabel').textContent = `Section ${step} of ${TOTAL_STEPS}`;
+    document.getElementById('stepCounter').textContent = pct + '%';
+    const dots = document.querySelectorAll('.step-dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('active', 'done');
+      if (i + 1 < step) d.classList.add('done');
+      if (i + 1 === step) d.classList.add('active');
+    });
+    document.getElementById('backBtn').disabled = step === 1;
+    document.getElementById('nextBtn').textContent = step === TOTAL_STEPS ? 'Review →' : 'Next →';
+  }
+
+  function showStep(step) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.querySelector(`.step-panel[data-step="${step}"]`);
+    if (panel) panel.classList.add('active');
+    document.getElementById('summaryPanel').classList.remove('active');
+    document.getElementById('formNav').style.display = 'flex';
+    updateProgress(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Toggle helpers ─────────────────────────────────────────────────────
+  function toggleCheck(el, key, value) {
+    el.classList.toggle('selected');
+    const arr = formData[key] || (formData[key] = []);
+    const idx = arr.indexOf(value);
+    if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+  }
+
+  function toggleRadio(el, key, value) {
+    const parent = el.closest('.radio-group, .check-group');
+    parent.querySelectorAll('.radio-item').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+    formData[key] = value;
+  }
+
+  // ── Dynamic URL rows ───────────────────────────────────────────────────
+  function addRow(listId, placeholder) {
+    const list = document.getElementById(listId);
+    const isUrl = placeholder.startsWith('http');
+    const div = document.createElement('div');
+    div.className = 'url-row';
+    div.innerHTML = `<input type="${isUrl ? 'url' : 'text'}" placeholder="${placeholder}" /><button class="url-remove" onclick="removeRow(this)" title="Remove">×</button>`;
+    list.appendChild(div);
+  }
+
+  function removeRow(btn) {
+    const row = btn.closest('.url-row');
+    const list = row.parentElement;
+    if (list.children.length > 1) row.remove();
+  }
+
+  // ── Validation ─────────────────────────────────────────────────────────
+  function setError(id, show) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const inp = document.getElementById(id.replace('-err',''));
+    if (inp) inp.classList.toggle('error', show);
+    el.classList.toggle('visible', show);
+  }
+
+  function validateStep(step) {
+    let ok = true;
+    const req = (id, check) => { const v = !check; setError(id+'-err', v); if (v) ok = false; };
+
+    if (step === 1) {
+      req('firstName', document.getElementById('firstName').value.trim());
+      req('lastName',  document.getElementById('lastName').value.trim());
+      const em = document.getElementById('email').value.trim();
+      req('email', em && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em));
+      req('businessName', document.getElementById('businessName').value.trim());
+      req('industry', document.getElementById('industry').value);
+    }
+    if (step === 2) {
+      req('goals',    formData.goals.length > 0);
+      req('timeline', document.getElementById('timeline').value);
+    }
+    if (step === 3) {
+      req('vibe', formData.vibe.length > 0);
+    }
+    if (step === 4) {
+      req('pages',      formData.pages.length > 0);
+      req('copywriter', formData.copywriter !== '');
+    }
+    if (step === 5) {
+      req('budget', formData.budget !== '');
+    }
+    return ok;
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────
+  function goNext() {
+    if (!validateStep(currentStep)) return;
+    if (currentStep === TOTAL_STEPS) { showSummary(); return; }
+    currentStep++;
+    showStep(currentStep);
+  }
+
+  function goBack() {
+    if (document.getElementById('summaryPanel').classList.contains('active')) {
+      document.getElementById('summaryPanel').classList.remove('active');
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.querySelector(`.step-panel[data-step="${TOTAL_STEPS}"]`);
+      if (panel) panel.classList.add('active');
+      document.getElementById('formNav').style.display = 'flex';
+      updateProgress(TOTAL_STEPS);
+      return;
+    }
+    if (currentStep > 1) { currentStep--; showStep(currentStep); }
+  }
+
+  // ── Collect helpers ────────────────────────────────────────────────────
+  function val(id)     { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function listVals(id){ return [...document.querySelectorAll(`#${id} .url-row input`)].map(i=>i.value.trim()).filter(Boolean); }
+
+  // ── Summary ────────────────────────────────────────────────────────────
+  function showSummary() {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('formNav').style.display = 'none';
+    document.getElementById('summaryPanel').classList.add('active');
+
+    const sections = [
+      {
+        title: 'Business & Contact',
+        rows: [
+          ['Name',          `${val('firstName')} ${val('lastName')}`],
+          ['Email',         val('email')],
+          ['Phone',         val('phone')],
+          ['Business',      val('businessName')],
+          ['Industry',      val('industry')],
+          ['Location',      val('location')],
+          ['Current Site',  val('currentSite')],
+          ['Description',   val('bizDesc')],
+        ]
+      },
+      {
+        title: 'Goals & Timeline',
+        rows: [
+          ['Goals',         formData.goals.join(', ')],
+          ['Goal Detail',   val('goalDetail')],
+          ['Timeline',      val('timeline')],
+          ['Hard Deadline', val('hardDeadline')],
+          ['Audience',      val('audience')],
+        ]
+      },
+      {
+        title: 'Design Preferences',
+        rows: [
+          ['Vibe',          formData.vibe.join(', ')],
+          ['Has Logo',      formData.hasLogo],
+          ['Brand Colors',  val('brandColors')],
+          ['Font Style',    formData.fontStyle],
+          ['Has Photos',    formData.hasPhotos],
+          ["Don't Want",    val('dontWant')],
+          ['Design Notes',  val('designNotes')],
+        ]
+      },
+      {
+        title: 'Content & Pages',
+        rows: [
+          ['Pages',         formData.pages.join(', ')],
+          ['Other Pages',   val('otherPages')],
+          ['Copywriter',    formData.copywriter],
+          ['Needs CMS',     formData.cms],
+          ['Features',      formData.features.join(', ')],
+        ]
+      },
+      {
+        title: 'Budget',
+        rows: [
+          ['Budget Range',  formData.budget],
+          ['Ongoing Support', formData.ongoing],
+          ['Funding Source', formData.funding],
+          ['Payment Pref',  formData.payment],
+          ['Budget Notes',  val('budgetNotes')],
+        ]
+      },
+      {
+        title: 'Competitors & Inspiration',
+        rows: [
+          ['Competitors',   listVals('competitorList').join(', ')],
+          ['Inspiration',   listVals('inspirationList').join(', ')],
+          ['Like About',    val('likeAbout')],
+          ['Dislike',       val('dislikeAbout')],
+          ['Differentiator',val('differentiator')],
+          ['Final Notes',   val('finalNotes')],
+        ]
+      }
+    ];
+
+    const grid = document.getElementById('summaryGrid');
+    grid.innerHTML = sections.map(s => `
+      <div class="summary-section">
+        <h3>${s.title}</h3>
+        <div class="summary-rows">
+          ${s.rows.map(([k,v]) => `
+            <div class="summary-row">
+              <span class="summary-key">${k}</span>
+              <span class="summary-val ${v ? '' : 'empty'}">${v || '—'}</span>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────────
+  function submitForm() {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    const intake = {
+      contact: {
+        firstName: val('firstName'),
+        lastName: val('lastName'),
+        email: val('email'),
+        phone: val('phone'),
+        businessName: val('businessName'),
+        industry: val('industry'),
+        location: val('location'),
+        website: val('currentSite'),
+        bizDesc: val('bizDesc'),
+      },
+      goals: { goals: formData.goals, goalDetail: val('goalDetail'), timeline: val('timeline'), hardDeadline: val('hardDeadline'), audience: val('audience') },
+      design: { vibe: formData.vibe, hasLogo: formData.hasLogo, brandColors: val('brandColors'), fontStyle: formData.fontStyle, hasPhotos: formData.hasPhotos, dontWant: val('dontWant'), designNotes: val('designNotes') },
+      content: { pages: formData.pages, otherPages: val('otherPages'), copywriter: formData.copywriter, cms: formData.cms, features: formData.features },
+      budget: { range: formData.budget, ongoing: formData.ongoing, funding: formData.funding, payment: formData.payment, notes: val('budgetNotes') },
+      research: { competitors: listVals('competitorList'), inspiration: listVals('inspirationList'), likeAbout: val('likeAbout'), dislikeAbout: val('dislikeAbout'), differentiator: val('differentiator'), finalNotes: val('finalNotes') }
+    };
+
+    const budget = (formData.budget || '').toLowerCase();
+    const tier = budget.includes('10,000') || budget.includes('20,000') ? 'growth' : 'starter';
+
+    const painOverride =
+      `Website intake submission\n` +
+      `Business: ${intake.contact.businessName}\n` +
+      `Industry: ${intake.contact.industry}\n` +
+      `Goal(s): ${(intake.goals.goals || []).join(', ')}\n` +
+      `Timeline: ${intake.goals.timeline || ''}\n` +
+      `Budget: ${intake.budget.range || ''}\n` +
+      `Outcome: ${intake.goals.goalDetail || ''}\n` +
+      `Notes: ${intake.research.finalNotes || ''}`.trim();
+
+    const payload = {
+      // SYS 01 — Website Form Lead Intake can now upsert contact if contactId missing
+      contact: {
+        firstName: intake.contact.firstName,
+        lastName: intake.contact.lastName,
+        email: intake.contact.email,
+        phone: intake.contact.phone,
+        company: intake.contact.businessName,
+        industry: intake.contact.industry,
+      },
+      createDeal: true,
+      dealStage: 'qualifiedtobuy',
+      tier,
+      painOverride,
+      intake
+    };
+
+    const statusEl = document.createElement('div');
+    statusEl.className = 'submit-status';
+    statusEl.id = 'submitStatus';
+    statusEl.textContent = 'Submitting…';
+    const actions = document.querySelector('.summary-actions');
+    if (actions && !document.getElementById('submitStatus')) actions.appendChild(statusEl);
+
+    fetch('https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(async (res) => {
+        const text = await res.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) {}
+        if (!res.ok) {
+          const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `Request failed (${res.status})`;
+          throw new Error(msg);
+        }
+        return data;
+      })
+      .then(() => {
+        document.getElementById('summaryPanel').innerHTML = `
+          <div style="padding:60px 28px;text-align:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--teal-500);color:white;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">✓</div>
+            <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.03em;color:var(--charcoal-900);font-family:'Montserrat',sans-serif">Intake submitted!</h2>
+            <p style="font-size:14px;color:var(--charcoal-600);margin-top:10px;font-weight:300;max-width:420px;margin-inline:auto;">We’ll review your answers and reach out within 1 business day to schedule your kickoff call.</p>
+            <p style="margin-top:24px;font-size:13px;color:var(--teal-600);font-family:'DM Mono',monospace;">— IntraWeb Technologies</p>
+          </div>`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      })
+      .catch((err) => {
+        if (statusEl) {
+          statusEl.classList.add('error');
+          statusEl.textContent = `Submission failed: ${err && err.message ? err.message : 'Unknown error'}`;
+        }
+        if (submitBtn) submitBtn.disabled = false;
+      });
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────────
+  updateProgress(1);
+</script>
+</body>
+</html>

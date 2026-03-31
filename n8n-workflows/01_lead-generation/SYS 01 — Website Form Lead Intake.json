@@ -72,13 +72,13 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "singleValue": true
           },
           "conditions": [
             {
               "id": "has-id",
               "leftValue": "={{ $json.contactId }}",
-              "rightValue": "",
               "operator": {
                 "type": "string",
                 "operation": "notEmpty"
@@ -100,7 +100,69 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. HubSpot workflow must POST JSON with contactId (e.g. {{ contact.hs_object_id }}).' } }];"
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "sw-create-update-hubspot-contact",
+          "mode": "id",
+          "cachedResultName": "SW: Create or Update HubSpot Contact"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.email || c.Email || c.emailAddress || ''; })() }}",
+            "phone": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.phone || c.Phone || ''; })() }}",
+            "firstName": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.firstName || c.firstname || c.first_name || ''; })() }}",
+            "lastName": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.lastName || c.lastname || c.last_name || ''; })() }}",
+            "company": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.company || c.businessName || c.business || c.companyName || ''; })() }}",
+            "industry": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.industry || c.niche || ''; })() }}",
+            "customProps": "={{ JSON.stringify({ pain_point: $('Parse Webhook Input').first().json.painOverride || '' }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys16-upsert-contact",
+      "name": "Upsert HubSpot Contact",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1130,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const up = $('Upsert HubSpot Contact').first().json;\nconst contactId = up?.data?.contactId ? String(up.data.contactId) : '';\nif (!contactId) {\n  return [{ json: { success: false, error: 'Could not create/update HubSpot contact (missing contactId from upsert).', upsert: up } }];\n}\nreturn [{ json: { contactId } }];"
+      },
+      "id": "sys16-upsert-extract",
+      "name": "Use Upserted Contact ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nreturn [{ json: { contactId: parse.contactId } }];"
+      },
+      "id": "sys16-use-existing",
+      "name": "Use Existing Contact ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. HubSpot workflow must POST JSON with contactId (e.g. contact.hs_object_id).' } }];"
       },
       "id": "sys16-missing",
       "name": "Missing Contact ID Response",
@@ -118,7 +180,7 @@
         "operation": "get",
         "contactId": {
           "__rl": true,
-          "value": "={{ $('Parse Webhook Input').first().json.contactId }}",
+          "value": "={{ $json.contactId }}",
           "mode": "id"
         },
         "additionalFields": {
@@ -142,8 +204,8 @@
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2.2,
       "position": [
-        1130,
-        220
+        1570,
+        320
       ],
       "credentials": {
         "hubspotAppToken": {
@@ -155,7 +217,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Parse Webhook Input').first().json.contactId }}",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Get Contact').first().json.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "hubspotAppToken",
         "sendBody": true,
@@ -168,8 +230,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1350,
-        220
+        1790,
+        320
       ],
       "credentials": {
         "hubspotAppToken": {
@@ -206,21 +268,21 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1570,
-        220
+        2010,
+        320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = parse.dealStage || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: parse.contactId,\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = parse.dealStage || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: String(raw.id || parse.contactId || ''),\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
       },
       "id": "sys16-prep-deal",
       "name": "Prep Create Deal",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1790,
-        120
+        2230,
+        220
       ]
     },
     {
@@ -237,8 +299,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2010,
-        120
+        2450,
+        220
       ]
     },
     {
@@ -250,8 +312,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2230,
-        120
+        2670,
+        220
       ]
     },
     {
@@ -282,8 +344,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2450,
-        120
+        2890,
+        220
       ]
     },
     {
@@ -313,8 +375,8 @@
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2.2,
       "position": [
-        2670,
-        60
+        3110,
+        160
       ],
       "credentials": {
         "hubspotAppToken": {
@@ -325,15 +387,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst parse = $('Parse Webhook Input').first().json;\nreturn [{ json: {\n  contactId: parse.contactId,\n  company: v(p.company),\n  industry: v(p.industry),\n  firstName: v(p.firstname)\n}}];"
+        "jsCode": "const raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nreturn [{ json: {\n  contactId: String(raw.id || ''),\n  company: v(p.company),\n  industry: v(p.industry),\n  firstName: v(p.firstname)\n}}];"
       },
       "id": "sys16-prep-enroll",
       "name": "Prep Enroll Outreach",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2890,
-        220
+        3330,
+        320
       ]
     },
     {
@@ -350,21 +412,21 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        3110,
-        220
+        3550,
+        320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = '';\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n} catch (e) {}\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || parse.contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: parse.createDeal ? `contact ${parse.contactId}; deal ${dealId || 'n/a'}` : `contact ${parse.contactId}; no deal created`\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = '';\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n} catch (e) {}\nconst contactId = String(raw.id || parse.contactId || '');\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: parse.createDeal ? `contact ${contactId}; deal ${dealId || 'n/a'}` : `contact ${contactId}; no deal created`\n}}];"
       },
       "id": "sys16-log-prep",
       "name": "Prep Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3330,
-        220
+        3770,
+        320
       ]
     },
     {
@@ -381,21 +443,21 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3550,
-        220
+        3990,
+        320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nlet dealId = null;\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n} catch (e) {}\nreturn [{ json: { success: true, contactId: parse.contactId, dealId, enrolledInOutreach: true } }];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst contactId = String($('Get Contact').first().json.id || parse.contactId || '');\nlet dealId = null;\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n} catch (e) {}\nreturn [{ json: { success: true, contactId, dealId, enrolledInOutreach: true } }];"
       },
       "id": "sys16-done",
       "name": "Success Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3770,
-        220
+        4210,
+        320
       ]
     }
   ],
@@ -437,14 +499,47 @@
       "main": [
         [
           {
-            "node": "Get Contact",
+            "node": "Use Existing Contact ID",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Missing Contact ID Response",
+            "node": "Upsert HubSpot Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert HubSpot Contact": {
+      "main": [
+        [
+          {
+            "node": "Use Upserted Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Upserted Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Get Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Contact ID": {
+      "main": [
+        [
+          {
+            "node": "Get Contact",
             "type": "main",
             "index": 0
           }

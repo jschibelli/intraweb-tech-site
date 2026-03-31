@@ -1,0 +1,134 @@
+[
+  {
+    "name": "IntraWeb Starter Tier",
+    "sku": "IW-AS-TIER",
+    "productId": "prod_UFMOnrM4TvYq1F",
+    "priceId": "price_1TGrfiFFObU2Nf6zLOeGE3Tq",
+    "amount": 150000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Starter Setup",
+    "sku": "IW-AS-SETUP",
+    "productId": "prod_UC0akkCz5dyLBC",
+    "priceId": "price_1TGrfkFFObU2Nf6z33apk1kF",
+    "amount": 100000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "skipped"
+  },
+  {
+    "name": "IntraWeb Starter - RETAINER",
+    "sku": "IW-AS-MRR",
+    "productId": "prod_UFMOasK97JEbQN",
+    "priceId": "price_1TGrfpFFObU2Nf6ziLmjJiso",
+    "amount": 30000,
+    "currency": "usd",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Growth Tier",
+    "sku": "IW-AG-TIER",
+    "productId": "prod_UFMPHqnjSwjbnV",
+    "priceId": "price_1TGrgoFFObU2Nf6zyqlI4xxc",
+    "amount": 200000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Growth Setup",
+    "sku": "IW-AG-SETUP",
+    "productId": "prod_UC0a9VeRmp6o0W",
+    "priceId": "price_1TGrgqFFObU2Nf6zcjrjC4rL",
+    "amount": 200000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "skipped"
+  },
+  {
+    "name": "IntraWeb Growth - RETAINER",
+    "sku": "IW-AG-MRR",
+    "productId": "prod_UFMPNfxf23fSXN",
+    "priceId": "price_1TGrgwFFObU2Nf6z2bdTO0Sj",
+    "amount": 45000,
+    "currency": "usd",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Starter - SETUP",
+    "sku": "IW-WS-SETUP",
+    "productId": "prod_UFMPoqkSgccnyf",
+    "priceId": "price_1TGrh2FFObU2Nf6znhAomQpj",
+    "amount": 250000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Starter - RETAINER",
+    "sku": "IW-WS-MRR",
+    "productId": "prod_UFMPclliS7kbBD",
+    "priceId": "price_1TGrh7FFObU2Nf6zoIWil3yJ",
+    "amount": 14900,
+    "currency": "usd",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Growth - SETUP",
+    "sku": "IW-WG-SETUP",
+    "productId": "prod_UFMQayfXa8nHjW",
+    "priceId": "price_1TGrhCFFObU2Nf6zh7rFMvWf",
+    "amount": 500000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Growth - RETAINER",
+    "sku": "IW-WG-MRR",
+    "productId": "prod_UFMQqcB52wKy9W",
+    "priceId": "price_1TGrhIFFObU2Nf6zKktzOwW1",
+    "amount": 29900,
+    "currency": "usd",
+    "recurring": true,
+    "interval": "month",
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Web Custom - SETUP",
+    "sku": "IW-WC-SETUP",
+    "productId": "prod_UFMQ3R5f2Wpvvn",
+    "priceId": "price_1TGrhQFFObU2Nf6zB02xcksp",
+    "amount": 0,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  },
+  {
+    "name": "IntraWeb Copywriting Add-on",
+    "sku": "IW-COPY-ADDON",
+    "productId": "prod_UFMQpuawHp2mGN",
+    "priceId": "price_1TGrhUFFObU2Nf6ziEihCAJO",
+    "amount": 50000,
+    "currency": "usd",
+    "recurring": false,
+    "interval": null,
+    "status": "created"
+  }
+]

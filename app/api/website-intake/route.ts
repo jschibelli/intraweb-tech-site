@@ -1,0 +1,257 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { RecaptchaEnterpriseServiceClient } from "@google-cloud/recaptcha-enterprise";
+import { writeFileSync, mkdirSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { timingSafeEqual } from "crypto";
+
+export const maxDuration = 60;
+
+const RECAPTCHA_ACTION = "website_intake";
+const RECAPTCHA_MIN_SCORE = 0.5;
+
+const inputSchema = z.object({
+  contact: z
+    .object({
+      firstName: z.string().min(1),
+      lastName: z.string().min(1),
+      email: z.string().email(),
+      phone: z.string().optional().default(""),
+      company: z.string().min(1),
+      industry: z.string().min(1),
+    })
+    .passthrough(),
+  createDeal: z.boolean().optional().default(true),
+  dealStage: z.string().optional().default("qualifiedtobuy"),
+  tier: z.enum(["starter", "growth"]).optional().default("starter"),
+  painOverride: z.string().optional().default(""),
+  intake: z.unknown().optional(),
+  recaptchaToken: z.string().optional(),
+});
+
+/** Postman / server-to-server testing only. Set WEBSITE_INTAKE_BYPASS_RECAPTCHA_SECRET (≥16 chars) and send matching X-Intraweb-Website-Intake-Bypass header. */
+function isRecaptchaBypassAuthorized(request: NextRequest): boolean {
+  const envSecret = process.env.WEBSITE_INTAKE_BYPASS_RECAPTCHA_SECRET?.trim();
+  if (!envSecret || envSecret.length < 16) {
+    return false;
+  }
+  const headerVal = request.headers.get("x-intraweb-website-intake-bypass")?.trim();
+  if (!headerVal) {
+    return false;
+  }
+  try {
+    const a = Buffer.from(headerVal, "utf8");
+    const b = Buffer.from(envSecret, "utf8");
+    if (a.length !== b.length) {
+      return false;
+    }
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
+async function verifyRecaptchaToken(
+  token: string,
+  request: NextRequest
+): Promise<{ valid: boolean; score?: number; invalidReason?: string; hostname?: string; apiErrorMessage?: string }> {
+  const projectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
+  const siteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
+  if (!projectId || !siteKey) {
+    return { valid: false };
+  }
+  try {
+    const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    if (!credentialsJson || credentialsJson.trim() === "") {
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage:
+          "GOOGLE_APPLICATION_CREDENTIALS_JSON is not set. In Vercel: Settings → Environment Variables → add the full service account JSON for Production, then redeploy.",
+      };
+    }
+    let key: { client_email?: string; private_key?: string; [k: string]: unknown };
+    try {
+      key = JSON.parse(credentialsJson) as typeof key;
+    } catch (parseErr) {
+      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage: `Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON (parse error: ${msg}). Paste the full JSON from your service account key file.`,
+      };
+    }
+    if (!key.client_email || !key.private_key) {
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage:
+          "GOOGLE_APPLICATION_CREDENTIALS_JSON must contain client_email and private_key. Use the JSON file from Google Cloud service account Keys.",
+      };
+    }
+    const privateKey = key.private_key.includes("\\n") ? key.private_key.replace(/\\n/g, "\n") : key.private_key;
+    const keyWithNewlines = { ...key, private_key: privateKey };
+    const tmpDir = tmpdir();
+    const credsPath = join(tmpDir, "gcp-recaptcha-creds.json");
+    try {
+      mkdirSync(tmpDir, { recursive: true });
+      writeFileSync(credsPath, JSON.stringify(keyWithNewlines), "utf8");
+    } catch (writeErr) {
+      const msg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+      return {
+        valid: false,
+        invalidReason: "api_error",
+        apiErrorMessage: `Could not write credentials file: ${msg}.`,
+      };
+    }
+
+    const prevPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credsPath;
+    type AssessmentResult = {
+      tokenProperties?: { valid?: boolean; invalidReason?: string; action?: string; hostname?: string; createTime?: string };
+      riskAnalysis?: { score?: number };
+    };
+    let response: AssessmentResult;
+    try {
+      const client = new RecaptchaEnterpriseServiceClient();
+      const projectPath = client.projectPath(projectId);
+      const userAgent = request.headers.get("user-agent") ?? "";
+      const forwarded = request.headers.get("x-forwarded-for");
+      const userIp = forwarded ? forwarded.split(",")[0].trim() : "";
+      const result = await client.createAssessment({
+        parent: projectPath,
+        assessment: {
+          event: {
+            token,
+            siteKey,
+            expectedAction: RECAPTCHA_ACTION,
+            userAgent: userAgent || undefined,
+            userIpAddress: userIp || undefined,
+          },
+        },
+      });
+      response = result[0] as AssessmentResult;
+    } finally {
+      if (prevPath !== undefined) process.env.GOOGLE_APPLICATION_CREDENTIALS = prevPath;
+      else delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+
+    const invalidReasonRaw = response!.tokenProperties?.invalidReason;
+    const invalidReason = invalidReasonRaw != null ? String(invalidReasonRaw) : "unknown";
+    const score = response.riskAnalysis?.score ?? 0;
+    const action = response.tokenProperties?.action ?? "";
+    const hostname = response.tokenProperties?.hostname ?? "";
+
+    if (!response.tokenProperties?.valid) {
+      return { valid: false, invalidReason, score, hostname };
+    }
+    if (response.tokenProperties.action !== RECAPTCHA_ACTION) {
+      return { valid: false, invalidReason: "action_mismatch", score, hostname };
+    }
+    const scoreOk = score >= RECAPTCHA_MIN_SCORE;
+    return {
+      valid: scoreOk,
+      score,
+      invalidReason: scoreOk ? undefined : "score_below_threshold",
+      hostname,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("reCAPTCHA verification error:", err);
+    return { valid: false, invalidReason: "api_error", apiErrorMessage: message };
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const raw = (await req.json().catch(() => null)) as unknown;
+    const parsed = inputSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: "Invalid form data", error: parsed.error.issues?.[0]?.message ?? "Invalid payload" },
+        { status: 400 },
+      );
+    }
+
+    const recaptchaProjectId = process.env.RECAPTCHA_ENTERPRISE_PROJECT_ID;
+    const recaptchaSiteKey = process.env.RECAPTCHA_ENTERPRISE_SITE_KEY;
+    const recaptchaEnabled = Boolean(recaptchaProjectId && recaptchaSiteKey);
+
+    const skipRecaptchaInDev =
+      process.env.NODE_ENV === "development" && process.env.RECAPTCHA_SKIP_IN_DEV === "true";
+
+    const recaptchaBypass = isRecaptchaBypassAuthorized(req);
+    if (recaptchaBypass) {
+      console.warn(
+        "[website-intake] reCAPTCHA skipped: X-Intraweb-Website-Intake-Bypass matched WEBSITE_INTAKE_BYPASS_RECAPTCHA_SECRET (remove secret from production when done testing)"
+      );
+    }
+
+    if (recaptchaEnabled && !skipRecaptchaInDev && !recaptchaBypass) {
+      const token = parsed.data.recaptchaToken;
+      if (!token || typeof token !== "string") {
+        return NextResponse.json(
+          { error: "reCAPTCHA verification required", message: "Please complete the security check and try again." },
+          { status: 400 }
+        );
+      }
+      const { valid, invalidReason, score, hostname, apiErrorMessage } = await verifyRecaptchaToken(token, req);
+      if (!valid) {
+        console.error("[reCAPTCHA] verification failed", {
+          invalidReason,
+          score,
+          hostname,
+          apiErrorMessage,
+          hint: "Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY matches RECAPTCHA_ENTERPRISE_SITE_KEY; domain allowed in reCAPTCHA key; token not reused; Google credentials and API enabled.",
+        });
+        const responseBody: Record<string, unknown> = {
+          error: "reCAPTCHA verification failed",
+          message: "Security check failed. Please try again.",
+        };
+        if (process.env.RECAPTCHA_DEBUG_RESPONSE === "true") {
+          responseBody.debug = { invalidReason, score, hostname, apiErrorMessage };
+        }
+        return NextResponse.json(responseBody, { status: 400 });
+      }
+    }
+
+    const webhookUrl =
+      process.env.N8N_CONTACT_WEBHOOK_URL ||
+      "https://n8n.intrawebtech.com/webhook/hubspot-website-form-lead";
+
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed.data),
+    });
+
+    const text = await res.text();
+    let data: unknown = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = text;
+    }
+
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          message: "Upstream webhook error",
+          status: res.status,
+          error: typeof data === "string" ? data : (data as any)?.error || (data as any)?.message,
+        },
+        { status: 502 },
+      );
+    }
+
+    return NextResponse.json({ ok: true, upstream: data }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { message: "Server error", error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 },
+    );
+  }
+}
+
