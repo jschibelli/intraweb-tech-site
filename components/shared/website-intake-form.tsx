@@ -466,7 +466,7 @@ export default function WebsiteIntakeForm() {
           <div className="space-y-6">
             <h4 className="text-lg font-heading font-semibold text-white">Business & contact</h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">First name *</label>
                 <input {...register("firstName")} className={`${inputStyles} ${errors.firstName ? "border-red-500" : ""}`} />
@@ -496,7 +496,7 @@ export default function WebsiteIntakeForm() {
               {errors.businessName?.message && <p className="mt-1 text-sm text-red-400" role="alert">{errors.businessName.message}</p>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Industry / niche *</label>
                 <select {...register("industry")} className={`${inputStyles} ${errors.industry ? "border-red-500" : ""}`}>
@@ -548,7 +548,7 @@ export default function WebsiteIntakeForm() {
               <label className="block text-sm font-medium text-gray-200 mb-1.5">Describe the outcome you want (optional)</label>
               <textarea {...register("goalDetail")} className={`${inputStyles} resize-y`} rows={4} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Target launch date *</label>
                 <select {...register("timeline")} className={`${inputStyles} ${errors.timeline ? "border-red-500" : ""}`}>
@@ -583,7 +583,7 @@ export default function WebsiteIntakeForm() {
               {renderMultiSelect("vibe", VIBES, vibe, (errors.vibe as any)?.message)}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Logo</label>
                 <select {...register("hasLogo")} className={inputStyles}>
@@ -604,7 +604,7 @@ export default function WebsiteIntakeForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Brand colors (optional)</label>
                 <input {...register("brandColors")} className={inputStyles} placeholder="#0B1F36, #15B8A1" />
@@ -653,7 +653,7 @@ export default function WebsiteIntakeForm() {
               </select>
               {errors.copywriter?.message && <p className="mt-1 text-sm text-red-400" role="alert">{errors.copywriter.message}</p>}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Need a CMS/blog?</label>
                 <select {...register("cms")} className={inputStyles}>
@@ -687,7 +687,7 @@ export default function WebsiteIntakeForm() {
               </select>
               {errors.budget?.message && <p className="mt-1 text-sm text-red-400" role="alert">{errors.budget.message}</p>}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">Ongoing support after launch?</label>
                 <select {...register("ongoing")} className={inputStyles}>
@@ -766,7 +766,7 @@ export default function WebsiteIntakeForm() {
                 }
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1.5">What do you like? (optional)</label>
                 <textarea {...register("likeAbout")} className={`${inputStyles} resize-y`} rows={3} />
@@ -792,7 +792,7 @@ export default function WebsiteIntakeForm() {
           <div className="space-y-6">
             <h4 className="text-lg font-heading font-semibold text-white">Review</h4>
             <div className="rounded-md border border-gray-800 bg-gray-950/30 p-4 text-sm text-gray-200 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <div><span className="text-gray-400">Name:</span> {getValues("firstName")} {getValues("lastName")}</div>
                 <div><span className="text-gray-400">Email:</span> {getValues("email")}</div>
                 <div><span className="text-gray-400">Business:</span> {getValues("businessName")}</div>

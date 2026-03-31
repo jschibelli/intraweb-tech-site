@@ -37,7 +37,7 @@ export default function WebsiteIntakePage() {
       <EntranceReveal>
         <section className="py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
                 <h2 className="text-2xl font-heading font-bold mb-8">
                   What this does
