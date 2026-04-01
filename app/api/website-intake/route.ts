@@ -7,6 +7,7 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { timingSafeEqual } from "crypto";
 import { hubspotCreateOrUpdateContact, isHubSpotSyncFailure } from "@/lib/hubspotCreateOrUpdateContact";
+import { hubspotCreateWebsiteIntakeDeal } from "@/lib/hubspotCreateWebsiteIntakeDeal";
 import { formatWebsiteIntakeJsonSafe, formatWebsiteIntakePlainText } from "@/lib/formatWebsiteIntakeForHubSpot";
 import { hubSpotDealStageOrDefault } from "@/lib/normalizeHubSpotDealStage";
 
@@ -286,6 +287,25 @@ export async function POST(req: NextRequest) {
           "[website-intake] HubSpot website_intake_* fields were not saved (contact still created/updated):",
           hubspotResult.intakeFieldsSyncError,
         );
+      }
+
+      if (parsed.data.createDeal !== false && crmContactId) {
+        const dealResult = await hubspotCreateWebsiteIntakeDeal(hubspotToken, {
+          contactId: crmContactId,
+          company: c.company,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          industry: c.industry,
+          tier: parsed.data.tier,
+          dealStage: parsed.data.dealStage,
+          painSummary: painForDeal,
+        });
+        if ("error" in dealResult) {
+          console.error("[website-intake] HubSpot deal not created:", dealResult.error);
+        } else {
+          bodyForN8n = { ...bodyForN8n, hubspotDealId: dealResult.dealId };
+          console.log("[website-intake] HubSpot deal", dealResult.dealId, "associated with contact", crmContactId);
+        }
       }
     }
 

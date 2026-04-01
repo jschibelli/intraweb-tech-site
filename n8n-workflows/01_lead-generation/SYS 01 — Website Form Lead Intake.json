@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStageRaw = pick(body, ['dealStage', 'deal_stage']) || '';\nconst stageBuiltin = new Set(['appointmentscheduled', 'qualifiedtobuy', 'presentationscheduled', 'decisionmakerboughtin', 'contractsent', 'closedwon', 'closedlost']);\nconst normalizeDealStage = (s) => {\n  const t = String(s || '').trim();\n  if (!t) return '';\n  if (/^[0-9]+$/.test(t)) return t;\n  const lc = t.toLowerCase();\n  if (stageBuiltin.has(lc)) return lc;\n  return '';\n};\nconst dealStage = normalizeDealStage(dealStageRaw);\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null } }];"
+        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStageRaw = pick(body, ['dealStage', 'deal_stage']) || '';\nconst stageBuiltin = new Set(['appointmentscheduled', 'qualifiedtobuy', 'presentationscheduled', 'decisionmakerboughtin', 'contractsent', 'closedwon', 'closedlost']);\nconst normalizeDealStage = (s) => {\n  const t = String(s || '').trim();\n  if (!t) return '';\n  if (/^[0-9]+$/.test(t)) return t;\n  const lc = t.toLowerCase();\n  if (stageBuiltin.has(lc)) return lc;\n  return '';\n};\nconst dealStage = normalizeDealStage(dealStageRaw);\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\nconst hubspotDealId = pick(body, ['hubspotDealId', 'dealIdFromSite']) || '';\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null, hubspotDealId } }];"
       },
       "id": "sys16-parse",
       "name": "Parse Webhook Input",
@@ -251,7 +251,7 @@
           "conditions": [
             {
               "id": "create-yes",
-              "leftValue": "={{ $('Parse Webhook Input').first().json.createDeal === false ? 'no' : 'yes' }}",
+              "leftValue": "={{ (() => { const p = $('Parse Webhook Input').first().json; if (p.createDeal === false || p.createDeal === 'false') return 'no'; if (String(p.hubspotDealId || '').trim()) return 'no'; return 'yes'; })() }}",
               "rightValue": "yes",
               "operator": {
                 "type": "string",
@@ -336,7 +336,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = '';\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n} catch (e) {}\nconst contactId = String(raw.id || parse.contactId || '');\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: parse.createDeal ? `contact ${contactId}; deal ${dealId || 'n/a'}` : `contact ${contactId}; no deal created`\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = String(parse.hubspotDealId || '').trim();\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n  } catch (e) {}\n}\nconst contactId = String(raw.id || parse.contactId || '');\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: dealId ? `contact ${contactId}; deal ${dealId}` : `contact ${contactId}; no deal created`\n}}];"
       },
       "id": "sys16-log-prep",
       "name": "Prep Log",
@@ -367,7 +367,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst contactId = String($('Get Contact').first().json.id || parse.contactId || '');\nlet dealId = null;\ntry {\n  if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n} catch (e) {}\nreturn [{ json: { success: true, contactId, dealId, enrolledInOutreach: true } }];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst contactId = String($('Get Contact').first().json.id || parse.contactId || '');\nlet dealId = String(parse.hubspotDealId || '').trim() || null;\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n  } catch (e) {}\n}\nreturn [{ json: { success: true, contactId, dealId, enrolledInOutreach: true } }];"
       },
       "id": "sys16-done",
       "name": "Success Response",
