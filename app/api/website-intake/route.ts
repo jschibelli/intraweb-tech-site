@@ -262,6 +262,7 @@ export async function POST(req: NextRequest) {
         painPoint: painForDeal,
         intakePlainText: intakePlain,
         intakeJson,
+        intake: parsed.data.intake,
       });
       if (isHubSpotSyncFailure(hubspotResult)) {
         console.error("[website-intake] HubSpot sync failed:", hubspotResult.error);

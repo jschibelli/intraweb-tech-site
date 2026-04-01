@@ -3,6 +3,11 @@
  * Mirrors the Contacts API flow used in app/api/contact/route.ts.
  */
 
+import {
+  mapWebsiteIntakeToHubSpotContactProperties,
+  WEBSITE_INTAKE_CONTACT_PROPERTY_NAMES,
+} from "@/lib/mapWebsiteIntakeToHubSpotContactProperties";
+
 export type HubSpotContactSyncInput = {
   email: string;
   firstName: string;
@@ -15,6 +20,8 @@ export type HubSpotContactSyncInput = {
   intakePlainText?: string;
   /** JSON snapshot of `intake` (maps to HUBSPOT_WEBSITE_INTAKE_JSON_PROPERTY). */
   intakeJson?: string;
+  /** Nested intake object from the website form; mapped to `website_intake_*` contact properties. */
+  intake?: unknown;
 };
 
 export type HubSpotContactSyncResult =
@@ -42,12 +49,15 @@ export async function hubspotCreateOrUpdateContact(
     painPoint,
     intakePlainText,
     intakeJson,
+    intake,
   } = input;
 
   const plainProp =
     process.env.HUBSPOT_WEBSITE_INTAKE_PLAIN_PROPERTY?.trim() || "website_intake_details";
   const jsonProp =
     process.env.HUBSPOT_WEBSITE_INTAKE_JSON_PROPERTY?.trim() || "website_intake_json";
+
+  const intakeMapped = mapWebsiteIntakeToHubSpotContactProperties(intake);
 
   const contactProperties: Record<string, string> = {
     email,
@@ -56,6 +66,7 @@ export async function hubspotCreateOrUpdateContact(
     company,
     phone: phone || "",
     pain_point: painPoint,
+    ...intakeMapped,
   };
   if (websiteForHubSpot?.trim()) {
     contactProperties.website = websiteForHubSpot.trim();
@@ -67,9 +78,15 @@ export async function hubspotCreateOrUpdateContact(
     contactProperties[jsonProp] = intakeJson.trim();
   }
 
-  const hadIntakeProps = Boolean(contactProperties[plainProp] || contactProperties[jsonProp]);
+  const hadIntakeProps =
+    Object.keys(intakeMapped).length > 0 ||
+    Boolean(intakePlainText?.trim()) ||
+    Boolean(intakeJson?.trim());
   const withoutIntake = (): Record<string, string> => {
     const p = { ...contactProperties };
+    for (const k of WEBSITE_INTAKE_CONTACT_PROPERTY_NAMES) {
+      delete p[k];
+    }
     delete p[plainProp];
     delete p[jsonProp];
     return p;
