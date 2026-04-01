@@ -231,7 +231,11 @@ export async function POST(req: NextRequest) {
     // Do not forward reCAPTCHA token to n8n (secret, large, not part of workflow contract).
     const { recaptchaToken: _drop, ...restForN8n } = parsed.data;
 
-    let bodyForN8n: Record<string, unknown> = { ...restForN8n };
+    const intakePlain = formatWebsiteIntakePlainText(parsed.data.intake);
+    /** Full structured intake for deal `description` + contact `pain_point` (n8n Prep Create Deal / SW Create HubSpot Deal). */
+    const painForDeal = (intakePlain || parsed.data.painOverride || "").trim();
+
+    let bodyForN8n: Record<string, unknown> = { ...restForN8n, painOverride: painForDeal };
     /** Set when HubSpot CRM create/update succeeded; used to avoid 502 if n8n is down. */
     let crmContactId: string | null = null;
 
@@ -246,7 +250,6 @@ export async function POST(req: NextRequest) {
           website = ic.website.trim();
         }
       }
-      const intakePlain = formatWebsiteIntakePlainText(parsed.data.intake);
       const intakeJson = formatWebsiteIntakeJsonSafe(parsed.data.intake);
 
       const hubspotResult = await hubspotCreateOrUpdateContact(hubspotToken, {
@@ -256,7 +259,7 @@ export async function POST(req: NextRequest) {
         company: c.company,
         phone: c.phone || "",
         website,
-        painPoint: parsed.data.painOverride || "",
+        painPoint: painForDeal,
         intakePlainText: intakePlain,
         intakeJson,
       });
