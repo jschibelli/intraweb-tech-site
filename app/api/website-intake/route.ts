@@ -232,8 +232,11 @@ export async function POST(req: NextRequest) {
     const { recaptchaToken: _drop, ...restForN8n } = parsed.data;
 
     const intakePlain = formatWebsiteIntakePlainText(parsed.data.intake);
-    /** Full structured intake for deal `description` + contact `pain_point` (n8n Prep Create Deal / SW Create HubSpot Deal). */
-    const painForDeal = (intakePlain || parsed.data.painOverride || "").trim();
+    /**
+     * `pain_point` is a short rollup for deals / n8n. Full intake lives in `website_intake_*` properties + plain/JSON snapshots.
+     * Prefer client `painOverride` (short summary) over the long formatted dump when both exist.
+     */
+    const painForDeal = (parsed.data.painOverride?.trim() || intakePlain || "").trim();
 
     let bodyForN8n: Record<string, unknown> = { ...restForN8n, painOverride: painForDeal };
     /** Set when HubSpot CRM create/update succeeded; used to avoid 502 if n8n is down. */

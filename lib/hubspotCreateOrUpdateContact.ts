@@ -189,6 +189,9 @@ export async function hubspotCreateOrUpdateContact(
   }
 }
 
+/** HubSpot can reject very large single PATCH bodies; smaller chunks are easier to debug if one property misbehaves. */
+const INTAKE_PATCH_CHUNK_SIZE = 12;
+
 async function patchIntakeFields(
   patchByEmail: (props: Record<string, string>) => Promise<Response>,
   intakeMapped: Record<string, string>,
@@ -198,13 +201,22 @@ async function patchIntakeFields(
     return {};
   }
 
-  const patchRes = await patchByEmail(intakeMapped);
-  if (patchRes.ok) {
-    return {};
+  for (let i = 0; i < keys.length; i += INTAKE_PATCH_CHUNK_SIZE) {
+    const sliceKeys = keys.slice(i, i + INTAKE_PATCH_CHUNK_SIZE);
+    const chunk = Object.fromEntries(sliceKeys.map((k) => [k, intakeMapped[k]]));
+    const patchRes = await patchByEmail(chunk);
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      const msg = `PATCH website_intake_* chunk [${sliceKeys[0]}…${sliceKeys[sliceKeys.length - 1]}] HTTP ${
+        patchRes.status
+      } — ${errText.slice(0, 500)}`;
+      console.error(
+        "[hubspotCreateOrUpdateContact] Failed to save website_intake_* contact properties:",
+        errText.slice(0, 800),
+      );
+      return { error: msg };
+    }
   }
 
-  const errText = await patchRes.text();
-  const msg = `PATCH website_intake_* fields HTTP ${patchRes.status} — ${errText.slice(0, 500)}`;
-  console.error("[hubspotCreateOrUpdateContact] Failed to save website_intake_* contact properties:", errText.slice(0, 800));
-  return { error: msg };
+  return {};
 }
