@@ -278,6 +278,12 @@ export async function POST(req: NextRequest) {
       crmContactId = hubspotResult.contactId;
       bodyForN8n = { ...bodyForN8n, contactId: hubspotResult.contactId };
       console.log("[website-intake] HubSpot contact", hubspotResult.action, hubspotResult.contactId);
+      if (hubspotResult.intakeFieldsSyncError) {
+        console.warn(
+          "[website-intake] HubSpot website_intake_* fields were not saved (contact still created/updated):",
+          hubspotResult.intakeFieldsSyncError,
+        );
+      }
     }
 
     // Stay under `export const maxDuration = 60` (seconds) with margin for reCAPTCHA + JSON work.

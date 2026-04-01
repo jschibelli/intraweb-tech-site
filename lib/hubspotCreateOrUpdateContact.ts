@@ -5,7 +5,6 @@
 
 import {
   mapWebsiteIntakeToHubSpotContactProperties,
-  WEBSITE_INTAKE_CONTACT_PROPERTY_NAMES,
 } from "@/lib/mapWebsiteIntakeToHubSpotContactProperties";
 
 export type HubSpotContactSyncInput = {
@@ -25,7 +24,12 @@ export type HubSpotContactSyncInput = {
 };
 
 export type HubSpotContactSyncResult =
-  | { contactId: string; action: "created" | "updated" }
+  | {
+      contactId: string;
+      action: "created" | "updated";
+      /** Set when the second PATCH (website_intake_* only) failed; contact core fields may still be saved. */
+      intakeFieldsSyncError?: string;
+    }
   | { contactId: null; error: string };
 
 /** Narrows the union so TypeScript allows `.error` on the failure branch (CI-safe). */
@@ -37,7 +41,7 @@ export function isHubSpotSyncFailure(
 
 export async function hubspotCreateOrUpdateContact(
   hubspotAccessToken: string,
-  input: HubSpotContactSyncInput
+  input: HubSpotContactSyncInput,
 ): Promise<HubSpotContactSyncResult> {
   const {
     email,
@@ -59,34 +63,30 @@ export async function hubspotCreateOrUpdateContact(
 
   const intakeMapped = mapWebsiteIntakeToHubSpotContactProperties(intake);
 
-  const contactProperties: Record<string, string> = {
+  /** Standard + pain + snapshots — never includes `website_intake_*` (those are PATCHed in a second request). */
+  const coreProperties: Record<string, string> = {
     email,
     firstname: firstName,
     lastname: lastName,
     company,
     phone: phone || "",
     pain_point: painPoint,
-    ...intakeMapped,
   };
   if (websiteForHubSpot?.trim()) {
-    contactProperties.website = websiteForHubSpot.trim();
+    coreProperties.website = websiteForHubSpot.trim();
   }
   if (intakePlainText?.trim()) {
-    contactProperties[plainProp] = intakePlainText.trim();
+    coreProperties[plainProp] = intakePlainText.trim();
   }
   if (intakeJson?.trim()) {
-    contactProperties[jsonProp] = intakeJson.trim();
+    coreProperties[jsonProp] = intakeJson.trim();
   }
 
-  const hadIntakeProps =
-    Object.keys(intakeMapped).length > 0 ||
-    Boolean(intakePlainText?.trim()) ||
-    Boolean(intakeJson?.trim());
-  const withoutIntake = (): Record<string, string> => {
-    const p = { ...contactProperties };
-    for (const k of WEBSITE_INTAKE_CONTACT_PROPERTY_NAMES) {
-      delete p[k];
-    }
+  const hadPlainOrJson =
+    Boolean(intakePlainText?.trim()) || Boolean(intakeJson?.trim());
+
+  const withoutPlainJson = (): Record<string, string> => {
+    const p = { ...coreProperties };
     delete p[plainProp];
     delete p[jsonProp];
     return p;
@@ -115,16 +115,16 @@ export async function hubspotCreateOrUpdateContact(
       });
     };
 
-    let propsForRequest: Record<string, string> = contactProperties;
+    let propsForRequest: Record<string, string> = coreProperties;
     let res = await postContact(propsForRequest);
 
-    if (!res.ok && res.status === 400 && hadIntakeProps) {
+    if (!res.ok && res.status === 400 && hadPlainOrJson) {
       const err400 = await res.text();
       console.warn(
-        "[hubspotCreateOrUpdateContact] Contact POST 400 with intake fields; retrying without custom intake properties.",
+        "[hubspotCreateOrUpdateContact] Contact POST 400 with plain/json snapshot fields; retrying without them.",
         err400.slice(0, 280),
       );
-      propsForRequest = withoutIntake();
+      propsForRequest = withoutPlainJson();
       res = await postContact(propsForRequest);
     }
 
@@ -132,13 +132,13 @@ export async function hubspotCreateOrUpdateContact(
       if (res.status === 409) {
         let updateResponse = await patchByEmail(propsForRequest);
 
-        if (!updateResponse.ok && updateResponse.status === 400 && hadIntakeProps) {
+        if (!updateResponse.ok && updateResponse.status === 400 && hadPlainOrJson) {
           const patchErr = await updateResponse.text();
           console.warn(
-            "[hubspotCreateOrUpdateContact] Contact PATCH 400 with intake fields; retrying without them.",
+            "[hubspotCreateOrUpdateContact] Contact PATCH 400 with plain/json; retrying without them.",
             patchErr.slice(0, 280),
           );
-          propsForRequest = withoutIntake();
+          propsForRequest = withoutPlainJson();
           updateResponse = await patchByEmail(propsForRequest);
         }
 
@@ -155,7 +155,13 @@ export async function hubspotCreateOrUpdateContact(
         if (!id) {
           return { contactId: null, error: "PATCH succeeded but response had no contact id" };
         }
-        return { contactId: id, action: "updated" };
+
+        const intakePatch = await patchIntakeFields(patchByEmail, intakeMapped);
+        return {
+          contactId: id,
+          action: "updated",
+          ...(intakePatch.error ? { intakeFieldsSyncError: intakePatch.error } : {}),
+        };
       }
 
       const errorBody = await res.text();
@@ -170,9 +176,35 @@ export async function hubspotCreateOrUpdateContact(
     if (!id) {
       return { contactId: null, error: "POST succeeded but response had no contact id" };
     }
-    return { contactId: id, action: "created" };
+
+    const intakePatch = await patchIntakeFields(patchByEmail, intakeMapped);
+    return {
+      contactId: id,
+      action: "created",
+      ...(intakePatch.error ? { intakeFieldsSyncError: intakePatch.error } : {}),
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return { contactId: null, error: msg };
   }
+}
+
+async function patchIntakeFields(
+  patchByEmail: (props: Record<string, string>) => Promise<Response>,
+  intakeMapped: Record<string, string>,
+): Promise<{ error?: string }> {
+  const keys = Object.keys(intakeMapped);
+  if (keys.length === 0) {
+    return {};
+  }
+
+  const patchRes = await patchByEmail(intakeMapped);
+  if (patchRes.ok) {
+    return {};
+  }
+
+  const errText = await patchRes.text();
+  const msg = `PATCH website_intake_* fields HTTP ${patchRes.status} — ${errText.slice(0, 500)}`;
+  console.error("[hubspotCreateOrUpdateContact] Failed to save website_intake_* contact properties:", errText.slice(0, 800));
+  return { error: msg };
 }
