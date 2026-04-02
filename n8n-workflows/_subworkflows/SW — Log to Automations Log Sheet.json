@@ -121,7 +121,11 @@
             "Event Type": "={{ $json['Event Type'] }}",
             "Status": "={{ $json['Status'] }}",
             "Notes": "={{ $json['Notes'] }}"
-          }
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },

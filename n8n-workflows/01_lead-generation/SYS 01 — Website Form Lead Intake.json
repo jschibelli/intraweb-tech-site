@@ -162,19 +162,6 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. Expected the site or HubSpot workflow to POST a real contact id.' } }];"
-      },
-      "id": "sys16-missing",
-      "name": "Missing Contact ID Response",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1140,
-        720
-      ]
-    },
-    {
-      "parameters": {
         "authentication": "appToken",
         "resource": "contact",
         "operation": "get",
@@ -320,14 +307,20 @@
     },
     {
       "parameters": {
-        "operation": "append",
+        "operation": "appendOrUpdate",
         "documentId": {
-          "mode": "id",
-          "value": "={{ $json.sheetId }}"
+          "__rl": true,
+          "value": "11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE",
+          "mode": "list",
+          "cachedResultName": "IntraWeb OS — Master Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE/edit?usp=drivesdk"
         },
         "sheetName": {
-          "mode": "name",
-          "value": "Contacts"
+          "__rl": true,
+          "value": 587093177,
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE/edit#gid=587093177"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -342,19 +335,104 @@
             "Lead Score": "={{ $json.leadScore }}",
             "HubSpot Contact ID": "={{ $json.contactId }}"
           },
-          "matchingColumns": [],
-          "schema": [],
+          "matchingColumns": [
+            "HubSpot Contact ID"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HubSpot Contact ID",
+              "displayName": "HubSpot Contact ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
         "options": {}
       },
-      "id": "sys16-contacts-sheet",
-      "name": "Append to Contacts Tab",
+      "id": "f3a0249b-db16-4139-8c50-88eab2972251",
+      "name": "Append or update row in sheet",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
+      "typeVersion": 4.7,
       "position": [
-        2900,
+        2896,
         320
       ],
       "retryOnFail": true,
@@ -897,14 +975,14 @@
       "main": [
         [
           {
-            "node": "Append to Contacts Tab",
+            "node": "Append or update row in sheet",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Append to Contacts Tab": {
+    "Append or update row in sheet": {
       "main": [
         [
           {
