@@ -8,7 +8,7 @@ import { checkRateLimit } from "@/lib/kickoffRateLimit";
 const querySchema = z.object({
   anchorDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   timeZone: z.string().min(2).max(120),
-  spanDays: z.coerce.number().int().min(1).max(14).optional().default(7),
+  spanDays: z.coerce.number().int().min(1).max(35).optional().default(7),
 });
 
 function clientIp(req: NextRequest): string {
