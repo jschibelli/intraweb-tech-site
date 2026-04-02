@@ -187,7 +187,7 @@ function buildKickoffTitle(data: WebsiteIntakeFormData): string {
 }
 
 function buildCalKickoffUrl(data: WebsiteIntakeFormData): string {
-  const configured = process.env.NEXT_PUBLIC_CAL_KICKOFF_CAL_LINK?.trim() || "intraweb/discovery";
+  const configured = process.env.NEXT_PUBLIC_CAL_KICKOFF_CAL_LINK?.trim() || "intraweb/website-discovery";
   const base = configured.startsWith("http")
     ? configured
     : `https://cal.com/${configured.replace(/^\/+/, "")}`;
