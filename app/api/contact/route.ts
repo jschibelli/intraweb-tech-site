@@ -8,7 +8,14 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { timingSafeEqual } from "crypto";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/** Lazy init so `next build` / route analysis does not require RESEND_API_KEY at module load. */
+function getResend(): Resend {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) {
+    throw new Error("RESEND_API_KEY is not set");
+  }
+  return new Resend(key);
+}
 
 /** Vercel / serverless: allow HubSpot + Claude + n8n without cutting the request short on Pro plans */
 export const maxDuration = 60;
@@ -489,7 +496,7 @@ What they are trying to fix or achieve:
 ${painPoint}
 `;
 
-    const emailPromise = resend.emails.send({
+    const emailPromise = getResend().emails.send({
       from: "IntraWeb Contact Form <contact@intrawebtech.com>",
       to: process.env.CONTACT_EMAIL || "contact@intrawebtech.com",
       subject: "New Contact Form Submission",

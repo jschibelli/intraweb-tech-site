@@ -1,11 +1,11 @@
 "use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 
-export default function ThankYouPage() {
-  const searchParams = useSearchParams();
-  const scheduled = searchParams.get("scheduled");
+function ThankYouView({ scheduled }: { scheduled: string | null }) {
   const bookedKickoff = scheduled === "1";
   const skippedKickoff = scheduled === "0";
 
@@ -70,5 +70,19 @@ export default function ThankYouPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function ThankYouContent() {
+  const searchParams = useSearchParams();
+  const scheduled = searchParams?.get("scheduled") ?? null;
+  return <ThankYouView scheduled={scheduled} />;
+}
+
+export default function ThankYouPage() {
+  return (
+    <Suspense fallback={<ThankYouView scheduled={null} />}>
+      <ThankYouContent />
+    </Suspense>
   );
 }
