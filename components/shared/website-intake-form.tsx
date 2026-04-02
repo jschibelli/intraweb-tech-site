@@ -96,6 +96,7 @@ const schema = z.object({
 
 type WebsiteIntakeFormValues = z.input<typeof schema>;
 type WebsiteIntakeFormData = z.output<typeof schema>;
+type WebsiteIntakeStep = 1 | 2 | 3 | 4 | 5 | 6 | "review" | "schedule";
 
 const GOALS = [
   "Generate more leads",
@@ -180,11 +181,36 @@ function formatReviewValue(value: unknown): string {
   return s || "—";
 }
 
+function buildKickoffTitle(data: WebsiteIntakeFormData): string {
+  const fullName = `${data.firstName} ${data.lastName}`.trim();
+  return `${data.businessName || fullName || "Website lead"} kickoff`;
+}
+
+function buildCalKickoffUrl(data: WebsiteIntakeFormData): string {
+  const configured = process.env.NEXT_PUBLIC_CAL_KICKOFF_CAL_LINK?.trim() || "intraweb/discovery";
+  const base = configured.startsWith("http")
+    ? configured
+    : `https://cal.com/${configured.replace(/^\/+/, "")}`;
+
+  try {
+    const url = new URL(base);
+    const fullName = `${data.firstName} ${data.lastName}`.trim();
+    if (data.email) url.searchParams.set("email", data.email);
+    if (fullName) url.searchParams.set("name", fullName);
+    if (data.phone) url.searchParams.set("attendeePhoneNumber", data.phone);
+    url.searchParams.set("title", buildKickoffTitle(data));
+    return url.toString();
+  } catch {
+    return base;
+  }
+}
+
 export default function WebsiteIntakeForm() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | "review">(1);
+  const [step, setStep] = useState<WebsiteIntakeStep>(1);
   const [validatingStep, setValidatingStep] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ type: "error"; message: string } | null>(null);
+  const [submittedData, setSubmittedData] = useState<WebsiteIntakeFormData | null>(null);
   const recaptchaReady = useRef(false);
 
   const {
@@ -245,9 +271,15 @@ export default function WebsiteIntakeForm() {
   });
 
   const progress = useMemo(() => {
-    const idx = step === "review" ? 7 : step;
-    return Math.round((idx / 7) * 100);
+    const idx = step === "review" ? 7 : step === "schedule" ? 8 : step;
+    return Math.round((idx / 8) * 100);
   }, [step]);
+
+  const stepTitle = step === "review"
+    ? "Review & submit"
+    : step === "schedule"
+      ? "Schedule your kickoff"
+      : `Section ${step} of 6`;
 
   const goals = watch("goals");
   const vibe = watch("vibe");
@@ -258,7 +290,7 @@ export default function WebsiteIntakeForm() {
 
   const canGoNext = async (): Promise<boolean> => {
     setSubmitStatus(null);
-    if (step === "review") return true;
+    if (step === "review" || step === "schedule") return true;
     const fieldsByStep: Record<number, (keyof WebsiteIntakeFormData)[]> = {
       1: ["firstName", "lastName", "email", "businessName", "industry"],
       2: ["goals", "timeline"],
@@ -272,7 +304,7 @@ export default function WebsiteIntakeForm() {
   };
 
   const next = async () => {
-    if (step === "review") return;
+    if (step === "review" || step === "schedule") return;
     if (step === 6) {
       setValidatingStep(true);
       try {
@@ -294,6 +326,7 @@ export default function WebsiteIntakeForm() {
 
   const back = () => {
     setSubmitStatus(null);
+    if (step === "schedule") return;
     if (step === "review") setStep(6);
     else setStep((Math.max(1, step - 1) as any) as any);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -413,18 +446,24 @@ export default function WebsiteIntakeForm() {
         const err = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
         throw new Error(err.message || err.error || "Submission failed");
       }
-      router.push("/thank-you");
+      setSubmittedData(parsed);
+      setStep("schedule");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       setSubmitStatus({
         type: "error",
         message: e instanceof Error ? e.message : "Something went wrong. Please try again.",
       });
     }
-  }, [getRecaptchaToken, router]);
+  }, [getRecaptchaToken]);
 
   const submitFromReview = useCallback(() => {
     void handleSubmit(onSubmit)();
   }, [handleSubmit, onSubmit]);
+
+  const continueToThankYou = useCallback((scheduled: boolean) => {
+    router.push(`/thank-you?scheduled=${scheduled ? "1" : "0"}`);
+  }, [router]);
 
   const renderMultiSelect = (
     name: "goals" | "vibe" | "pages" | "features",
@@ -464,7 +503,7 @@ export default function WebsiteIntakeForm() {
           <div>
             <p className="text-xs tracking-widest uppercase text-gray-400">Website Intake</p>
             <h3 className="text-xl font-heading font-bold text-white mt-1">
-              {step === "review" ? "Review & submit" : `Section ${step} of 6`}
+              {stepTitle}
             </h3>
           </div>
           <div className="text-sm text-teal-300 font-mono">{progress}%</div>
@@ -818,7 +857,7 @@ export default function WebsiteIntakeForm() {
           <div className="space-y-6">
             <h4 className="text-lg font-heading font-semibold text-white">Review</h4>
             <p className="text-sm text-gray-400">
-              Confirm everything below before submitting. You can use <span className="text-gray-300">Back</span> to edit a section.
+              Confirm everything below before submitting. After that, the final step is choosing your kickoff time.
             </p>
             <div className="rounded-md border border-gray-800 bg-gray-950/30 p-4 text-sm text-gray-200 space-y-6">
               <div>
@@ -896,35 +935,106 @@ export default function WebsiteIntakeForm() {
           </div>
         )}
 
-        <div className="pt-2 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={back}
-            disabled={step === 1 || isSubmitting || validatingStep}
-            className="px-5 py-2.5 rounded-md border border-gray-700 text-gray-200 hover:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Back
-          </button>
-          {step === "review" ? (
+        {step === "schedule" && submittedData && (
+          <div className="space-y-6">
+            <div className="rounded-xl border border-teal-500/30 bg-gradient-to-br from-teal-500/10 via-gray-950/60 to-orange-500/10 p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Final step</p>
+              <h4 className="mt-2 text-2xl font-heading font-semibold text-white">Book your kickoff call</h4>
+              <p className="mt-3 text-sm text-gray-300">
+                Your intake has been submitted. Choose a time below to lock in your kickoff while everything is fresh.
+                If you are not ready, you can skip for now and use the follow-up email later.
+              </p>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+              <div className="rounded-xl border border-gray-800 bg-gray-950/60 overflow-hidden">
+                <div className="border-b border-gray-800 px-4 py-3 bg-gray-950/80">
+                  <p className="text-sm font-medium text-white">IntraWeb kickoff scheduler</p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Booking for {submittedData.firstName} {submittedData.lastName} at {submittedData.businessName}
+                  </p>
+                </div>
+                <iframe
+                  src={buildCalKickoffUrl(submittedData)}
+                  title="Schedule your kickoff call"
+                  className="w-full min-h-[860px] bg-white"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-5">
+                  <h5 className="text-base font-semibold text-white">Need the direct link?</h5>
+                  <p className="mt-2 text-sm text-gray-300">
+                    If the embedded calendar does not load, open the booking page in a new tab.
+                  </p>
+                  <a
+                    href={buildCalKickoffUrl(submittedData)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center rounded-md border border-teal-500/50 px-4 py-2 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/10"
+                  >
+                    Open scheduling page
+                  </a>
+                </div>
+
+                <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-5 space-y-3">
+                  <h5 className="text-base font-semibold text-white">When you are done</h5>
+                  <p className="text-sm text-gray-300">
+                    After you finish booking, continue to the confirmation page. If you skip, we will still send a follow-up path with your booking link.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => continueToThankYou(true)}
+                      className="rounded-md bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-500"
+                    >
+                      I booked my kickoff
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => continueToThankYou(false)}
+                      className="rounded-md border border-gray-700 px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:border-gray-500"
+                    >
+                      Skip for now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step !== "schedule" && (
+          <div className="pt-2 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={submitFromReview}
-              disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={back}
+              disabled={step === 1 || isSubmitting || validatingStep}
+              className="px-5 py-2.5 rounded-md border border-gray-700 text-gray-200 hover:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Submitting…" : "Submit intake"}
+              Back
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void next()}
-              disabled={isSubmitting || validatingStep}
-              className="px-6 py-2.5 rounded-md bg-teal-600 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {validatingStep && step === 6 ? "Checking…" : step === 6 ? "Review" : "Next"}
-            </button>
-          )}
-        </div>
+            {step === "review" ? (
+              <button
+                type="button"
+                onClick={submitFromReview}
+                disabled={isSubmitting}
+                className="px-6 py-2.5 rounded-md bg-orange-500 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Submitting…" : "Submit & continue"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void next()}
+                disabled={isSubmitting || validatingStep}
+                className="px-6 py-2.5 rounded-md bg-teal-600 text-white font-semibold hover:bg-teal-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {validatingStep && step === 6 ? "Checking…" : step === 6 ? "Review" : "Next"}
+              </button>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );

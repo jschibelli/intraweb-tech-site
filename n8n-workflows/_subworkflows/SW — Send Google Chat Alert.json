@@ -20,7 +20,9 @@
       ]
     },
     {
-      "parameters": {},
+      "parameters": {
+        "inputSource": "passthrough"
+      },
       "id": "sw-chat-trigger",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
@@ -33,7 +35,11 @@
     {
       "parameters": {
         "source": "database",
-        "workflowId": "1eTTVoSFSlSPvZV4"
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        }
       },
       "id": "sw-chat-config",
       "name": "Get Config",
@@ -146,7 +152,8 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": ""
   },
   "pinData": {}
 }

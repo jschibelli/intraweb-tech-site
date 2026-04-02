@@ -1,13 +1,13 @@
 {
   "id": "sys-16-website-form-lead-intake",
   "name": "SYS 01 — Website Form Lead Intake",
-  "description": "Webhook after HubSpot form creates a contact: tags lead_source + hs_lead_status (NEW), optionally creates an associated deal (pain on deal for SYS 03 — Proposal and Contract Delivery), POSTs to /enroll-outreach (SYS 02 — Outbound Lead Outreach Sequence). HubSpot workflow should call this with contactId. Patched: tier field added to Parse Webhook Input and Prep Create Deal. pain_point fallback to painOverride added. Upstream contactId now always real (never empty).",
+  "description": "Webhook after website intake creates or updates the HubSpot contact, syncs all website_intake_* contact properties plus snapshots, creates or reuses a Website deal, mirrors Contacts and Deals sheet rows, sends a confirmation email, waits for booking_flag, sends a reminder with the kickoff link when needed, and logs each step. This no longer enrolls SYS 02 — Outbound Lead Outreach Sequence.",
   "nodes": [
     {
       "parameters": {
-        "content": "## SYS 01 — Website Form Lead Intake\n\n### Purpose\n**Start the OS path for website leads** after your **HubSpot form** creates the contact. Updates CRM fields, optionally **creates a deal** (so pipeline + proposals have a deal record), then enrolls the contact in **SYS 02 — Outbound Lead Outreach Sequence**.\n\n### HubSpot setup (required)\n1. **Form** creates/updates the contact (native HubSpot form).\n2. **Contact-based workflow** — trigger: *Form submission* (your form). Re-enrollment: your choice (e.g. allow re-enroll only if no open deal).\n3. **Action: Send webhook** (POST) to  \n   `{{your n8n base URL}}/webhook/hubspot-website-form-lead`  \n   Body (JSON), e.g.:\n   ```json\n   { \"contactId\": \"{{ contact.hs_object_id }}\" }\n   ```\n   Optional: `\"createDeal\": false` if a deal is already created elsewhere; `\"dealStage\": \"qualifiedtobuy\"` (use your portal’s first-stage internal ID); `\"tier\": \"starter\"`; `\"painOverride\": \"...\"` if not stored on `pain_point`.\n\n### What it does\n1. **Parse** `contactId` from JSON (`contactId`, `contact_id`, `hs_object_id`, `vid`).\n2. **Get Contact** (firstname, company, industry, pain_point).\n3. **Tag Contact Inbound** (**HTTP PATCH** to HubSpot CRM v3): sets `lead_source=inbound` and `hs_lead_status=NEW` on the contact by ID (avoids n8n’s HubSpot upsert property picker, which does not list `hs_lead_status`). Values must match your portal’s option internals; edit the JSON body if needed (see `docs/hubspot-setup.md`).\n4. If **`createDeal`** (default true): **Create HubSpot Deal** (SW) + set **`deal_pain_points`** on the deal when pain text exists.\n5. **POST** `/webhook/enroll-outreach` with `contactId`, `firstName`, `company`, `industry` (same shape as SYS 01 — AI Voice Lead Qualification).\n6. **Log** to Automations Log.\n\n### Dependencies\nCONFIG, **SW: Create HubSpot Deal** (set Execute Workflow ID), HubSpot credential, **Log** sub-workflow, active **SYS 02 — Outbound Lead Outreach Sequence**.",
-        "height": 580,
-        "width": 520,
+        "content": "## SYS 01 — Website Form Lead Intake\n\n### Purpose\nHandle **website intake** submissions after the site or HubSpot form creates the contact. This workflow syncs the website intake fields into HubSpot, creates or reuses the **Website** deal, mirrors the contact and deal into the master sheet, sends a confirmation email, waits, and sends a reminder if the contact still has not booked.\n\n### What it does\n1. Parse the website intake webhook body and map all `website_intake_*` contact properties.\n2. Create or update the HubSpot contact when only core form fields are present.\n3. Tag the contact as inbound and set `hs_lead_status=NEW`.\n4. Create or reuse the Website deal in the **kickoff requested** stage.\n5. Append the contact and deal to the master sheet **Contacts** and **Deals** tabs.\n6. Log `website_form_intake`, `website_kickoff_ack_sent`, and `website_kickoff_reminder_sent` to the Automations Log.\n7. Send the confirmation email after intake submission, wait, re-check `booking_flag`, and send a reminder with the kickoff link only if they still have not booked.\n\n### Dependencies\nCONFIG, **SW: Create or Update HubSpot Contact**, **SW: Create HubSpot Deal**, **SW: Send Email via Resend**, **SW: Log to Automations Log Sheet**, HubSpot credential, Google Sheets credential.",
+        "height": 560,
+        "width": 560,
         "color": 5
       },
       "id": "note-sys16",
@@ -15,8 +15,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1.3,
       "position": [
-        60,
-        60
+        40,
+        40
       ]
     },
     {
@@ -31,7 +31,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        250,
+        260,
         320
       ]
     },
@@ -49,20 +49,20 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        470,
+        480,
         320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim();\n  }\n  return '';\n};\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst dealStageRaw = pick(body, ['dealStage', 'deal_stage']) || '';\nconst stageBuiltin = new Set(['appointmentscheduled', 'qualifiedtobuy', 'presentationscheduled', 'decisionmakerboughtin', 'contractsent', 'closedwon', 'closedlost']);\nconst normalizeDealStage = (s) => {\n  const t = String(s || '').trim();\n  if (!t) return '';\n  if (/^[0-9]+$/.test(t)) return t;\n  const lc = t.toLowerCase();\n  if (stageBuiltin.has(lc)) return lc;\n  return '';\n};\nconst dealStage = normalizeDealStage(dealStageRaw);\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst amount = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\nconst hubspotDealId = pick(body, ['hubspotDealId', 'dealIdFromSite']) || '';\n\nreturn [{ json: { contactId, createDeal, dealStage, tier, painOverride, amount: Number.isFinite(amount) ? amount : null, hubspotDealId } }];"
+        "jsCode": "const root = $('Website Form Lead Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\nconst config = $('Get Config').first().json;\nconst rawContact = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body;\nconst intake = body.intake && typeof body.intake === 'object' && !Array.isArray(body.intake) ? body.intake : {};\n\nconst pick = (obj, keys) => {\n  if (!obj || typeof obj !== 'object') return '';\n  for (const key of keys) {\n    const value = obj[key];\n    if (value !== undefined && value !== null) {\n      const s = String(value).trim();\n      if (s) return s;\n    }\n  }\n  return '';\n};\nconst normalize = (value) => {\n  if (value === undefined || value === null) return '';\n  if (Array.isArray(value)) {\n    return value.map((item) => String(item).trim()).filter(Boolean).join(', ');\n  }\n  return String(value).trim();\n};\nconst objValue = (obj, key) => (obj && typeof obj === 'object' && !Array.isArray(obj) ? obj[key] : undefined);\nconst objString = (obj, key) => normalize(objValue(obj, key));\n\nconst contactId = pick(body, ['contactId', 'contact_id', 'hs_object_id', 'vid', 'objectId']) || pick(root, ['contactId', 'contact_id', 'hs_object_id']);\nconst createDeal = body.createDeal === false || body.createDeal === 'false' ? false : true;\nconst tier = pick(body, ['tier']) || 'starter';\nconst painOverride = pick(body, ['painOverride', 'message', 'notes', 'pain']) || '';\nconst hubspotDealId = pick(body, ['hubspotDealId', 'dealIdFromSite']) || '';\nconst amountRaw = body.amount !== undefined && body.amount !== null && body.amount !== '' ? Number(body.amount) : null;\nconst stageBuiltin = new Set(['appointmentscheduled', 'qualifiedtobuy', 'presentationscheduled', 'decisionmakerboughtin', 'contractsent', 'closedwon', 'closedlost']);\nconst normalizeDealStage = (value) => {\n  const s = String(value || '').trim();\n  if (!s) return '';\n  if (/^[0-9]+$/.test(s)) return s;\n  const lc = s.toLowerCase();\n  if (stageBuiltin.has(lc)) return lc;\n  return '';\n};\nconst dealStage = normalizeDealStage(body.dealStage || body.deal_stage) || String(config.hubspot?.dealStageIds?.discoveryCallRequested || '').trim() || 'qualifiedtobuy';\n\nconst email = pick(rawContact, ['email', 'Email', 'emailAddress']);\nconst phone = pick(rawContact, ['phone', 'Phone']);\nconst firstName = pick(rawContact, ['firstName', 'firstname', 'first_name']);\nconst lastName = pick(rawContact, ['lastName', 'lastname', 'last_name']);\nconst company = pick(rawContact, ['company', 'businessName', 'business', 'companyName']);\nconst industry = pick(rawContact, ['industry', 'niche']);\nconst website = pick(rawContact, ['website', 'currentSite', 'site']);\nconst intakePlainText = typeof body.intakePlainText === 'string' ? body.intakePlainText.trim() : '';\nlet intakeJson = '{}';\nif (typeof body.intakeJson === 'string' && body.intakeJson.trim()) {\n  intakeJson = body.intakeJson.trim();\n} else {\n  try {\n    intakeJson = JSON.stringify(intake, null, 2);\n  } catch (error) {\n    intakeJson = '{}';\n  }\n}\n\nconst intakeContact = objValue(intake, 'contact') || {};\nconst goals = objValue(intake, 'goals') || {};\nconst design = objValue(intake, 'design') || {};\nconst content = objValue(intake, 'content') || {};\nconst budget = objValue(intake, 'budget') || {};\nconst research = objValue(intake, 'research') || {};\n\nconst intakeMapped = {\n  website_intake_audience: objString(goals, 'audience'),\n  website_intake_brand_colors: objString(design, 'brandColors'),\n  website_intake_budget_notes: objString(budget, 'notes'),\n  website_intake_budget_range: objString(budget, 'range'),\n  website_intake_business_description: objString(intakeContact, 'bizDesc'),\n  website_intake_cms: objString(content, 'cms'),\n  website_intake_competitors: normalize(objValue(research, 'competitors')),\n  website_intake_copywriter: objString(content, 'copywriter'),\n  website_intake_design_notes: objString(design, 'designNotes'),\n  website_intake_differentiator: objString(research, 'differentiator'),\n  website_intake_dislike_about: objString(research, 'dislikeAbout'),\n  website_intake_dont_want: objString(design, 'dontWant'),\n  website_intake_features: normalize(objValue(content, 'features')),\n  website_intake_final_notes: objString(research, 'finalNotes'),\n  website_intake_font_style: objString(design, 'fontStyle'),\n  website_intake_funding: objString(budget, 'funding'),\n  website_intake_goal_detail: objString(goals, 'goalDetail'),\n  website_intake_goals: normalize(objValue(goals, 'goals')),\n  website_intake_hard_deadline: objString(goals, 'hardDeadline'),\n  website_intake_has_logo: objString(design, 'hasLogo'),\n  website_intake_has_photos: objString(design, 'hasPhotos'),\n  website_intake_industry: objString(intakeContact, 'industry'),\n  website_intake_inspiration_sites: normalize(objValue(research, 'inspiration')),\n  website_intake_like_about: objString(research, 'likeAbout'),\n  website_intake_location: objString(intakeContact, 'location'),\n  website_intake_ongoing_support: objString(budget, 'ongoing'),\n  website_intake_other_pages: objString(content, 'otherPages'),\n  website_intake_pages: normalize(objValue(content, 'pages')),\n  website_intake_payment: objString(budget, 'payment'),\n  website_intake_timeline: objString(goals, 'timeline'),\n  website_intake_vibe: normalize(objValue(design, 'vibe')),\n};\n\nconst customProps = {};\nconst pushProp = (key, value) => {\n  const normalizedValue = normalize(value);\n  if (normalizedValue) customProps[key] = normalizedValue;\n};\npushProp('pain_point', painOverride);\npushProp('website', website);\npushProp('website_intake_details', intakePlainText);\npushProp('website_intake_json', intakeJson);\nfor (const [key, value] of Object.entries(intakeMapped)) {\n  pushProp(key, value);\n}\n\nreturn [{\n  json: {\n    contactId,\n    createDeal,\n    dealStage,\n    tier,\n    painOverride,\n    amount: Number.isFinite(amountRaw) ? amountRaw : null,\n    hubspotDealId,\n    email,\n    phone,\n    firstName,\n    lastName,\n    company,\n    industry,\n    website,\n    intake,\n    intakePlainText,\n    intakeJson,\n    customProps,\n    source: 'Website intake'\n  }\n}];"
       },
       "id": "sys16-parse",
       "name": "Parse Webhook Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        690,
+        700,
         320
       ]
     },
@@ -72,16 +72,16 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict",
-            "singleValue": true
+            "typeValidation": "strict"
           },
           "conditions": [
             {
               "id": "has-id",
               "leftValue": "={{ $json.contactId }}",
+              "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "notEmpty"
+                "operation": "notEquals"
               }
             }
           ],
@@ -94,7 +94,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        910,
+        920,
         320
       ]
     },
@@ -103,25 +103,25 @@
         "source": "database",
         "workflowId": {
           "__rl": true,
-          "value": "sw-create-update-hubspot-contact",
+          "value": "HbPxMMcf5tGERxEr",
           "mode": "id",
           "cachedResultName": "SW: Create or Update HubSpot Contact"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "email": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.email || c.Email || c.emailAddress || ''; })() }}",
-            "phone": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.phone || c.Phone || ''; })() }}",
-            "firstName": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.firstName || c.firstname || c.first_name || ''; })() }}",
-            "lastName": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.lastName || c.lastname || c.last_name || ''; })() }}",
-            "company": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.company || c.businessName || c.business || c.companyName || ''; })() }}",
-            "industry": "={{ (() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; const c = body.contact && typeof body.contact === 'object' && !Array.isArray(body.contact) ? body.contact : body; return c.industry || c.niche || ''; })() }}",
-            "customProps": "={{ JSON.stringify({ pain_point: $('Parse Webhook Input').first().json.painOverride || '', website_intake_json: JSON.stringify((() => { const root = $('Website Form Lead Webhook').first().json; const body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root; return body.intake || {}; })()) }) }}"
+            "email": "={{ $('Parse Webhook Input').first().json.email }}",
+            "phone": "={{ $('Parse Webhook Input').first().json.phone }}",
+            "firstName": "={{ $('Parse Webhook Input').first().json.firstName }}",
+            "lastName": "={{ $('Parse Webhook Input').first().json.lastName }}",
+            "company": "={{ $('Parse Webhook Input').first().json.company }}",
+            "industry": "={{ $('Parse Webhook Input').first().json.industry }}",
+            "customProps": "={{ $('Parse Webhook Input').first().json.customProps }}"
           },
           "matchingColumns": [],
           "schema": [],
           "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -130,47 +130,47 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1130,
+        1140,
         520
       ]
     },
     {
       "parameters": {
-        "jsCode": "const up = $('Upsert HubSpot Contact').first().json;\nconst contactId = up?.data?.contactId ? String(up.data.contactId) : '';\nif (!contactId) {\n  return [{ json: { success: false, error: 'Could not create/update HubSpot contact (missing contactId from upsert).', upsert: up } }];\n}\nreturn [{ json: { contactId } }];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst upsert = $('Upsert HubSpot Contact').first().json;\nconst contactId = upsert?.data?.contactId ? String(upsert.data.contactId) : '';\nif (!contactId) {\n  return [{ json: { success: false, error: 'Could not create or update HubSpot contact.', upsert } }];\n}\nreturn [{ json: { ...parse, contactId } }];"
       },
       "id": "sys16-upsert-extract",
       "name": "Use Upserted Contact ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1350,
+        1360,
         520
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nreturn [{ json: { contactId: parse.contactId } }];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nreturn [{ json: { ...parse, contactId: parse.contactId } }];"
       },
       "id": "sys16-use-existing",
       "name": "Use Existing Contact ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1130,
+        1140,
         120
       ]
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. HubSpot workflow must POST JSON with contactId (e.g. contact.hs_object_id).' } }];"
+        "jsCode": "return [{ json: { success: false, error: 'Missing contactId. Expected the site or HubSpot workflow to POST a real contact id.' } }];"
       },
       "id": "sys16-missing",
       "name": "Missing Contact ID Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        910,
-        520
+        1140,
+        720
       ]
     },
     {
@@ -191,7 +191,9 @@
                 "lastname",
                 "company",
                 "industry",
-                "email"
+                "email",
+                "phone",
+                "pain_point"
               ],
               "propertyMode": "valueOnly"
             }
@@ -204,7 +206,7 @@
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2.2,
       "position": [
-        1570,
+        1580,
         320
       ],
       "credentials": {
@@ -217,12 +219,12 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Get Contact').first().json.id }}",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Get Contact').first().json.id || (($('Get Contact').first().json.properties && $('Get Contact').first().json.properties.hs_object_id) ? $('Get Contact').first().json.properties.hs_object_id.value : '') || $('Get Contact').first().json.vid }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "hubspotAppToken",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ properties: { lead_source: 'inbound' } }) }}",
+        "jsonBody": "={{ JSON.stringify({ properties: { lead_source: 'inbound', hs_lead_status: 'NEW' } }) }}",
         "options": {}
       },
       "id": "sys16-patch-contact",
@@ -230,7 +232,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1790,
+        1800,
         320
       ],
       "credentials": {
@@ -268,20 +270,20 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2010,
+        2020,
         320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nconst company = v(p.company);\nconst first = v(p.firstname);\nconst last = v(p.lastname);\nconst pain = (parse.painOverride || v(p.pain_point) || '').trim();\nconst dealName = `${company || first || 'Website lead'} - Website`;\nconst stage = (parse.dealStage && String(parse.dealStage).trim()) || 'qualifiedtobuy';\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{ json: {\n  contactId: String(raw.id || parse.contactId || ''),\n  dealName,\n  company,\n  firstname: first,\n  lastname: last,\n  stage,\n  amount,\n  industry: v(p.industry),\n  painPoint: pain,\n  tier: parse.tier || 'starter'\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst config = $('Get Config').first().json;\nconst raw = $('Get Contact').first().json;\nconst properties = raw.properties || raw;\nconst valueOf = (value) => {\n  if (value === undefined || value === null) return '';\n  if (typeof value === 'object' && 'value' in value) return String(value.value ?? '').trim();\n  return String(value).trim();\n};\nconst company = parse.company || valueOf(properties.company);\nconst firstName = parse.firstName || valueOf(properties.firstname);\nconst lastName = parse.lastName || valueOf(properties.lastname);\nconst industry = parse.industry || valueOf(properties.industry);\nconst painPoint = parse.painOverride || valueOf(properties.pain_point) || parse.intakePlainText || 'Website intake submission';\nconst defaultStage = String(config.hubspot?.dealStageIds?.discoveryCallRequested || '').trim() || 'qualifiedtobuy';\nconst stage = String(parse.dealStage || '').trim() || defaultStage;\nconst amount = parse.amount != null ? parse.amount : 0;\nreturn [{\n  json: {\n    contactId: String(raw.id || parse.contactId || ''),\n    dealName: `${company || firstName || 'Website lead'} - Website`,\n    company,\n    firstname: firstName,\n    lastname: lastName,\n    stage,\n    amount,\n    industry,\n    painPoint,\n    tier: parse.tier || 'starter'\n  }\n}];"
       },
       "id": "sys16-prep-deal",
       "name": "Prep Create Deal",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2230,
+        2240,
         220
       ]
     },
@@ -299,51 +301,163 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2450,
+        2460,
         220
       ]
     },
     {
       "parameters": {
-        "jsCode": "const raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nreturn [{ json: {\n  contactId: String(raw.id || ''),\n  company: v(p.company),\n  industry: v(p.industry),\n  firstName: v(p.firstname)\n}}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst config = $('Get Config').first().json;\nconst raw = $('Get Contact').first().json;\nconst properties = raw.properties || raw;\nconst valueOf = (value) => {\n  if (value === undefined || value === null) return '';\n  if (typeof value === 'object' && 'value' in value) return String(value.value ?? '').trim();\n  return String(value).trim();\n};\nlet dealId = String(parse.hubspotDealId || '').trim();\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n  } catch (error) {}\n}\nconst company = parse.company || valueOf(properties.company);\nconst firstName = parse.firstName || valueOf(properties.firstname);\nconst lastName = parse.lastName || valueOf(properties.lastname);\nconst contactId = String(raw.id || valueOf(properties.hs_object_id) || raw.vid || parse.contactId || '');\nreturn [{\n  json: {\n    sheetId: config.google?.masterSheetId || '',\n    timestamp: new Date().toISOString(),\n    contactId,\n    dealId,\n    companyId: '',\n    email: parse.email || valueOf(properties.email),\n    phone: parse.phone || valueOf(properties.phone),\n    firstName,\n    lastName,\n    company,\n    industry: parse.industry || valueOf(properties.industry),\n    tier: parse.tier || 'starter',\n    source: parse.source || 'Website intake',\n    leadScore: '',\n    dealName: `${company || firstName || 'Website lead'} - Website`\n  }\n}];"
       },
-      "id": "sys16-prep-enroll",
-      "name": "Prep Enroll Outreach",
+      "id": "sys16-build-context",
+      "name": "Build CRM Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3330,
+        2680,
         320
       ]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{ ($('Get Config').first().json.n8nBaseUrl || $('Get Config').first().json.owner?.n8nBaseUrl || 'https://n8n.intrawebtech.com').replace(/\\/$/, '') + '/webhook/enroll-outreach' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ contactId: $json.contactId, company: $json.company, industry: $json.industry, firstName: $json.firstName }) }}",
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $json.sheetId }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Contacts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "Name": "={{ ($json.firstName + ' ' + $json.lastName).trim() || $json.company }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Company": "={{ $json.company }}",
+            "Industry": "={{ $json.industry }}",
+            "Source": "={{ $json.source }}",
+            "Lead Score": "={{ $json.leadScore }}",
+            "HubSpot Contact ID": "={{ $json.contactId }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
         "options": {}
       },
-      "id": "sys16-enroll",
-      "name": "Enroll in SYS 02 — Outbound",
-      "type": "n8n-nodes-base.httpRequest",
+      "id": "sys16-contacts-sheet",
+      "name": "Append to Contacts Tab",
+      "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        3550,
+        2900,
+        320
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 120000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pKS06498CxELp8nS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-deal-id",
+              "leftValue": "={{ $('Build CRM Context').first().json.dealId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys16-has-deal-id",
+      "name": "Has Deal ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3120,
         320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst raw = $('Get Contact').first().json;\nconst p = raw.properties || raw;\nconst v = (x) => {\n  if (x === undefined || x === null) return '';\n  if (typeof x === 'object' && 'value' in x) return String(x.value ?? '').trim();\n  return String(x).trim();\n};\nlet dealId = String(parse.hubspotDealId || '').trim();\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n  } catch (e) {}\n}\nconst contactId = String(raw.id || parse.contactId || '');\nconst name = `${v(p.firstname)} ${v(p.lastname)}`.trim() || contactId;\nreturn [{ json: {\n  workflowName: 'SYS 01 — Website Form Lead Intake',\n  contactName: name,\n  phone: '',\n  eventType: 'website_form_intake',\n  status: 'success',\n  notes: dealId ? `contact ${contactId}; deal ${dealId}` : `contact ${contactId}; no deal created`\n}}];"
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $('Build CRM Context').first().json.sheetId }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Deals"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Build CRM Context').first().json.timestamp }}",
+            "Deal Name": "={{ $('Build CRM Context').first().json.dealName }}",
+            "Company": "={{ $('Build CRM Context').first().json.company }}",
+            "Industry": "={{ $('Build CRM Context').first().json.industry }}",
+            "Tier": "={{ $('Build CRM Context').first().json.tier }}",
+            "Lead Score": "={{ $('Build CRM Context').first().json.leadScore }}",
+            "HubSpot Deal ID": "={{ $('Build CRM Context').first().json.dealId }}",
+            "HubSpot Contact ID": "={{ $('Build CRM Context').first().json.contactId }}",
+            "HubSpot Company ID": "={{ $('Build CRM Context').first().json.companyId }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       },
-      "id": "sys16-log-prep",
-      "name": "Prep Log",
+      "id": "sys16-deals-sheet",
+      "name": "Append to Deals Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        3340,
+        220
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 120000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pKS06498CxELp8nS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build CRM Context').first().json;\nconst name = `${ctx.firstName || ''} ${ctx.lastName || ''}`.trim() || ctx.company || ctx.contactId;\nconst dealNote = ctx.dealId ? `contact ${ctx.contactId}; deal ${ctx.dealId}` : `contact ${ctx.contactId}; no deal created`;\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Website Form Lead Intake',\n    contactName: name,\n    phone: ctx.phone || '',\n    eventType: 'website_form_intake',\n    status: 'success',\n    notes: dealNote\n  }\n}];"
+      },
+      "id": "sys16-intake-log-prep",
+      "name": "Prep Intake Log",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3770,
+        3560,
         320
       ]
     },
@@ -356,25 +470,263 @@
           "mode": "id"
         }
       },
-      "id": "sys16-log",
-      "name": "Log to Sheet",
+      "id": "sys16-intake-log",
+      "name": "Log Intake",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        3990,
+        3780,
         320
       ]
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst contactId = String($('Get Contact').first().json.id || parse.contactId || '');\nlet dealId = String(parse.hubspotDealId || '').trim() || null;\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || null;\n  } catch (e) {}\n}\nreturn [{ json: { success: true, contactId, dealId, enrolledInOutreach: true } }];"
+        "jsCode": "const ctx = $('Build CRM Context').first().json;\nconst firstName = ctx.firstName || 'there';\nreturn [{\n  json: {\n    to: ctx.email,\n    subject: `${ctx.company || 'Your website project'} — intake confirmed`,\n    html: `<div style=\"font-family: DM Sans, Arial, sans-serif; max-width: 640px; color: #1f2937;\"><p>Hi ${firstName},</p><p>Thanks for submitting your website intake form. We received your project details and our team is already reviewing them.</p><p>If you booked your kickoff on the intake page, keep an eye out for your calendar confirmation and meeting details.</p><p>If you were not ready to schedule yet, no problem. We will send a follow-up reminder with your kickoff link so you can book when it fits your schedule.</p><p>We will use your intake answers to prepare for the conversation and map the right next steps for your build.</p><p>Talk soon,<br/>John Schibelli<br/>IntraWeb Technologies</p></div>`,\n    workflowName: 'SYS 01 — Website Form Lead Intake'\n  }\n}];"
+      },
+      "id": "sys16-ack-email-prep",
+      "name": "Prep Kickoff Ack Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4000,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "FF6VOLCcRxI4uNYD",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "to": "={{ $json.to }}",
+            "subject": "={{ $json.subject }}",
+            "html": "={{ $json.html }}",
+            "workflowName": "={{ $json.workflowName }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys16-ack-email-send",
+      "name": "Send Kickoff Ack Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4220,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build CRM Context').first().json;\nconst name = `${ctx.firstName || ''} ${ctx.lastName || ''}`.trim() || ctx.company || ctx.contactId;\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Website Form Lead Intake',\n    contactName: name,\n    phone: ctx.phone || '',\n    eventType: 'website_kickoff_ack_sent',\n    status: 'success',\n    notes: `Confirmation email sent to ${ctx.email || 'unknown email'}`\n  }\n}];"
+      },
+      "id": "sys16-ack-log-prep",
+      "name": "Prep Ack Email Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4440,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        }
+      },
+      "id": "sys16-ack-log",
+      "name": "Log Ack Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4660,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Get Config').first().json.timing && $('Get Config').first().json.timing.websiteKickoffReminderHours ? $('Get Config').first().json.timing.websiteKickoffReminderHours : 48 }}",
+        "unit": "hours"
+      },
+      "id": "sys16-wait-reminder",
+      "name": "Wait For Kickoff Reminder",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4880,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "get",
+        "contactId": "={{ $('Build CRM Context').first().json.contactId }}",
+        "additionalFields": {
+          "properties": [
+            "booking_flag",
+            "email",
+            "firstname",
+            "lastname",
+            "company"
+          ]
+        },
+        "options": {}
+      },
+      "id": "sys16-check-booking",
+      "name": "Check Booking Status",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        5100,
+        320
+      ],
+      "credentials": {
+        "hubspotApi": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-booked",
+              "leftValue": "={{ $json.properties.booking_flag }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "has-email",
+              "leftValue": "={{ $json.properties.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys16-needs-reminder",
+      "name": "Needs Reminder?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5320,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Get Config').first().json;\nconst contact = $('Check Booking Status').first().json.properties || {};\nconst ctx = $('Build CRM Context').first().json;\nconst firstName = String(contact.firstname || ctx.firstName || 'there').trim();\nconst company = String(contact.company || ctx.company || '').trim();\nconst title = `${company || `${ctx.firstName || ''} ${ctx.lastName || ''}`.trim() || 'Website lead'} kickoff`;\nconst base = config.owner?.kickoffCalendarLink || config.calcom?.kickoffBookingUrl || config.owner?.calendarLink || 'https://cal.com/intraweb/discovery';\nlet kickoffLink = base;\ntry {\n  const url = new URL(base);\n  if (ctx.email) url.searchParams.set('email', ctx.email);\n  if (ctx.phone) url.searchParams.set('attendeePhoneNumber', ctx.phone);\n  const fullName = `${ctx.firstName || ''} ${ctx.lastName || ''}`.trim();\n  if (fullName) url.searchParams.set('name', fullName);\n  if (title) url.searchParams.set('title', title);\n  kickoffLink = url.toString();\n} catch (error) {}\nreturn [{\n  json: {\n    to: contact.email || ctx.email,\n    subject: `${company || 'Your website project'} — reminder to book your kickoff call`,\n    html: `<div style=\"font-family: DM Sans, Arial, sans-serif; max-width: 640px; color: #1f2937;\"><p>Hi ${firstName},</p><p>We noticed you have not booked your kickoff call yet. Use the link below whenever you are ready so we can review your website project and next steps together.</p><p><a href=\"${kickoffLink}\" style=\"display: inline-block; background: #0f766e; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 600;\">Schedule your kickoff call</a></p><p>If you already booked, you can ignore this email.</p><p>Thanks,<br/>John Schibelli<br/>IntraWeb Technologies</p></div>`,\n    workflowName: 'SYS 01 — Website Form Lead Intake'\n  }\n}];"
+      },
+      "id": "sys16-reminder-email-prep",
+      "name": "Prep Kickoff Reminder Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "FF6VOLCcRxI4uNYD",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "to": "={{ $json.to }}",
+            "subject": "={{ $json.subject }}",
+            "html": "={{ $json.html }}",
+            "workflowName": "={{ $json.workflowName }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "sys16-reminder-email-send",
+      "name": "Send Kickoff Reminder Email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        5760,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build CRM Context').first().json;\nconst name = `${ctx.firstName || ''} ${ctx.lastName || ''}`.trim() || ctx.company || ctx.contactId;\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Website Form Lead Intake',\n    contactName: name,\n    phone: ctx.phone || '',\n    eventType: 'website_kickoff_reminder_sent',\n    status: 'success',\n    notes: `Kickoff reminder sent to ${ctx.email || 'unknown email'}`\n  }\n}];"
+      },
+      "id": "sys16-reminder-log-prep",
+      "name": "Prep Reminder Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5980,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "1qQFLOSHZsS9JPKP",
+          "mode": "id"
+        }
+      },
+      "id": "sys16-reminder-log",
+      "name": "Log Reminder",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build CRM Context').first().json;\nconst config = $('Get Config').first().json;\nreturn [{\n  json: {\n    success: true,\n    contactId: ctx.contactId,\n    dealId: ctx.dealId || null,\n    enrolledInOutreach: false,\n    kickoffReminderDelayHours: config.timing?.websiteKickoffReminderHours || 48\n  }\n}];"
       },
       "id": "sys16-done",
       "name": "Success Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4210,
+        6420,
         320
       ]
     }
@@ -497,7 +849,7 @@
         ],
         [
           {
-            "node": "Prep Enroll Outreach",
+            "node": "Build CRM Context",
             "type": "main",
             "index": 0
           }
@@ -519,47 +871,204 @@
       "main": [
         [
           {
-            "node": "Prep Enroll Outreach",
+            "node": "Build CRM Context",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prep Enroll Outreach": {
+    "Build CRM Context": {
       "main": [
         [
           {
-            "node": "Enroll in SYS 02 — Outbound",
+            "node": "Append to Contacts Tab",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Enroll in SYS 02 — Outbound": {
+    "Append to Contacts Tab": {
       "main": [
         [
           {
-            "node": "Prep Log",
+            "node": "Has Deal ID?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prep Log": {
+    "Has Deal ID?": {
       "main": [
         [
           {
-            "node": "Log to Sheet",
+            "node": "Append to Deals Tab",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Intake Log",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Log to Sheet": {
+    "Append to Deals Tab": {
+      "main": [
+        [
+          {
+            "node": "Prep Intake Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Intake Log": {
+      "main": [
+        [
+          {
+            "node": "Log Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Intake": {
+      "main": [
+        [
+          {
+            "node": "Prep Kickoff Ack Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Kickoff Ack Email": {
+      "main": [
+        [
+          {
+            "node": "Send Kickoff Ack Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Kickoff Ack Email": {
+      "main": [
+        [
+          {
+            "node": "Prep Ack Email Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Ack Email Log": {
+      "main": [
+        [
+          {
+            "node": "Log Ack Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Ack Email": {
+      "main": [
+        [
+          {
+            "node": "Wait For Kickoff Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For Kickoff Reminder": {
+      "main": [
+        [
+          {
+            "node": "Check Booking Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Booking Status": {
+      "main": [
+        [
+          {
+            "node": "Needs Reminder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Reminder?": {
+      "main": [
+        [
+          {
+            "node": "Prep Kickoff Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Kickoff Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Send Kickoff Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Kickoff Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Prep Reminder Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Reminder Log": {
+      "main": [
+        [
+          {
+            "node": "Log Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Reminder": {
       "main": [
         [
           {

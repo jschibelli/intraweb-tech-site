@@ -48,7 +48,7 @@
     },
     {
       "parameters": {
-        "jsCode": "let data = $input.first().json;\nif (Array.isArray(data) && data.length && typeof data[0] === 'object') {\n  data = data[0];\n}\nif (!data || typeof data !== 'object') data = {};\n\nconst wf = data.workflow || {};\nconst wfName = wf.name || 'Unknown workflow';\nconst wfId = wf.id != null ? String(wf.id) : '';\n\nlet errMsg = '';\nlet lastNode = '';\nlet execUrl = '';\nlet execId = '';\nlet mode = '';\n\nif (data.execution) {\n  const ex = data.execution;\n  mode = ex.mode || '';\n  lastNode = ex.lastNodeExecuted || '';\n  execUrl = ex.url || '';\n  execId = ex.id != null ? String(ex.id) : '';\n  const err = ex.error;\n  if (err && typeof err === 'object') {\n    errMsg = err.message || err.description || err.reason || JSON.stringify(err);\n  } else if (err) {\n    errMsg = String(err);\n  }\n} else if (data.trigger) {\n  const t = data.trigger;\n  mode = t.mode || 'trigger';\n  const te = t.error || {};\n  errMsg = te.message || (te.cause && te.cause.message) || te.name || 'Trigger error';\n  lastNode = (te.node && te.node.name) ? te.node.name : 'trigger';\n}\n\nif (!errMsg) errMsg = 'Unknown error (no message in payload)';\nconst msgShort = errMsg.length > 1800 ? errMsg.slice(0, 1800) + '…' : errMsg;\n\nconst lines = [\n  `n8n workflow failed: *${wfName}*${wfId ? ` (id ${wfId})` : ''}`,\n  `Node: ${lastNode || '—'}`,\n  `Mode: ${mode || '—'}`,\n  `Error: ${msgShort}`\n];\nif (execUrl) lines.push(`Execution: ${execUrl}`);\nelse if (execId) lines.push(`Execution id: ${execId}`);\n\nreturn [{\n  json: {\n    message: lines.join('\\n'),\n    priority: 'error',\n    _logNotes: msgShort.slice(0, 500),\n    _wfName: wfName\n  }\n}];"
+        "jsCode": "let data = $input.first().json;\nif (Array.isArray(data) && data.length && typeof data[0] === 'object') {\n  data = data[0];\n}\nif (!data || typeof data !== 'object') data = {};\n\nconst wf = data.workflow || {};\nconst wfName = wf.name || 'Unknown workflow';\nconst wfId = wf.id != null ? String(wf.id) : '';\n\nlet errMsg = '';\nlet lastNode = '';\nlet execUrl = '';\nlet execId = '';\nlet mode = '';\n\nif (data.execution) {\n  const ex = data.execution;\n  mode = ex.mode || '';\n  lastNode = ex.lastNodeExecuted || '';\n  execUrl = ex.url || '';\n  execId = ex.id != null ? String(ex.id) : '';\n  const err = ex.error;\n  if (err && typeof err === 'object') {\n    errMsg = err.message || err.description || err.reason || JSON.stringify(err);\n  } else if (err) {\n    errMsg = String(err);\n  }\n} else if (data.trigger) {\n  const t = data.trigger;\n  mode = t.mode || 'trigger';\n  const te = t.error || {};\n  errMsg = te.message || (te.cause && te.cause.message) || te.name || 'Trigger error';\n  lastNode = (te.node && te.node.name) ? te.node.name : 'trigger';\n}\n\nif (!errMsg) errMsg = 'Unknown error (no message in payload)';\nconst msgShort = errMsg.length > 1800 ? errMsg.slice(0, 1800) + '…' : errMsg;\n\nconst lines = [\n  `n8n workflow failed: *${wfName}*${wfId ? ` (id ${wfId})` : ''}`,\n  `Node: ${lastNode || '—'}`,\n  `Mode: ${mode || '—'}`,\n  `Error: ${msgShort}`\n];\nif (execUrl) lines.push(`Execution: ${execUrl}`);\nelse if (execId) lines.push(`Execution id: ${execId}`);\n\nreturn [{\n  json: {\n    message: lines.join('\\n'),\n    priority: 'error',\n    _logNotes: msgShort.slice(0, 500),\n    _wfName: wfName,\n    _wfId: wfId\n  }\n}];"
       },
       "id": "sys17-prep-chat",
       "name": "Prep Chat Message",
@@ -80,7 +80,7 @@
     },
     {
       "parameters": {
-        "jsCode": "let notes = '';\nlet wfName = 'SYS 00 — Global Error Notification';\ntry {\n  notes = $('Prep Chat Message').first().json._logNotes || '';\n  wfName = $('Prep Chat Message').first().json._wfName || wfName;\n} catch (e) {}\nreturn [{\n  json: {\n    workflowName: 'SYS 00 — Global Error Notification',\n    contactName: wfName,\n    phone: '',\n    eventType: 'workflow_error',\n    status: 'failure',\n    notes: notes || 'workflow_error'\n  }\n}];"
+        "jsCode": "let notes = '';\nlet wfName = 'SYS 00 — Global Error Notification';\nlet skipAutomationsLog = false;\ntry {\n  const prep = $('Prep Chat Message').first().json;\n  notes = prep._logNotes || '';\n  wfName = prep._wfName || wfName;\n  const wfId = String(prep._wfId || '').trim();\n  if (wfId === '1qQFLOSHZsS9JPKP') skipAutomationsLog = true;\n  if (String(wfName).includes('Log to Automations Log Sheet')) skipAutomationsLog = true;\n} catch (e) {}\nreturn [{\n  json: {\n    workflowName: 'SYS 00 — Global Error Notification',\n    contactName: wfName,\n    phone: '',\n    eventType: 'workflow_error',\n    status: 'failure',\n    notes: notes || 'workflow_error',\n    skipAutomationsLog\n  }\n}];"
       },
       "id": "sys17-prep-log",
       "name": "Prep Log",
@@ -88,6 +88,38 @@
       "typeVersion": 2,
       "position": [
         940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skip-log-flag",
+              "leftValue": "={{ $json.skipAutomationsLog }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sys17-if-skip-log",
+      "name": "Skip Automations Log?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1060,
         300
       ]
     },
@@ -105,7 +137,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1160,
+        1280,
         300
       ],
       "onError": "continueRegularOutput"
@@ -162,6 +194,24 @@
       "main": [
         [
           {
+            "node": "Skip Automations Log?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Automations Log?": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Log to Sheet",
             "type": "main",
             "index": 0
@@ -183,7 +233,8 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": ""
   },
   "pinData": {}
 }

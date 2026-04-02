@@ -5,7 +5,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## SW: Log to Automations Log Sheet\n\n**Subworkflow.** Appends one row to the **Automations Log** tab of the master Google Sheet. Every workflow that performs an action should log here for audit and debugging.\n\n**Input:** `workflowName`, `contactName`, `phone`, `eventType`, `status`, `notes` (optional). Document ID is read from **Get Config** (`masterSheetId`).\n\n**Google Sheets (v4.7):** Append uses **Define Below** — each column maps from **Prepare Row Data** (`$json[...]`). **Auto-map** with empty `columns.value` triggers *At least one value has to be added under 'Values to Send'* on some n8n builds.\n\n**Output:** `{ success, data, error }`. Ensures a consistent paper trail across all systems.",
+        "content": "## SW: Log to Automations Log Sheet\n\n**Subworkflow.** Appends one row to the **Automations Log** tab of the master Google Sheet. Every workflow that performs an action should log here for audit and debugging.\n\n**Input:** `workflowName`, `contactName`, `phone`, `eventType`, `status`, `notes` (optional). Document ID is read from **Get Config** (`masterSheetId`).\n\n**Google Sheets (v4.7):** Append uses **Define Below** — each column maps from **Prepare Row Data** (`$json[...]`). **Auto-map** with empty `columns.value` triggers *At least one value has to be added under 'Values to Send'* on some n8n builds.\n\n**Output:** `{ success, data, error }`. Ensures a consistent paper trail across all systems.\n\n**Critical:** In n8n **Settings** for this workflow, set **Error workflow** to **None** (empty). If it points at **SYS 00 — Global Error Notification**, a Sheets quota failure can re-trigger SYS 00, which calls this logger again and causes a Chat alert storm.",
         "height": 280,
         "width": 420,
         "color": 5
@@ -133,10 +133,13 @@
         1060,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 120000,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "IJzDJS1jpbItegZD",
-          "name": "Google Sheets account 2"
+          "id": "pKS06498CxELp8nS",
+          "name": "Google Sheets account"
         }
       }
     },
@@ -229,7 +232,8 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": ""
   },
   "pinData": {}
 }
