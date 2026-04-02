@@ -294,7 +294,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst config = $('Get Config').first().json;\nconst raw = $('Get Contact').first().json;\nconst properties = raw.properties || raw;\nconst valueOf = (value) => {\n  if (value === undefined || value === null) return '';\n  if (typeof value === 'object' && 'value' in value) return String(value.value ?? '').trim();\n  return String(value).trim();\n};\nlet dealId = String(parse.hubspotDealId || '').trim();\nif (!dealId) {\n  try {\n    if (parse.createDeal) dealId = $('Create Deal').first().json.data?.dealId || $('Create Deal').first().json.data?.id || '';\n  } catch (error) {}\n}\nconst company = parse.company || valueOf(properties.company);\nconst firstName = parse.firstName || valueOf(properties.firstname);\nconst lastName = parse.lastName || valueOf(properties.lastname);\nconst contactId = String(raw.id || valueOf(properties.hs_object_id) || raw.vid || parse.contactId || '');\nreturn [{\n  json: {\n    sheetId: config.google?.masterSheetId || '',\n    timestamp: new Date().toISOString(),\n    contactId,\n    dealId,\n    companyId: '',\n    email: parse.email || valueOf(properties.email),\n    phone: parse.phone || valueOf(properties.phone),\n    firstName,\n    lastName,\n    company,\n    industry: parse.industry || valueOf(properties.industry),\n    tier: parse.tier || 'starter',\n    source: parse.source || 'Website intake',\n    leadScore: '',\n    dealName: `${company || firstName || 'Website lead'} - Website`\n  }\n}];"
+        "jsCode": "const parse = $('Parse Webhook Input').first().json;\nconst config = $('Get Config').first().json;\nconst raw = $('Get Contact').first().json;\nconst properties = raw.properties || raw;\nconst valueOf = (value) => {\n  if (value === undefined || value === null) return '';\n  if (typeof value === 'object' && 'value' in value) return String(value.value ?? '').trim();\n  return String(value).trim();\n};\nlet dealId = String(parse.hubspotDealId || '').trim();\nif (!dealId) {\n  try {\n    if (parse.createDeal) {\n      const rawDeal = $('Create Deal').first().json.data?.dealId ?? $('Create Deal').first().json.data?.id;\n      dealId = rawDeal != null && rawDeal !== '' ? String(rawDeal).trim() : '';\n    }\n  } catch (error) {}\n}\ndealId = dealId ? String(dealId).trim() : '';\nconst company = parse.company || valueOf(properties.company);\nconst firstName = parse.firstName || valueOf(properties.firstname);\nconst lastName = parse.lastName || valueOf(properties.lastname);\nconst contactId = String(raw.id || valueOf(properties.hs_object_id) || raw.vid || parse.contactId || '');\nreturn [{\n  json: {\n    sheetId: config.google?.masterSheetId || '',\n    timestamp: new Date().toISOString(),\n    contactId,\n    dealId,\n    companyId: '',\n    email: parse.email || valueOf(properties.email),\n    phone: parse.phone || valueOf(properties.phone),\n    firstName,\n    lastName,\n    company,\n    industry: parse.industry || valueOf(properties.industry),\n    tier: parse.tier || 'starter',\n    source: parse.source || 'Website intake',\n    leadScore: '',\n    dealName: `${company || firstName || 'Website lead'} - Website`\n  }\n}];"
       },
       "id": "sys16-build-context",
       "name": "Build CRM Context",
@@ -309,11 +309,8 @@
       "parameters": {
         "operation": "appendOrUpdate",
         "documentId": {
-          "__rl": true,
-          "value": "11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE",
-          "mode": "list",
-          "cachedResultName": "IntraWeb OS — Master Data",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE/edit?usp=drivesdk"
+          "mode": "id",
+          "value": "={{ $('Get Config').first().json.google.masterSheetId }}"
         },
         "sheetName": {
           "__rl": true,
@@ -456,11 +453,11 @@
           "conditions": [
             {
               "id": "has-deal-id",
-              "leftValue": "={{ $('Build CRM Context').first().json.dealId }}",
-              "rightValue": "",
+              "leftValue": "={{ Number($('Build CRM Context').first().json.dealId) || 0 }}",
+              "rightValue": 0,
               "operator": {
-                "type": "string",
-                "operation": "notEquals"
+                "type": "number",
+                "operation": "gt"
               }
             }
           ],

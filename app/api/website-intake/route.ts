@@ -10,6 +10,7 @@ import { hubspotCreateOrUpdateContact, isHubSpotSyncFailure } from "@/lib/hubspo
 import { hubspotCreateWebsiteIntakeDeal } from "@/lib/hubspotCreateWebsiteIntakeDeal";
 import { formatWebsiteIntakeJsonSafe, formatWebsiteIntakePlainText } from "@/lib/formatWebsiteIntakeForHubSpot";
 import { hubSpotDealStageOrDefault } from "@/lib/normalizeHubSpotDealStage";
+import { buildBookingSessionPayload } from "@/lib/kickoffBookingSession";
 
 export const maxDuration = 60;
 
@@ -242,6 +243,14 @@ export async function POST(req: NextRequest) {
     let bodyForN8n: Record<string, unknown> = { ...restForN8n, painOverride: painForDeal };
     /** Set when HubSpot CRM create/update succeeded; used to avoid 502 if n8n is down. */
     let crmContactId: string | null = null;
+    let hubspotDealId: string | null = null;
+
+    const kickoffExtras = (): Record<string, unknown> => {
+      if (!crmContactId) {
+        return {};
+      }
+      return buildBookingSessionPayload(crmContactId, parsed.data.contact, hubspotDealId) as Record<string, unknown>;
+    };
 
     const hubspotToken = process.env.HUBSPOT_ACCESS_TOKEN?.trim();
     if (hubspotToken) {
@@ -303,6 +312,7 @@ export async function POST(req: NextRequest) {
         if ("error" in dealResult) {
           console.error("[website-intake] HubSpot deal not created:", dealResult.error);
         } else {
+          hubspotDealId = dealResult.dealId;
           bodyForN8n = { ...bodyForN8n, hubspotDealId: dealResult.dealId };
           console.log("[website-intake] HubSpot deal", dealResult.dealId, "associated with contact", crmContactId);
         }
@@ -343,7 +353,8 @@ export async function POST(req: NextRequest) {
           ")",
         );
         return NextResponse.json(
-          { ok: true, crmRecorded: true, automationDispatch: "unreachable" }, { status: 200 },
+          { ok: true, crmRecorded: true, automationDispatch: "unreachable", ...kickoffExtras() },
+          { status: 200 },
         );
       }
       return NextResponse.json(
@@ -384,6 +395,7 @@ export async function POST(req: NextRequest) {
             crmRecorded: true,
             automationDispatch: "failed",
             n8nStatus: res.status,
+            ...kickoffExtras(),
           },
           { status: 200 },
         );
@@ -405,7 +417,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ ok: true, upstream: data }, { status: 200 });
+    return NextResponse.json({ ok: true, upstream: data, ...kickoffExtras() }, { status: 200 });
   } catch (err) {
     return NextResponse.json(
       { message: "Server error", error: err instanceof Error ? err.message : "Unknown error" },

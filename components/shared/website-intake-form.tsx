@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import KickoffScheduler from "@/components/website-intake/KickoffScheduler";
+import { buildKickoffTitle } from "@/lib/websiteIntakeKickoff";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -181,11 +183,6 @@ function formatReviewValue(value: unknown): string {
   return s || "—";
 }
 
-function buildKickoffTitle(data: WebsiteIntakeFormData): string {
-  const fullName = `${data.firstName} ${data.lastName}`.trim();
-  return `${data.businessName || fullName || "Website lead"} kickoff`;
-}
-
 function buildCalKickoffUrl(data: WebsiteIntakeFormData): string {
   const configured = process.env.NEXT_PUBLIC_CAL_KICKOFF_CAL_LINK?.trim() || "intraweb/website-discovery";
   const base = configured.startsWith("http")
@@ -211,6 +208,7 @@ export default function WebsiteIntakeForm() {
   const [validatingStep, setValidatingStep] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ type: "error"; message: string } | null>(null);
   const [submittedData, setSubmittedData] = useState<WebsiteIntakeFormData | null>(null);
+  const [bookingSession, setBookingSession] = useState<string | null>(null);
   const recaptchaReady = useRef(false);
 
   const {
@@ -442,10 +440,15 @@ export default function WebsiteIntakeForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const bodyJson = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        bookingSession?: string;
+      };
       if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
-        throw new Error(err.message || err.error || "Submission failed");
+        throw new Error(bodyJson.message || bodyJson.error || "Submission failed");
       }
+      setBookingSession(typeof bodyJson.bookingSession === "string" ? bodyJson.bookingSession : null);
       setSubmittedData(parsed);
       setStep("schedule");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -461,9 +464,20 @@ export default function WebsiteIntakeForm() {
     void handleSubmit(onSubmit)();
   }, [handleSubmit, onSubmit]);
 
-  const continueToThankYou = useCallback((scheduled: boolean) => {
-    router.push(`/thank-you?scheduled=${scheduled ? "1" : "0"}`);
-  }, [router]);
+  const continueToThankYou = useCallback(
+    (opts: { scheduled: boolean; booked?: boolean; startIso?: string }) => {
+      const sp = new URLSearchParams();
+      sp.set("scheduled", opts.scheduled ? "1" : "0");
+      if (opts.booked) {
+        sp.set("booked", "1");
+      }
+      if (opts.startIso) {
+        sp.set("start", opts.startIso);
+      }
+      router.push(`/thank-you?${sp.toString()}`);
+    },
+    [router],
+  );
 
   const renderMultiSelect = (
     name: "goals" | "vibe" | "pages" | "features",
@@ -515,7 +529,7 @@ export default function WebsiteIntakeForm() {
 
       <form
         noValidate
-        className="p-6 space-y-8"
+        className="p-6 space-y-7"
         onSubmit={(e) => {
           e.preventDefault();
         }}
@@ -936,71 +950,23 @@ export default function WebsiteIntakeForm() {
         )}
 
         {step === "schedule" && submittedData && (
-          <div className="space-y-6">
-            <div className="rounded-xl border border-teal-500/30 bg-gradient-to-br from-teal-500/10 via-gray-950/60 to-orange-500/10 p-5">
+          <div className="space-y-8">
+            <div className="rounded-xl border border-teal-500/30 bg-gradient-to-br from-teal-500/10 via-gray-950/60 to-orange-500/10 p-6 sm:p-7">
               <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Final step</p>
               <h4 className="mt-2 text-2xl font-heading font-semibold text-white">Book your kickoff call</h4>
-              <p className="mt-3 text-sm text-gray-300">
-                Your intake has been submitted. Choose a time below to lock in your kickoff while everything is fresh.
-                If you are not ready, you can skip for now and use the follow-up email later.
+              <p className="mt-3 text-sm text-gray-300 leading-relaxed max-w-3xl">
+                Your intake is saved. Pick a time below on our scheduler, or open Cal.com in a new tab. You can skip and
+                book later from your confirmation email.
               </p>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-xl border border-gray-800 bg-gray-950/60 overflow-hidden">
-                <div className="border-b border-gray-800 px-4 py-3 bg-gray-950/80">
-                  <p className="text-sm font-medium text-white">IntraWeb kickoff scheduler</p>
-                  <p className="mt-1 text-xs text-gray-400">
-                    Booking for {submittedData.firstName} {submittedData.lastName} at {submittedData.businessName}
-                  </p>
-                </div>
-                <iframe
-                  src={buildCalKickoffUrl(submittedData)}
-                  title="Schedule your kickoff call"
-                  className="w-full min-h-[860px] bg-white"
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-5">
-                  <h5 className="text-base font-semibold text-white">Need the direct link?</h5>
-                  <p className="mt-2 text-sm text-gray-300">
-                    If the embedded calendar does not load, open the booking page in a new tab.
-                  </p>
-                  <a
-                    href={buildCalKickoffUrl(submittedData)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex items-center rounded-md border border-teal-500/50 px-4 py-2 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/10"
-                  >
-                    Open scheduling page
-                  </a>
-                </div>
-
-                <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-5 space-y-3">
-                  <h5 className="text-base font-semibold text-white">When you are done</h5>
-                  <p className="text-sm text-gray-300">
-                    After you finish booking, continue to the confirmation page. If you skip, we will still send a follow-up path with your booking link.
-                  </p>
-                  <div className="flex flex-col gap-3">
-                    <button
-                      type="button"
-                      onClick={() => continueToThankYou(true)}
-                      className="rounded-md bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-500"
-                    >
-                      I booked my kickoff
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => continueToThankYou(false)}
-                      className="rounded-md border border-gray-700 px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:border-gray-500"
-                    >
-                      Skip for now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <KickoffScheduler
+              bookingSession={bookingSession}
+              submittedData={submittedData}
+              fallbackCalUrl={buildCalKickoffUrl(submittedData)}
+              kickoffTitle={buildKickoffTitle(submittedData)}
+              onContinue={continueToThankYou}
+            />
           </div>
         )}
 

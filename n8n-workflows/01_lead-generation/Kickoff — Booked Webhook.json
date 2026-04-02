@@ -1,0 +1,59 @@
+{
+  "name": "Kickoff — Booked Webhook",
+  "description": "Receives POST from Next.js `/api/kickoff/book` when a lead books via the custom scheduler (`N8N_KICKOFF_BOOKED_WEBHOOK_URL`). Payload: type=kickoff_booked, hubspotContactId, hubspotDealId, calBookingUid, start, end, managementUrl, email. Wire this to HubSpot updates, Sheets, Slack, or email — same secret header as website intake when `N8N_WEBHOOK_SECRET` is set.",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kickoff-booked",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "kickoff-booked-webhook",
+      "name": "Kickoff Booked Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "kickoff-booked-placeholder"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Incoming body is in $json (or $json.body depending on n8n version).\nconst root = $input.first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\nreturn [{ json: { received: true, payload: body } }];"
+      },
+      "id": "kickoff-booked-parse",
+      "name": "Parse payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, received: $json.received } }}",
+        "options": {}
+      },
+      "id": "kickoff-booked-respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Kickoff Booked Webhook": {
+      "main": [[{ "node": "Parse payload", "type": "main", "index": 0 }]]
+    },
+    "Parse payload": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

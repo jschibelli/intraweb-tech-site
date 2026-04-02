@@ -5,12 +5,30 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 
-function ThankYouView({ scheduled }: { scheduled: string | null }) {
+function formatKickoffWhen(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" });
+}
+
+function ThankYouView({
+  scheduled,
+  bookedViaApi,
+  startIso,
+}: {
+  scheduled: string | null;
+  bookedViaApi: string | null;
+  startIso: string | null;
+}) {
   const bookedKickoff = scheduled === "1";
   const skippedKickoff = scheduled === "0";
+  const whenLabel = formatKickoffWhen(startIso);
 
   const intro = bookedKickoff
-    ? "Your intake is in and your kickoff is booked."
+    ? bookedViaApi === "1" && whenLabel
+      ? `Your intake is in and your kickoff is scheduled for ${whenLabel}.`
+      : "Your intake is in and your kickoff is booked."
     : skippedKickoff
       ? "Your intake is in. You can book your kickoff when you're ready."
       : "Your intake is in and our team is reviewing the details.";
@@ -47,7 +65,9 @@ function ThankYouView({ scheduled }: { scheduled: string | null }) {
               <span className="text-teal-400 mr-3 mt-1">→</span>
               <span>
                 {bookedKickoff
-                  ? "Watch for your Cal.com confirmation and meeting details. We will come prepared with your goals, timeline, and project notes."
+                  ? bookedViaApi === "1"
+                    ? "You will receive a Cal.com confirmation with the meeting link. We will come prepared with your goals, timeline, and project notes."
+                    : "Watch for your Cal.com confirmation and meeting details. We will come prepared with your goals, timeline, and project notes."
                   : skippedKickoff
                     ? "You will receive a confirmation email now. If you skipped scheduling, the follow-up email will include your kickoff booking link."
                     : "You will receive a confirmation email shortly with the next steps for your website project."}
@@ -76,12 +96,14 @@ function ThankYouView({ scheduled }: { scheduled: string | null }) {
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const scheduled = searchParams?.get("scheduled") ?? null;
-  return <ThankYouView scheduled={scheduled} />;
+  const bookedViaApi = searchParams?.get("booked") ?? null;
+  const startIso = searchParams?.get("start") ?? null;
+  return <ThankYouView scheduled={scheduled} bookedViaApi={bookedViaApi} startIso={startIso} />;
 }
 
 export default function ThankYouPage() {
   return (
-    <Suspense fallback={<ThankYouView scheduled={null} />}>
+    <Suspense fallback={<ThankYouView scheduled={null} bookedViaApi={null} startIso={null} />}>
       <ThankYouContent />
     </Suspense>
   );
