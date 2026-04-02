@@ -513,7 +513,7 @@ export default function KickoffScheduler({
           onClick={() => onContinue({ scheduled: true })}
           className="rounded-md border border-gray-700 px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:border-gray-500"
         >
-          I already booked (skip)
+          Book Kickoff
         </button>
         <button
           type="button"
