@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T03:32:46.07Z",
+  "updatedAt": "2026-04-03T03:42:44.519Z",
   "createdAt": "2026-03-01T07:34:48.212Z",
   "id": "zJWCaaXQ0HbwYiAO",
   "name": "SYS 02 — ElevenLabs Post-Call Handler",
@@ -808,16 +808,18 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
   },
   "staticData": null,
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
-  "activeVersionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
-  "versionCounter": 37,
+  "versionId": "b5b0c79e-bfc5-4452-b714-b083fd2616d3",
+  "activeVersionId": "b5b0c79e-bfc5-4452-b714-b083fd2616d3",
+  "versionCounter": 92,
   "triggerCount": 1,
   "shared": [
     {
@@ -840,9 +842,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-01T07:39:04Z",
-    "createdAt": "2026-03-01T07:37:50.995Z",
-    "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
+    "updatedAt": "2026-04-03T03:05:39.856Z",
+    "createdAt": "2026-04-03T03:05:39.856Z",
+    "versionId": "b5b0c79e-bfc5-4452-b714-b083fd2616d3",
     "workflowId": "zJWCaaXQ0HbwYiAO",
     "nodes": [
       {
@@ -879,7 +881,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const body = $input.first().json.body || $input.first().json;\n\n// ElevenLabs post-call payload structure\nconst conversationId = body.conversation_id || '';\nconst agentId = body.agent_id || '';\nconst status = body.status || '';\nconst transcript = body.transcript || '';\nconst recordingUrl = body.recording_url || '';\nconst durationSeconds = body.duration_seconds || 0;\n\n// Data collection fields from ElevenLabs agent\nconst dataFields = body.data_collection || body.analysis?.data_collection || {};\n\n// Structured fields Adam collected\nconst callOutcome = dataFields.call_outcome?.value || 'no_answer';\nconst prospectSummary = dataFields.prospect_summary?.value || '';\nconst callbackTime = dataFields.callback_requested_time?.value || '';\nconst disqualReason = dataFields.disqualification_reason?.value || '';\n\n// New rescore fields\nconst companySizeRaw = dataFields.company_size?.value;\nconst companySize = parseInt(companySizeRaw) || 0;\nconst revenueRange = dataFields.revenue_range?.value || '';\nconst prospectRole = dataFields.prospect_role?.value || '';\n\n// Phone number from dynamic variables (ElevenLabs echoes these back)\nconst dynamicVars = body.conversation_initiation_client_data?.dynamic_variables || {};\nconst customerName = dynamicVars.customer_name || '';\n\n// Map revenue_range enum to score\nconst revenueScores = {\n  'over_100m': 25,\n  '25m_100m': 25,\n  '5m_25m': 20,\n  '1m_5m': 15,\n  'under_1m': 3\n};\nconst revenuePts = revenueScores[revenueRange] || 0;\n\n// Map role to score\nconst roleScores = {\n  'Owner / C-Suite': 20,\n  'VP / Director': 15,\n  'Manager': 8,\n  'Individual Contributor': 3\n};\nconst rolePts = roleScores[prospectRole] || 0;\n\n// Employee score\nlet empPts = 0;\nif (companySize >= 10 && companySize <= 150) empPts = 15;\nelse if (companySize > 150) empPts = 10;\nelse if (companySize > 0) empPts = 5;\n\n// Lead tier\nconst isGrowth = (companySize >= 10 && companySize <= 150) ||\n  ['5m_25m','25m_100m','over_100m'].includes(revenueRange);\nconst leadTier = isGrowth ? 'growth' : 'starter';\n\n// Rescore total (hard fields only — no message score needed post-call)\nconst rescoreTotal = revenuePts + rolePts + empPts;\n\n// Bucket based on rescore (these fields replace form data)\nlet bucket = 'cold';\nif (rescoreTotal >= 35) bucket = 'hot';\nelse if (rescoreTotal >= 20) bucket = 'warm';\n\n// Override bucket based on call outcome\n// If they booked or requested callback, treat as hot regardless of score\nif (['booked', 'callback_requested'].includes(callOutcome)) bucket = 'hot';\nif (callOutcome === 'not_interested' || callOutcome === 'disqualified') bucket = 'cold';\n\nreturn [{\n  json: {\n    conversationId,\n    agentId,\n    status,\n    recordingUrl,\n    durationSeconds,\n    transcript,\n    callOutcome,\n    prospectSummary,\n    callbackTime,\n    disqualReason,\n    companySize,\n    revenueRange,\n    prospectRole,\n    revenuePts,\n    rolePts,\n    empPts,\n    rescoreTotal,\n    bucket,\n    leadTier,\n    rescoreBreakdown: `Post-call rescore: Revenue +${revenuePts} | Role +${rolePts} | Employees +${empPts} = ${rescoreTotal}pts → ${bucket.toUpperCase()} | Outcome: ${callOutcome}`\n  }\n}];"
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst conversationId = body.conversation_id || '';\nconst agentId = body.agent_id || '';\nconst status = body.status || '';\nconst transcript = body.transcript || '';\nconst recordingUrl = body.recording_url || '';\nconst durationSeconds = body.duration_seconds || 0;\n\nconst dataFields = body.data_collection || body.analysis?.data_collection || {};\n\nconst callOutcome = dataFields.call_outcome?.value || 'no_answer';\nconst prospectSummary = dataFields.prospect_summary?.value || '';\nconst callbackTime = dataFields.callback_requested_time?.value || '';\nconst disqualReason = dataFields.disqualification_reason?.value || '';\n\nconst companySizeRaw = dataFields.company_size?.value;\nconst companySize = parseInt(companySizeRaw) || 0;\nconst revenueRange = dataFields.revenue_range?.value || '';\nconst prospectRole = dataFields.prospect_role?.value || '';\n\nconst dynamicVars = body.conversation_initiation_client_data?.dynamic_variables || {};\nconst customerName = dynamicVars.customer_name || '';\nconst contactId = dynamicVars.contact_id || dynamicVars.contactId || '';\nconst firstName = dynamicVars.first_name || dynamicVars.firstName || customerName.split(' ')[0] || '';\nconst lastName = dynamicVars.last_name || dynamicVars.lastName || '';\nconst company = dynamicVars.company || dynamicVars.company_name || '';\nconst industry = dynamicVars.industry || '';\nconst phone = dynamicVars.phone || dynamicVars.phone_number || '';\nconst email = dynamicVars.email || '';\n\nconst revenueScores = {\n  'over_100m': 25, '25m_100m': 25, '5m_25m': 20, '1m_5m': 15, 'under_1m': 3\n};\nconst revenuePts = revenueScores[revenueRange] || 0;\n\nconst roleScores = {\n  'Owner / C-Suite': 20, 'VP / Director': 15, 'Manager': 8, 'Individual Contributor': 3\n};\nconst rolePts = roleScores[prospectRole] || 0;\n\nlet empPts = 0;\nif (companySize >= 10 && companySize <= 150) empPts = 15;\nelse if (companySize > 150) empPts = 10;\nelse if (companySize > 0) empPts = 5;\n\nconst isGrowth = (companySize >= 10 && companySize <= 150) ||\n  ['5m_25m','25m_100m','over_100m'].includes(revenueRange);\nconst leadTier = isGrowth ? 'growth' : 'starter';\n\nconst rescoreTotal = revenuePts + rolePts + empPts;\n\nlet bucket = 'cold';\nif (rescoreTotal >= 35) bucket = 'hot';\nelse if (rescoreTotal >= 20) bucket = 'warm';\n\nif (['booked', 'callback_requested'].includes(callOutcome)) bucket = 'hot';\nif (callOutcome === 'not_interested' || callOutcome === 'disqualified') bucket = 'cold';\n\nreturn [{\n  json: {\n    conversationId, agentId, status, recordingUrl, durationSeconds, transcript,\n    callOutcome, prospectSummary, callbackTime, disqualReason,\n    companySize, revenueRange, prospectRole,\n    revenuePts, rolePts, empPts, rescoreTotal, bucket, leadTier,\n    customerName, contactId, firstName, lastName, company, industry, phone, email,\n    rescoreBreakdown: `Post-call rescore: Revenue +${revenuePts} | Role +${rolePts} | Employees +${empPts} = ${rescoreTotal}pts \\u2192 ${bucket.toUpperCase()} | Outcome: ${callOutcome}`\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -1046,29 +1048,40 @@
       },
       {
         "parameters": {
-          "authentication": "oAuth2",
-          "resource": "deal",
-          "stage": "=appointmentscheduled",
-          "additionalFields": {
-            "amount": "10000",
-            "dealName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId }} — AI Diagnostic (Call Booked)",
-            "pipeline": "=default"
-          }
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-create-hubspot-deal",
+            "mode": "id",
+            "cachedResultName": "SW: Create HubSpot Deal"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "contactId": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.contactId }}",
+              "company": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.company }}",
+              "firstName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.firstName }}",
+              "lastName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.lastName }}",
+              "stage": "appointmentscheduled",
+              "tier": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier }}",
+              "industry": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.industry }}",
+              "painPoint": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
         },
-        "type": "n8n-nodes-base.hubspot",
-        "typeVersion": 2.2,
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
         "position": [
           464,
           -224
         ],
         "id": "b4fe4390-8dce-4b04-9c18-944bc629ae82",
-        "name": "💼 Create HubSpot Deal (Booked)",
-        "credentials": {
-          "hubspotOAuth2Api": {
-            "id": "ZRIrnXjLJc2Cek2l",
-            "name": "HubSpot account"
-          }
-        }
+        "name": "🔗 Execute SW — Create HubSpot Deal"
       },
       {
         "parameters": {
@@ -1285,9 +1298,9 @@
       },
       {
         "parameters": {
-          "content": "## IntraWeb — ElevenLabs Post-Call Handler\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/elevenlabs-call-complete\n\n**Call Outcomes routed:**\n- 📅 booked → HubSpot update + Deal created + Google Chat alert\n- 📲 callback_requested → HubSpot update + Google Chat alert (manual follow-up)\n- 📵 no_answer → HubSpot logged + Google Chat alert\n- 🚫 not_interested / disqualified → HubSpot zeroed + Google Chat alert\n\n**Post-Call Rescore Logic:**\nUses Adam's structured data collection fields:\n- company_size (Number) → employee score 0/5/10/15pts\n- revenue_range (Enum) → revenue score 0-25pts\n- prospect_role (String) → role score 0-20pts\nMax rescore: 60pts\nBuckets: Hot 35+, Warm 20-34, Cold <20\n\n**Outcome overrides bucket:**\n- booked or callback_requested → always Hot\n- not_interested or disqualified → always Cold\n\n**⚠️ Known limitation:**\nHubSpot update nodes use contactEmail field — ElevenLabs\npost-call payload doesn't always include email.\nYou may need to look up the contact by conversationId\nor phone number. Add a HubSpot search node if needed.",
-          "height": 420,
-          "width": 500,
+          "content": "## SYS 02 — ElevenLabs Post-Call Handler\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/elevenlabs-call-complete\n\n**Call Outcomes routed:**\n- 📅 booked → HubSpot update + SW Create Deal + Google Chat alert\n- 📲 callback_requested → HubSpot update + Google Chat alert + Enroll SYS 02 — Outbound Lead Outreach Sequence\n- 📵 no_answer → HubSpot logged + Google Chat alert + Enroll SYS 02 — Outbound Lead Outreach Sequence + SMS\n- 🚫 disqualified/not_interested → IF gate → HubSpot zeroed + Google Chat alert + Log to Sheet\n\n**Post-Call Rescore Logic:**\nUses Adam's structured data collection fields:\n- company_size (Number) → employee score 0/5/10/15pts\n- revenue_range (Enum) → revenue score 0-25pts\n- prospect_role (String) → role score 0-20pts\nMax rescore: 60pts  |  Buckets: Hot 35+, Warm 20-34, Cold <20\n\n**Outcome overrides bucket:**\n- booked or callback_requested → always Hot\n- not_interested or disqualified → always Cold\n\n**Downstream handoffs:**\n- Booked → SW — Create HubSpot Deal (contactId, company, stage, tier)\n- Callback/No Answer → SYS 03 webhook /enroll-outreach (contactId, firstName, company, industry)\n- No Answer → SW — Send SMS (phone, body)\n- Disqualified → SW — Log to Automations Log Sheet (workflowName, eventType, status, notes)\n\n**Contact fields from ElevenLabs dynamic_variables:**\ncontactId, firstName, lastName, company, industry, phone, email\n(Must be set when initiating the call from SYS 02 or other upstream)",
+          "height": 560,
+          "width": 560,
           "color": 4
         },
         "type": "n8n-nodes-base.stickyNote",
@@ -1298,6 +1311,151 @@
         ],
         "id": "d71e1b60-b1c0-4e84-af98-5bf7249c935f",
         "name": "📋 Setup Notes"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "disqualified-check",
+                "leftValue": "={{ $json.callOutcome }}",
+                "rightValue": "disqualified",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "not-interested-check",
+                "leftValue": "={{ $json.callOutcome }}",
+                "rightValue": "not_interested",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -160,
+          368
+        ],
+        "id": "dq-gate-001",
+        "name": "🚫 Disqualified?"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://n8n.intrawebtech.com/webhook/enroll-outreach",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ contactId: $('🔍 Parse & Rescore Post-Call Data').first().json.contactId, firstName: $('🔍 Parse & Rescore Post-Call Data').first().json.firstName, company: $('🔍 Parse & Rescore Post-Call Data').first().json.company, industry: $('🔍 Parse & Rescore Post-Call Data').first().json.industry, callbackTime: $('🔍 Parse & Rescore Post-Call Data').first().json.callbackTime, prospectSummary: $('🔍 Parse & Rescore Post-Call Data').first().json.prospectSummary, bucket: $('🔍 Parse & Rescore Post-Call Data').first().json.bucket, leadTier: $('🔍 Parse & Rescore Post-Call Data').first().json.leadTier, sourceWorkflow: 'SYS 02 — ElevenLabs Post-Call Handler', eventType: 'callback_requested' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          672,
+          -32
+        ],
+        "id": "enroll-callback-001",
+        "name": "🔗 Enroll in SYS 02 — Outbound (Callback)"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://n8n.intrawebtech.com/webhook/enroll-outreach",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ contactId: $('🔍 Parse & Rescore Post-Call Data').first().json.contactId, firstName: $('🔍 Parse & Rescore Post-Call Data').first().json.firstName, company: $('🔍 Parse & Rescore Post-Call Data').first().json.company, industry: $('🔍 Parse & Rescore Post-Call Data').first().json.industry, conversationId: $('🔍 Parse & Rescore Post-Call Data').first().json.conversationId, bucket: $('🔍 Parse & Rescore Post-Call Data').first().json.bucket, rescoreTotal: $('🔍 Parse & Rescore Post-Call Data').first().json.rescoreTotal, sourceWorkflow: 'SYS 02 — ElevenLabs Post-Call Handler', eventType: 'no_answer' }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          672,
+          120
+        ],
+        "id": "enroll-noanswer-001",
+        "name": "🔗 Enroll in SYS 02 — Outbound (No Answer)"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "VzxtOFmmGEitVEQk",
+            "mode": "id",
+            "cachedResultName": "SW: Send SMS"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.phone }}",
+              "body": "={{ 'Hi ' + $('🔍 Parse & Rescore Post-Call Data').first().json.firstName + ', we tried reaching you earlier. Would love to connect — reply here or book a quick call at your convenience.' }}",
+              "workflowName": "SYS 02 — ElevenLabs Post-Call Handler"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          672,
+          220
+        ],
+        "id": "sms-noanswer-001",
+        "name": "📱 Send Follow-up SMS (No Answer)"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-log-automations-log-sheet",
+            "mode": "id",
+            "cachedResultName": "SW: Log to Automations Log Sheet"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "workflowName": "SYS 02 — ElevenLabs Post-Call Handler",
+              "contactName": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.customerName || $('🔍 Parse & Rescore Post-Call Data').first().json.firstName }}",
+              "phone": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.phone }}",
+              "eventType": "call_disqualified",
+              "status": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.callOutcome }}",
+              "notes": "={{ $('🔍 Parse & Rescore Post-Call Data').first().json.disqualReason || 'No reason provided' }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          464,
+          368
+        ],
+        "id": "log-disqualified-001",
+        "name": "📝 Log Disqualified to Sheet"
       }
     ],
     "connections": {
@@ -1342,7 +1500,7 @@
               "index": 0
             },
             {
-              "node": "📊 HubSpot — Update Contact (Disqualified)",
+              "node": "🚫 Disqualified?",
               "type": "main",
               "index": 0
             }
@@ -1364,18 +1522,7 @@
         "main": [
           [
             {
-              "node": "💼 Create HubSpot Deal (Booked)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "💼 Create HubSpot Deal (Booked)": {
-        "main": [
-          [
-            {
-              "node": "💬 Google Chat — Booked Alert",
+              "node": "🔗 Execute SW — Create HubSpot Deal",
               "type": "main",
               "index": 0
             }
@@ -1436,37 +1583,72 @@
             }
           ]
         ]
+      },
+      "🔗 Execute SW — Create HubSpot Deal": {
+        "main": [
+          [
+            {
+              "node": "💬 Google Chat — Booked Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "💬 Google Chat — Callback Alert": {
+        "main": [
+          [
+            {
+              "node": "🔗 Enroll in SYS 02 — Outbound (Callback)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "💬 Google Chat — No Answer Alert": {
+        "main": [
+          [
+            {
+              "node": "🔗 Enroll in SYS 02 — Outbound (No Answer)",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "📱 Send Follow-up SMS (No Answer)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "🚫 Disqualified?": {
+        "main": [
+          [
+            {
+              "node": "📊 HubSpot — Update Contact (Disqualified)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "💬 Google Chat — Disqualified Alert": {
+        "main": [
+          [
+            {
+              "node": "📝 Log Disqualified to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "John Schibelli",
-    "name": "Version 27a1fdcb",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-03-01T07:39:04.783Z",
-        "id": 84,
-        "workflowId": "zJWCaaXQ0HbwYiAO",
-        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-03-01T08:18:43.81Z",
-        "id": 88,
-        "workflowId": "zJWCaaXQ0HbwYiAO",
-        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-03-01T08:18:43.798Z",
-        "id": 87,
-        "workflowId": "zJWCaaXQ0HbwYiAO",
-        "versionId": "27a1fdcb-05da-4414-9f55-9d1056b15c39",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
   }
 }

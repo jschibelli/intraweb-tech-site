@@ -1,7 +1,11 @@
 {
-  "id": "sys-16-calcom-kickoff-booking-handler",
+  "updatedAt": "2026-04-03T03:42:43.062Z",
+  "createdAt": "2026-04-02T02:04:39.521Z",
+  "id": "jZSXHKgoMIQErTJ1",
   "name": "SYS 01 — Cal.com Kickoff Booking Handler",
-  "description": "Webhook for Cal.com kickoff bookings. Filters to the configured kickoff event type, finds the HubSpot contact by attendee email, marks booking_flag=true, sends a Google Chat notification, and logs kickoff_call_scheduled or kickoff_call_scheduled_unmatched.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -33,7 +37,8 @@
       "position": [
         260,
         320
-      ]
+      ],
+      "webhookId": "a4e86307-26c8-4a14-ba4b-76a7444d17de"
     },
     {
       "parameters": {
@@ -590,7 +595,651 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate",
+    "errorWorkflow": ""
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e908fed1-f736-4906-ad04-c65bcaf28c77",
+  "activeVersionId": "e908fed1-f736-4906-ad04-c65bcaf28c77",
+  "versionCounter": 30,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-02T02:04:39.526Z",
+      "createdAt": "2026-04-02T02:04:39.526Z",
+      "role": "workflow:owner",
+      "workflowId": "jZSXHKgoMIQErTJ1",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:43.063Z",
+    "createdAt": "2026-04-03T03:42:43.063Z",
+    "versionId": "e908fed1-f736-4906-ad04-c65bcaf28c77",
+    "workflowId": "jZSXHKgoMIQErTJ1",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 01 — Cal.com Kickoff Booking Handler\n\n### Purpose\nHandle **Cal.com booking created** events for the website intake kickoff path. This workflow filters the webhook to the configured kickoff event type, matches the attendee to a HubSpot contact, sets `booking_flag=true`, then sends the team a Google Chat notification and writes a scheduling row to the Automations Log.\n\n### What it does\n1. Receives the Cal.com booking webhook.\n2. Parses the attendee email, phone, booking id, start time, meeting URL, and event type id.\n3. Ignores unrelated Cal.com events.\n4. Searches HubSpot for the matching contact by attendee email.\n5. When matched, PATCHes `booking_flag=true` on the contact.\n6. Sends a Google Chat notification and logs `kickoff_call_scheduled`.\n7. If no HubSpot contact is found, still notifies and logs `kickoff_call_scheduled_unmatched` so the booking is not silent.\n\n### Dependencies\nCONFIG, HubSpot credential, **SW: Send Google Chat Alert**, **SW: Log to Automations Log Sheet**.",
+          "height": 520,
+          "width": 520,
+          "color": 5
+        },
+        "id": "note-cal-kickoff",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          40,
+          40
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "calcom-kickoff-booking",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "cal-webhook",
+        "name": "Cal.com Booking Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          260,
+          320
+        ],
+        "webhookId": "a4e86307-26c8-4a14-ba4b-76a7444d17de"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          }
+        },
+        "id": "cal-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          480,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const root = $('Cal.com Booking Webhook').first().json;\nconst body = root.body && typeof root.body === 'object' && !Array.isArray(root.body) ? root.body : root;\nconst payload = body.payload && typeof body.payload === 'object' && !Array.isArray(body.payload) ? body.payload : body;\nconst config = $('Get Config').first().json;\nconst expectedEventTypeId = String(config.calcom?.kickoffEventTypeId || '').trim();\nconst attendee = Array.isArray(payload.attendees) && payload.attendees.length ? payload.attendees[0] : (payload.attendee && typeof payload.attendee === 'object' ? payload.attendee : {});\nconst responses = payload.responses && typeof payload.responses === 'object' && !Array.isArray(payload.responses) ? payload.responses : {};\nconst pick = (...values) => {\n  for (const value of values) {\n    if (value === undefined || value === null) continue;\n    const s = String(value).trim();\n    if (s) return s;\n  }\n  return '';\n};\nconst eventTypeId = pick(payload.eventTypeId, payload.eventType?.id, body.eventTypeId, body.eventType?.id);\nconst bookingId = pick(payload.bookingId, payload.id, payload.uid, body.bookingId, body.id);\nconst bookingUrl = pick(payload.bookingUrl, payload.rescheduleUrl, body.bookingUrl);\nconst meetingUrl = pick(payload.meetingUrl, payload.videoCallUrl, body.meetingUrl);\nconst startTime = pick(payload.startTime, payload.start, body.startTime, body.start);\nconst endTime = pick(payload.endTime, payload.end, body.endTime, body.end);\nconst email = pick(attendee.email, responses.email, payload.email, body.email);\nconst phone = pick(attendee.phoneNumber, attendee.phone, responses.attendeePhoneNumber, responses.phone, body.phone);\nconst name = pick(attendee.name, responses.name, payload.name, body.name);\nconst title = pick(payload.title, body.title);\nconst shouldHandle = expectedEventTypeId && eventTypeId === expectedEventTypeId ? 'true' : 'false';\nreturn [{\n  json: {\n    shouldHandle,\n    expectedEventTypeId,\n    eventTypeId,\n    bookingId,\n    bookingUrl,\n    meetingUrl,\n    startTime,\n    endTime,\n    email,\n    phone,\n    name,\n    title,\n    triggerEvent: pick(body.triggerEvent, body.event, payload.event)\n  }\n}];"
+        },
+        "id": "cal-parse",
+        "name": "Parse Cal Booking Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          700,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "is-kickoff",
+                "leftValue": "={{ $json.shouldHandle }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "cal-is-kickoff",
+        "name": "Is Kickoff Event?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          920,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-email",
+                "leftValue": "={{ $('Parse Cal Booking Payload').first().json.email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "cal-has-email",
+        "name": "Has Attendee Email?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1140,
+          220
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: $('Parse Cal Booking Payload').first().json.email }] }], properties: ['firstname', 'lastname', 'company', 'email', 'phone', 'booking_flag'], limit: 1 }) }}",
+          "options": {}
+        },
+        "id": "cal-find-contact",
+        "name": "Find HubSpot Contact by Email",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1360,
+          220
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const search = $('Find HubSpot Contact by Email').first().json;\nconst result = Array.isArray(search.results) && search.results.length ? search.results[0] : null;\nconst props = result?.properties || {};\nreturn [{\n  json: {\n    contactId: result?.id ? String(result.id) : '',\n    firstName: String(props.firstname || '').trim(),\n    lastName: String(props.lastname || '').trim(),\n    company: String(props.company || '').trim(),\n    email: String(props.email || '').trim(),\n    phone: String(props.phone || '').trim()\n  }\n}];"
+        },
+        "id": "cal-contact-match",
+        "name": "Extract Contact Match",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1580,
+          220
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-contact-id",
+                "leftValue": "={{ $json.contactId }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "cal-contact-found",
+        "name": "Contact Found?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1800,
+          220
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Extract Contact Match').first().json.contactId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ properties: { booking_flag: 'true' } }) }}",
+          "options": {}
+        },
+        "id": "cal-mark-booked",
+        "name": "Mark Contact Booked",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2020,
+          120
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('Parse Cal Booking Payload').first().json;\nconst contact = $('Extract Contact Match').first().json;\nconst contactName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || booking.name || booking.email || 'Unknown attendee';\nconst company = contact.company || 'Unknown company';\nconst when = booking.startTime || 'Unknown time';\nconst lines = [\n  `Kickoff call scheduled: ${contactName} (${booking.email || contact.email || 'no email'})`,\n  `Company: ${company}`,\n  `Start: ${when}`,\n  booking.meetingUrl ? `Meet: ${booking.meetingUrl}` : '',\n  booking.bookingUrl ? `Booking: ${booking.bookingUrl}` : ''\n].filter(Boolean);\nreturn [{\n  json: {\n    message: lines.join('\\n'),\n    priority: 'info'\n  }\n}];"
+        },
+        "id": "cal-scheduled-alert-prep",
+        "name": "Prep Scheduled Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2240,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          }
+        },
+        "id": "cal-scheduled-alert",
+        "name": "Send Scheduled Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2460,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('Parse Cal Booking Payload').first().json;\nconst contact = $('Extract Contact Match').first().json;\nconst contactName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || booking.name || booking.email || 'Unknown attendee';\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Cal.com Kickoff Booking Handler',\n    contactName,\n    phone: booking.phone || contact.phone || '',\n    eventType: 'kickoff_call_scheduled',\n    status: 'success',\n    notes: `booking ${booking.bookingId || 'unknown'}; eventType ${booking.eventTypeId || 'unknown'}; email ${booking.email || contact.email || 'unknown'}; start ${booking.startTime || 'unknown'}`\n  }\n}];"
+        },
+        "id": "cal-scheduled-log-prep",
+        "name": "Prep Scheduled Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2680,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          }
+        },
+        "id": "cal-scheduled-log",
+        "name": "Log Scheduled Booking",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2900,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('Parse Cal Booking Payload').first().json;\nconst contact = $('Extract Contact Match').first().json;\nreturn [{\n  json: {\n    message: `Kickoff booking received but no HubSpot contact was matched for ${booking.email || 'missing attendee email'}. Booking ${booking.bookingId || 'unknown'} at ${booking.startTime || 'unknown time'}.`,\n    priority: 'warning',\n    contactName: booking.name || contact.email || booking.email || 'Unknown attendee',\n    phone: booking.phone || ''\n  }\n}];"
+        },
+        "id": "cal-unmatched-alert-prep",
+        "name": "Prep Unmatched Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2020,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          }
+        },
+        "id": "cal-unmatched-alert",
+        "name": "Send Unmatched Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2240,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('Parse Cal Booking Payload').first().json;\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Cal.com Kickoff Booking Handler',\n    contactName: booking.name || booking.email || 'Unknown attendee',\n    phone: booking.phone || '',\n    eventType: 'kickoff_call_scheduled_unmatched',\n    status: 'warning',\n    notes: `No HubSpot contact matched email ${booking.email || 'missing'}; booking ${booking.bookingId || 'unknown'}; start ${booking.startTime || 'unknown'}`\n  }\n}];"
+        },
+        "id": "cal-unmatched-log-prep",
+        "name": "Prep Unmatched Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2460,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          }
+        },
+        "id": "cal-unmatched-log",
+        "name": "Log Unmatched Booking",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2680,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { success: true, ignored: true, reason: 'Not the configured kickoff event type.' } }];"
+        },
+        "id": "cal-ignored-response",
+        "name": "Ignored Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1140,
+          620
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const booking = $('Parse Cal Booking Payload').first().json;\nlet contactId = '';\ntry {\n  contactId = $('Extract Contact Match').first().json.contactId || '';\n} catch (error) {}\nreturn [{\n  json: {\n    success: true,\n    handled: booking.shouldHandle === 'true',\n    matchedContactId: contactId || null,\n    bookingId: booking.bookingId || null\n  }\n}];"
+        },
+        "id": "cal-success-response",
+        "name": "Success Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3120,
+          320
+        ]
+      }
+    ],
+    "connections": {
+      "Cal.com Booking Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Parse Cal Booking Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Cal Booking Payload": {
+        "main": [
+          [
+            {
+              "node": "Is Kickoff Event?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Kickoff Event?": {
+        "main": [
+          [
+            {
+              "node": "Has Attendee Email?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ignored Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Attendee Email?": {
+        "main": [
+          [
+            {
+              "node": "Find HubSpot Contact by Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Unmatched Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find HubSpot Contact by Email": {
+        "main": [
+          [
+            {
+              "node": "Extract Contact Match",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Contact Match": {
+        "main": [
+          [
+            {
+              "node": "Contact Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Contact Found?": {
+        "main": [
+          [
+            {
+              "node": "Mark Contact Booked",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Unmatched Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark Contact Booked": {
+        "main": [
+          [
+            {
+              "node": "Prep Scheduled Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Scheduled Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Scheduled Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Scheduled Alert": {
+        "main": [
+          [
+            {
+              "node": "Prep Scheduled Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Scheduled Log": {
+        "main": [
+          [
+            {
+              "node": "Log Scheduled Booking",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Scheduled Booking": {
+        "main": [
+          [
+            {
+              "node": "Success Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Unmatched Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Unmatched Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Unmatched Alert": {
+        "main": [
+          [
+            {
+              "node": "Prep Unmatched Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Unmatched Log": {
+        "main": [
+          [
+            {
+              "node": "Log Unmatched Booking",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Unmatched Booking": {
+        "main": [
+          [
+            {
+              "node": "Success Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:42:43.104Z",
+        "id": 1482,
+        "workflowId": "jZSXHKgoMIQErTJ1",
+        "versionId": "e908fed1-f736-4906-ad04-c65bcaf28c77",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:43.093Z",
+        "id": 1481,
+        "workflowId": "jZSXHKgoMIQErTJ1",
+        "versionId": "e908fed1-f736-4906-ad04-c65bcaf28c77",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

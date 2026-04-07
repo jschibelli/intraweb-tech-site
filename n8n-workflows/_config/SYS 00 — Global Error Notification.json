@@ -1,7 +1,11 @@
 {
-  "id": "sys-17-global-error-notification",
+  "updatedAt": "2026-04-03T21:27:59.047Z",
+  "createdAt": "2026-03-21T17:28:10.960Z",
+  "id": "w9S9LovIY8CxchZm",
   "name": "SYS 00 — Global Error Notification",
-  "description": "Error Trigger workflow: when assigned as another workflow’s Error workflow, posts alarm to Google Chat and logs workflow_error. Does not use CONFIG (avoids failure if CONFIG breaks). Set this workflow’s own Error workflow to None to avoid loops.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -15,8 +19,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        60,
-        60
+        -320,
+        96
       ]
     },
     {
@@ -31,8 +35,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        600,
-        60
+        -352,
+        0
       ]
     },
     {
@@ -42,8 +46,8 @@
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
       "position": [
-        280,
-        300
+        288,
+        304
       ]
     },
     {
@@ -55,18 +59,18 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        500,
-        300
+        512,
+        304
       ]
     },
     {
       "parameters": {
-        "source": "database",
         "workflowId": {
           "__rl": true,
           "value": "PGf6jPoWtxSPlr0h",
           "mode": "id"
-        }
+        },
+        "options": {}
       },
       "id": "sys17-chat",
       "name": "Send Google Chat Alert",
@@ -74,7 +78,7 @@
       "typeVersion": 1.3,
       "position": [
         720,
-        300
+        304
       ],
       "onError": "continueRegularOutput"
     },
@@ -87,8 +91,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
-        300
+        944,
+        304
       ]
     },
     {
@@ -119,18 +123,18 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1060,
-        300
+        1072,
+        304
       ]
     },
     {
       "parameters": {
-        "source": "database",
         "workflowId": {
           "__rl": true,
           "value": "1qQFLOSHZsS9JPKP",
           "mode": "id"
-        }
+        },
+        "options": {}
       },
       "id": "sys17-log",
       "name": "Log to Sheet",
@@ -138,7 +142,7 @@
       "typeVersion": 1.3,
       "position": [
         1280,
-        300
+        304
       ],
       "onError": "continueRegularOutput"
     },
@@ -151,8 +155,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1380,
-        300
+        1392,
+        304
       ]
     }
   ],
@@ -233,8 +237,333 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true,
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": ""
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "c0a35f8f-bb70-4f54-b75c-db6a850776f8",
+  "activeVersionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+  "versionCounter": 97,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-21T17:28:10.963Z",
+      "createdAt": "2026-03-21T17:28:10.963Z",
+      "role": "workflow:owner",
+      "workflowId": "w9S9LovIY8CxchZm",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-02T02:47:19.153Z",
+    "createdAt": "2026-04-02T02:47:19.153Z",
+    "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+    "workflowId": "w9S9LovIY8CxchZm",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 00 — Global Error Notification\n\n### Purpose\nCentral **failure alerts**: when any OS workflow errors, n8n runs **this** workflow so the team gets a **Google Chat** message and a row in the **Automations Log**.\n\n### Assign it (required)\n**Per workflow:** Open each system workflow → **⋯** → **Settings** → **Error workflow** → choose **SYS 00 — Global Error Notification** → Save. Repeat for workflows you care about, or use your n8n **instance default error workflow** if your version supports it.\n\n### Critical\nOn **this** workflow’s **Settings**, set **Error workflow** to **None** / empty. Otherwise a failure here could recurse.\n\n### How it runs\n- Starts only from the **Error Trigger** (not manual test).\n- **Prep** reads `execution` or `trigger` error payloads (see n8n docs).\n- **Send Google Chat Alert** sub-workflow (message + `priority: error`).\n- **Log** sub-workflow (`workflow_error`). Chat/Log use `onError: continue` so one failing channel still tries the other.\n\n### Dependencies\n**SW: Send Google Chat Alert**, **SW: Log to Automations Log Sheet** — Execute Workflow nodes use **Database** source + workflow IDs (same pattern as other system workflows). If your Log/Chat workflow IDs differ, change the **Execute Workflow** nodes in n8n or edit the JSON `workflowId.value` fields.",
+          "height": 520,
+          "width": 500,
+          "color": 5
+        },
+        "id": "note-sys17",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          60,
+          60
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## README — SYS 00 — Global Error Notification\n\n**What this is:** The shared **error handler** for IntraWeb OS workflows. When n8n runs a workflow that fails and that workflow’s **Error workflow** points here, this flow **posts Google Chat** (error priority) and appends **Automations Log** with `eventType` **workflow_error**.\n\n**Design:** This workflow **does not** call **CONFIG**. Payload handling is local in **Prep Chat Message** so a broken CONFIG fetch elsewhere does not block this path. (The **Chat** and **Log** sub-workflows may still use CONFIG or their own credentials internally—if they fail, fix those next.)\n\n---\n\n### Repo documentation\n\n- **docs/operations-runbook.md** — §9 Global error notifications (SYS 00 — Global Error Notification) + post-import checklist\n- **docs/testing-checklist.md** — Global error verification (production-style trigger)\n- **README.md** — Stack overview\n\n---\n\n### Setup checklist\n\n1. Import **SYS 00 — Global Error Notification** and **activate** it.\n2. Ensure sub-workflows exist: **SW: Send Google Chat Alert**, **SW: Log to Automations Log Sheet** (or your equivalents).\n3. In **Send Google Chat Alert** and **Log to Sheet**, set **Execute Workflow** → source **Database** → correct workflow IDs. Repo export defaults: Chat `PGf6jPoWtxSPlr0h`, Log `1qQFLOSHZsS9JPKP` — **replace in n8n** if your IDs differ.\n4. **On this workflow:** **⋯** → **Settings** → **Error workflow** → **None** / empty (**required** — prevents a loop if the error handler itself errors).\n5. **On each workflow to monitor** (system workflows in `workflows/`): same **Settings** → **Error workflow** → **SYS 00 — Global Error Notification** → Save. Optional: instance **default error workflow** if your n8n version supports it.\n\n---\n\n### Node map (left → right)\n\n- **Error Trigger** — Entry when n8n invokes the assigned error workflow\n- **Prep Chat Message** — Normalizes `execution` / `trigger` payload; builds Chat `message`; sets `_logNotes`, `_wfName` for logging\n- **Send Google Chat Alert** — Runs Chat sub-workflow; **onError: continue** so logging still runs\n- **Prep Log** — Builds Log payload (`workflow_error`, failed workflow name in `contactName`)\n- **Log to Sheet** — Runs Log sub-workflow; **onError: continue**\n- **Done** — Terminal marker\n\n---\n\n### Testing (important)\n\nThe **Error Trigger often does not run** when you click **Test workflow** on the *failing* workflow. You need a **real execution path** (webhook, schedule, **Execute Workflow** from another run, etc.).\n\n**Suggested check:** Create a small workflow with **Error workflow** = SYS 00 — Global Error Notification, add **Stop and Error** (or a **Code** node that `throw`s), trigger it **via webhook or parent execution**, then confirm **Chat** + **Automations Log** row. Remove the test afterward.\n\n---\n\n### Troubleshooting\n\n- **No Chat:** Chat sub-workflow credentials / webhook; open the **Send Google Chat Alert** execution.\n- **No log row:** Log sub-workflow and sheet mapping; with **onError: continue**, **Log** should still run if Chat failed first.\n- **Alert storms / loops:** This error handler’s own **Error workflow** must stay **unset**.\n- **Sub-workflow noise:** Usually assign this handler on **parent** system workflows only; sub-workflows optional per runbook §9.",
+          "height": 820,
+          "width": 560,
+          "color": 4
+        },
+        "id": "note-sys17-readme",
+        "name": "Note — README",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          600,
+          60
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "sys17-error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          280,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "let data = $input.first().json;\nif (Array.isArray(data) && data.length && typeof data[0] === 'object') {\n  data = data[0];\n}\nif (!data || typeof data !== 'object') data = {};\n\nconst wf = data.workflow || {};\nconst wfName = wf.name || 'Unknown workflow';\nconst wfId = wf.id != null ? String(wf.id) : '';\n\nlet errMsg = '';\nlet lastNode = '';\nlet execUrl = '';\nlet execId = '';\nlet mode = '';\n\nif (data.execution) {\n  const ex = data.execution;\n  mode = ex.mode || '';\n  lastNode = ex.lastNodeExecuted || '';\n  execUrl = ex.url || '';\n  execId = ex.id != null ? String(ex.id) : '';\n  const err = ex.error;\n  if (err && typeof err === 'object') {\n    errMsg = err.message || err.description || err.reason || JSON.stringify(err);\n  } else if (err) {\n    errMsg = String(err);\n  }\n} else if (data.trigger) {\n  const t = data.trigger;\n  mode = t.mode || 'trigger';\n  const te = t.error || {};\n  errMsg = te.message || (te.cause && te.cause.message) || te.name || 'Trigger error';\n  lastNode = (te.node && te.node.name) ? te.node.name : 'trigger';\n}\n\nif (!errMsg) errMsg = 'Unknown error (no message in payload)';\nconst msgShort = errMsg.length > 1800 ? errMsg.slice(0, 1800) + '…' : errMsg;\n\nconst lines = [\n  `n8n workflow failed: *${wfName}*${wfId ? ` (id ${wfId})` : ''}`,\n  `Node: ${lastNode || '—'}`,\n  `Mode: ${mode || '—'}`,\n  `Error: ${msgShort}`\n];\nif (execUrl) lines.push(`Execution: ${execUrl}`);\nelse if (execId) lines.push(`Execution id: ${execId}`);\n\nreturn [{\n  json: {\n    message: lines.join('\\n'),\n    priority: 'error',\n    _logNotes: msgShort.slice(0, 500),\n    _wfName: wfName,\n    _wfId: wfId\n  }\n}];"
+        },
+        "id": "sys17-prep-chat",
+        "name": "Prep Chat Message",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          }
+        },
+        "id": "sys17-chat",
+        "name": "Send Google Chat Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          720,
+          300
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "let notes = '';\nlet wfName = 'SYS 00 — Global Error Notification';\nlet skipAutomationsLog = false;\ntry {\n  const prep = $('Prep Chat Message').first().json;\n  notes = prep._logNotes || '';\n  wfName = prep._wfName || wfName;\n  const wfId = String(prep._wfId || '').trim();\n  if (wfId === '1qQFLOSHZsS9JPKP') skipAutomationsLog = true;\n  if (String(wfName).includes('Log to Automations Log Sheet')) skipAutomationsLog = true;\n} catch (e) {}\nreturn [{\n  json: {\n    workflowName: 'SYS 00 — Global Error Notification',\n    contactName: wfName,\n    phone: '',\n    eventType: 'workflow_error',\n    status: 'failure',\n    notes: notes || 'workflow_error',\n    skipAutomationsLog\n  }\n}];"
+        },
+        "id": "sys17-prep-log",
+        "name": "Prep Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          940,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "skip-log-flag",
+                "leftValue": "={{ $json.skipAutomationsLog }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys17-if-skip-log",
+        "name": "Skip Automations Log?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1060,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          }
+        },
+        "id": "sys17-log",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1280,
+          300
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { handled: true, note: 'Error notification workflow finished (check Chat and Automations Log).' } }];"
+        },
+        "id": "sys17-done",
+        "name": "Done",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1380,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Prep Chat Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Chat Message": {
+        "main": [
+          [
+            {
+              "node": "Send Google Chat Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Google Chat Alert": {
+        "main": [
+          [
+            {
+              "node": "Prep Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Log": {
+        "main": [
+          [
+            {
+              "node": "Skip Automations Log?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Skip Automations Log?": {
+        "main": [
+          [
+            {
+              "node": "Done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-02T02:47:55.188Z",
+        "id": 1314,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.124Z",
+        "id": 1394,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.273Z",
+        "id": 1414,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.278Z",
+        "id": 1462,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.115Z",
+        "id": 1393,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.264Z",
+        "id": 1413,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.268Z",
+        "id": 1461,
+        "workflowId": "w9S9LovIY8CxchZm",
+        "versionId": "df30c1b2-2699-4ac1-af73-16abf16ca9e5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

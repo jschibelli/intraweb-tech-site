@@ -1,7 +1,11 @@
 {
-  "id": "sw-create-update-hubspot-contact",
+  "updatedAt": "2026-04-03T03:42:42.527Z",
+  "createdAt": "2026-03-08T22:41:14.717Z",
+  "id": "HbPxMMcf5tGERxEr",
   "name": "SW: Create or Update HubSpot Contact",
-  "description": "Subworkflow: idempotent HubSpot contact upsert by valid email, else by canonical phone (+1 US). Create or update with standard + customProps. Returns skipped_no_dedupe_key if neither email nor phone is usable. Used by lead sourcing, voice, and outreach.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -534,7 +538,629 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+  "activeVersionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+  "versionCounter": 358,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:41:14.720Z",
+      "createdAt": "2026-03-08T22:41:14.720Z",
+      "role": "workflow:owner",
+      "workflowId": "HbPxMMcf5tGERxEr",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:05:41.384Z",
+    "createdAt": "2026-04-03T03:05:41.384Z",
+    "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+    "workflowId": "HbPxMMcf5tGERxEr",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SW: Create or Update HubSpot Contact\n\n**Subworkflow.** Idempotent contact upsert: searches by **email** when valid; otherwise searches by **canonical phone** (`+1` + 10 digits for US). Updates if found, creates if not. Used by lead sourcing, voice qualification, and outreach.\n\n**Input:** `email`, `phone`, `firstName`, `lastName`, `company`, `industry`, `leadScore`, `source`, optional `customProps`\n\n**Phone:** Non-digits stripped; 10-digit US → stored/searched as `+1XXXXXXXXXX` so create and search match.\n\n**HubSpot mapping:** standard fields only (`email`, `phone`, `firstname`, `lastname`, `company`, `industry`). Custom properties via `customProps`.\n\n**Output:** `{ success, data: { contactId, action }, error }`. Returns `success: false`, `action: 'skipped_no_dedupe_key'` only when there is **no** valid email **and** no canonical phone (fewer than 10 digits). Placeholder emails (`@leads.intraweb.local`) trigger the phone path when phone is present.",
+          "height": 280,
+          "width": 420,
+          "color": 5
+        },
+        "id": "note-sw-contact",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "sw-hs-contact-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          250,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Execute Workflow Trigger').first().json || {};\n\nconst normalizeString = (value) => {\n  if (value === null || value === undefined) return '';\n  return String(value).trim();\n};\n\nconst HUBSPOT_INDUSTRIES = new Set(['ACCOUNTING','AIRLINES_AVIATION','ALTERNATIVE_DISPUTE_RESOLUTION','ALTERNATIVE_MEDICINE','ANIMATION','APPAREL_FASHION','ARCHITECTURE_PLANNING','ARTS_AND_CRAFTS','AUTOMOTIVE','AVIATION_AEROSPACE','BANKING','BIOTECHNOLOGY','BROADCAST_MEDIA','BUILDING_MATERIALS','BUSINESS_SUPPLIES_AND_EQUIPMENT','CAPITAL_MARKETS','CHEMICALS','CIVIC_SOCIAL_ORGANIZATION','CIVIL_ENGINEERING','COMMERCIAL_REAL_ESTATE','COMPUTER_NETWORK_SECURITY','COMPUTER_GAMES','COMPUTER_HARDWARE','COMPUTER_NETWORKING','COMPUTER_SOFTWARE','INTERNET','CONSTRUCTION','CONSUMER_ELECTRONICS','CONSUMER_GOODS','CONSUMER_SERVICES','COSMETICS','DAIRY','DEFENSE_SPACE','DESIGN','EDUCATION_MANAGEMENT','E_LEARNING','ELECTRICAL_ELECTRONIC_MANUFACTURING','ENTERTAINMENT','ENVIRONMENTAL_SERVICES','EVENTS_SERVICES','EXECUTIVE_OFFICE','FACILITIES_SERVICES','FARMING','FINANCIAL_SERVICES','FINE_ART','FISHERY','FOOD_BEVERAGES','FOOD_PRODUCTION','FUND_RAISING','FURNITURE','GAMBLING_CASINOS','GLASS_CERAMICS_CONCRETE','GOVERNMENT_ADMINISTRATION','GOVERNMENT_RELATIONS','GRAPHIC_DESIGN','HEALTH_WELLNESS_AND_FITNESS','HIGHER_EDUCATION','HOSPITAL_HEALTH_CARE','HOSPITALITY','HUMAN_RESOURCES','IMPORT_AND_EXPORT','INDIVIDUAL_FAMILY_SERVICES','INDUSTRIAL_AUTOMATION','INFORMATION_SERVICES','INFORMATION_TECHNOLOGY_AND_SERVICES','INSURANCE','INTERNATIONAL_AFFAIRS','INTERNATIONAL_TRADE_AND_DEVELOPMENT','INVESTMENT_BANKING','INVESTMENT_MANAGEMENT','JUDICIARY','LAW_ENFORCEMENT','LAW_PRACTICE','LEGAL_SERVICES','LEGISLATIVE_OFFICE','LEISURE_TRAVEL_TOURISM','LIBRARIES','LOGISTICS_AND_SUPPLY_CHAIN','LUXURY_GOODS_JEWELRY','MACHINERY','MANAGEMENT_CONSULTING','MARITIME','MARKET_RESEARCH','MARKETING_AND_ADVERTISING','MECHANICAL_OR_INDUSTRIAL_ENGINEERING','MEDIA_PRODUCTION','MEDICAL_DEVICES','MEDICAL_PRACTICE','MENTAL_HEALTH_CARE','MILITARY','MINING_METALS','MOTION_PICTURES_AND_FILM','MUSEUMS_AND_INSTITUTIONS','MUSIC','NANOTECHNOLOGY','NEWSPAPERS','NON_PROFIT_ORGANIZATION_MANAGEMENT','OIL_ENERGY','ONLINE_MEDIA','OUTSOURCING_OFFSHORING','PACKAGE_FREIGHT_DELIVERY','PACKAGING_AND_CONTAINERS','PAPER_FOREST_PRODUCTS','PERFORMING_ARTS','PHARMACEUTICALS','PHILANTHROPY','PHOTOGRAPHY','PLASTICS','POLITICAL_ORGANIZATION','PRIMARY_SECONDARY_EDUCATION','PRINTING','PROFESSIONAL_TRAINING_COACHING','PROGRAM_DEVELOPMENT','PUBLIC_POLICY','PUBLIC_RELATIONS_AND_COMMUNICATIONS','PUBLIC_SAFETY','PUBLISHING','RAILROAD_MANUFACTURE','RANCHING','REAL_ESTATE','RECREATIONAL_FACILITIES_AND_SERVICES','RELIGIOUS_INSTITUTIONS','RENEWABLES_ENVIRONMENT','RESEARCH','RESTAURANTS','RETAIL','SECURITY_AND_INVESTIGATIONS','SEMICONDUCTORS','SHIPBUILDING','SPORTING_GOODS','SPORTS','STAFFING_AND_RECRUITING','SUPERMARKETS','TELECOMMUNICATIONS','TEXTILES','THINK_TANKS','TOBACCO','TRANSLATION_AND_LOCALIZATION','TRANSPORTATION_TRUCKING_RAILROAD','UTILITIES','VENTURE_CAPITAL_PRIVATE_EQUITY','VETERINARY','WAREHOUSING','WHOLESALE','WINE_AND_SPIRITS','WIRELESS','WRITING_AND_EDITING','MOBILE_GAMES']);\nconst INDUSTRY_MAP = { 'HVAC':'MECHANICAL_OR_INDUSTRIAL_ENGINEERING', 'HVAC COMPANY':'MECHANICAL_OR_INDUSTRIAL_ENGINEERING', 'PLUMBING':'CONSTRUCTION', 'ELECTRICAL':'ELECTRICAL_ELECTRONIC_MANUFACTURING', 'ROOFING':'CONSTRUCTION', 'GENERAL CONTRACTOR':'CONSTRUCTION' };\nfunction toHubSpotIndustry(raw) {\n  const s = normalizeString(raw);\n  if (!s) return '';\n  const upper = s.toUpperCase();\n  return INDUSTRY_MAP[upper] || (HUBSPOT_INDUSTRIES.has(upper) ? upper : 'MECHANICAL_OR_INDUSTRIAL_ENGINEERING');\n}\n\nconst customProps = input.customProps && typeof input.customProps === 'object' && !Array.isArray(input.customProps)\n  ? input.customProps\n  : {};\n\nconst rawIndustry = normalizeString(input.industry);\nconst industry = rawIndustry ? toHubSpotIndustry(input.industry) : '';\n\nconst baseProperties = {\n  email: normalizeString(input.email),\n  phone: normalizeString(input.phone),\n  firstname: normalizeString(input.firstName),\n  lastname: normalizeString(input.lastName),\n  company: normalizeString(input.company)\n};\nif (industry) baseProperties.industry = industry;\n// lead_source and lead_score are custom in HubSpot - not sent by default; create them in HubSpot and pass via customProps if needed\n\n\nconst properties = {};\nfor (const [key, value] of Object.entries({ ...baseProperties, ...customProps })) {\n  if (!key) continue;\n  if (value === null || value === undefined) continue;\n\n  if (typeof value === 'string') {\n    const trimmed = value.trim();\n    if (trimmed) properties[key] = trimmed;\n    continue;\n  }\n\n  if (typeof value === 'number') {\n    if (Number.isFinite(value)) properties[key] = String(value);\n    continue;\n  }\n\n  if (typeof value === 'boolean') {\n    properties[key] = value ? 'true' : 'false';\n    continue;\n  }\n}\n\n// HubSpot rejects placeholder/synthetic emails (e.g. ...@leads.intraweb.local)\nconst isPlaceholderOrInvalidEmail = (e) => {\n  const s = (e || '').trim();\n  if (!s) return true;\n  if (s.toLowerCase().indexOf('@leads.intraweb.local') !== -1) return true;\n  return !/^[^@]+@[^@]+\\.[a-z]{2,}$/i.test(s);\n};\nconst hasValidEmail = !isPlaceholderOrInvalidEmail(properties.email);\nif (!hasValidEmail) delete properties.email;\n\nconst toCanonicalPhone = (raw) => {\n  const d = String(raw || '').replace(/\\D/g, '');\n  if (d.length < 10) return '';\n  if (d.length === 10) return '+1' + d;\n  if (d.length === 11 && d.startsWith('1')) return '+' + d;\n  return '+' + d;\n};\nconst canonicalPhone = toCanonicalPhone(normalizeString(input.phone));\nif (canonicalPhone) {\n  properties.phone = canonicalPhone;\n} else {\n  delete properties.phone;\n}\nconst hasNormalizedPhone = Boolean(canonicalPhone);\n\nreturn [{\n  json: {\n    email: properties.email || '',\n    phone: canonicalPhone,\n    canonicalPhone,\n    properties,\n    hasValidEmail: hasValidEmail,\n    hasValidEmailStr: hasValidEmail ? 'true' : 'false',\n    hasNormalizedPhone,\n    hasNormalizedPhoneStr: hasNormalizedPhone ? 'true' : 'false'\n  }\n}];"
+        },
+        "id": "sw-hs-contact-prepare",
+        "name": "Prepare Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          690,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-valid-email",
+                "leftValue": "={{ $json.hasValidEmailStr }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sw-hs-contact-has-valid-email",
+        "name": "Has valid email?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          910,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-normalized-phone",
+                "leftValue": "={{ $json.hasNormalizedPhoneStr }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sw-hs-contact-has-phone",
+        "name": "Has normalized phone?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          910,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { success: false, data: { contactId: null, action: 'skipped_no_dedupe_key' }, error: 'No valid email or canonical phone for HubSpot contact dedupe' } }];"
+        },
+        "id": "sw-hs-contact-return-no-email",
+        "name": "Return No Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1130,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "authentication": "appToken",
+          "resource": "contact",
+          "operation": "search",
+          "filterGroups": {
+            "values": [
+              {
+                "filters": {
+                  "values": [
+                    {
+                      "propertyName": "email",
+                      "operator": "EQ",
+                      "value": "={{ $json.email }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "limit": 1,
+          "options": {}
+        },
+        "id": "sw-hs-contact-search-email",
+        "name": "Search by Email",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1130,
+          180
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-email-found",
+                "leftValue": "={{ $json.total }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sw-hs-contact-email-found",
+        "name": "Email Found?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1130,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "authentication": "appToken",
+          "resource": "contact",
+          "operation": "search",
+          "filterGroups": {
+            "values": [
+              {
+                "filters": {
+                  "values": [
+                    {
+                      "propertyName": "phone",
+                      "operator": "EQ",
+                      "value": "={{ $('Prepare Input').first().json.canonicalPhone }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "limit": 1,
+          "options": {}
+        },
+        "id": "sw-hs-contact-search-phone",
+        "name": "Search by Phone",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          450
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-phone-found",
+                "leftValue": "={{ $json.total }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sw-hs-contact-phone-found",
+        "name": "Phone Found?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          450
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const searchResult = $('Search by Email').first().json;\nconst contactId = searchResult.results[0].id;\n\nreturn [{ json: { contactId: contactId, action: 'update_existing' } }];"
+        },
+        "id": "sw-hs-contact-extract-email",
+        "name": "Extract Email Match",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const searchResult = $('Search by Phone').first().json;\nconst contactId = searchResult.results[0].id;\n\nreturn [{ json: { contactId: contactId, action: 'update_existing' } }];"
+        },
+        "id": "sw-hs-contact-extract-phone",
+        "name": "Extract Phone Match",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          350
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contactId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ properties: $('Prepare Input').first().json.properties ?? {} }) }}",
+          "options": {}
+        },
+        "id": "sw-hs-contact-update",
+        "name": "Update Contact",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2010,
+          250
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ properties: $('Prepare Input').first().json.properties ?? {} }) }}",
+          "options": {}
+        },
+        "id": "sw-hs-contact-create",
+        "name": "Create Contact",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2010,
+          550
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Input = output of Update Contact or Create Contact. HubSpot uses vid. Return plain object only.\nconst item = $input.first();\nconst raw = item && item.json && typeof item.json === 'object' ? item.json : {};\nconst contactId = raw.vid ?? raw.id ?? raw.contactId;\nconst id = contactId != null ? String(contactId) : null;\nlet action = 'unknown';\ntry {\n  if ($('Update Contact').all().length > 0) action = 'updated';\n} catch (e) {}\ntry {\n  if (action === 'unknown' && $('Create Contact').all().length > 0) action = 'created';\n} catch (e2) {}\nreturn [{\n  json: {\n    success: true,\n    data: { contactId: id, action: String(action) },\n    error: null\n  }\n}];"
+        },
+        "id": "sw-hs-contact-response",
+        "name": "Return Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2230,
+          400
+        ]
+      }
+    ],
+    "connections": {
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Prepare Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Input": {
+        "main": [
+          [
+            {
+              "node": "Has valid email?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has valid email?": {
+        "main": [
+          [
+            {
+              "node": "Search by Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Has normalized phone?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has normalized phone?": {
+        "main": [
+          [
+            {
+              "node": "Search by Phone",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return No Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search by Email": {
+        "main": [
+          [
+            {
+              "node": "Email Found?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Search by Phone",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Email Found?": {
+        "main": [
+          [
+            {
+              "node": "Extract Email Match",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Search by Phone",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Email Match": {
+        "main": [
+          [
+            {
+              "node": "Update Contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search by Phone": {
+        "main": [
+          [
+            {
+              "node": "Phone Found?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Phone Found?": {
+        "main": [
+          [
+            {
+              "node": "Extract Phone Match",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Phone Match": {
+        "main": [
+          [
+            {
+              "node": "Update Contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Contact": {
+        "main": [
+          [
+            {
+              "node": "Return Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Contact": {
+        "main": [
+          [
+            {
+              "node": "Return Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:05:41.413Z",
+        "id": 1402,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.721Z",
+        "id": 1422,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.557Z",
+        "id": 1470,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.405Z",
+        "id": 1401,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.707Z",
+        "id": 1421,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.547Z",
+        "id": 1469,
+        "workflowId": "HbPxMMcf5tGERxEr",
+        "versionId": "b0008a1b-e42e-4445-955e-e172899adce5",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

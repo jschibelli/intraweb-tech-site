@@ -1,7 +1,11 @@
 {
-  "id": "sys-03-outbound-lead-outreach",
+  "updatedAt": "2026-04-03T03:42:43.438Z",
+  "createdAt": "2026-03-08T22:47:47.374Z",
+  "id": "jDbLNf6Q1mIaTlGy",
   "name": "SYS 02 — Outbound Lead Outreach Sequence",
-  "description": "Multi-touch outbound sequence triggered by webhook at /enroll-outreach (e.g. when a lead is enrolled from SYS 01 — Lead Sourcing Machine, SYS 01 — AI Voice Lead Qualification, or SYS 01 — Website Form Lead Intake). Sends Touch 1 email, waits per CONFIG, Touch 2 email, optional SMS touches; uses owner/company from CONFIG and logs each touch to the Automations Log.",
+  "description": "Multi-touch outbound sequence triggered by webhook at /enroll-outreach. Sends Touch 1 email, waits per CONFIG, Touch 2 email, optional SMS; uses owner/company from CONFIG and logs each touch to the Automations Log.",
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -33,7 +37,8 @@
       "position": [
         250,
         300
-      ]
+      ],
+      "webhookId": "81305961-2715-4d34-8b97-555e1205aa1b"
     },
     {
       "parameters": {
@@ -172,7 +177,8 @@
       "position": [
         1790,
         300
-      ]
+      ],
+      "webhookId": "9b1353f5-cb59-44e6-a397-1205e88dcc20"
     },
     {
       "parameters": {
@@ -295,7 +301,8 @@
       "position": [
         2890,
         250
-      ]
+      ],
+      "webhookId": "f177db75-1e18-4ca3-a7b3-c0e63bd64094"
     },
     {
       "parameters": {
@@ -423,7 +430,8 @@
       "position": [
         3990,
         200
-      ]
+      ],
+      "webhookId": "ac024f73-39a1-4303-bc53-bca8aa649c96"
     },
     {
       "parameters": {
@@ -546,7 +554,8 @@
       "position": [
         5090,
         150
-      ]
+      ],
+      "webhookId": "36621426-909e-406f-bf47-8a22b258ab1f"
     },
     {
       "parameters": {
@@ -1032,7 +1041,1099 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed"
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "3cf2d6d8-7798-48a5-b8be-6d6dbca84536",
+  "activeVersionId": "3cf2d6d8-7798-48a5-b8be-6d6dbca84536",
+  "versionCounter": 136,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:47:47.378Z",
+      "createdAt": "2026-03-08T22:47:47.378Z",
+      "role": "workflow:owner",
+      "workflowId": "jDbLNf6Q1mIaTlGy",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:43.439Z",
+    "createdAt": "2026-04-03T03:42:43.439Z",
+    "versionId": "3cf2d6d8-7798-48a5-b8be-6d6dbca84536",
+    "workflowId": "jDbLNf6Q1mIaTlGy",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 02 — Outbound Lead Outreach Sequence\n\n**Trigger:** Webhook POST at `/enroll-outreach` (e.g. when a lead is enrolled from **SYS 01 — Lead Sourcing Machine**, **SYS 01 — AI Voice Lead Qualification**, or **SYS 01 — Website Form Lead Intake** after a HubSpot form submission).\n\n**What it does:** Runs a multi-touch sequence: Touch 1 email (intro), then waits CONFIG's follow-up delay; Touch 2 email (value); optional Touch 3 SMS. All messaging uses owner and company info from CONFIG. Logs each touch to the Automations Log.\n\n**Dependencies:** CONFIG, Send Email, Send SMS, Log. Update HubSpot outreach/replied flags as needed.",
+          "height": 300,
+          "width": 460,
+          "color": 5
+        },
+        "id": "note-sys03",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "enroll-outreach",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "sys03-trigger",
+        "name": "Outreach Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "81305961-2715-4d34-8b97-555e1205aa1b"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          470,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $('Outreach Webhook').first().json;\nconst input = raw && raw.body && typeof raw.body === 'object' && !Array.isArray(raw.body) ? raw.body : raw;\nconst config = $('Get Config').first().json;\n\nreturn [{\n  json: {\n    contactId: input.contactId || input.contact_id || '',\n    company: input.company || '',\n    industry: input.industry || '',\n    firstName: input.firstName || input.firstname || '',\n    config: config\n  }\n}];"
+        },
+        "id": "sys03-prepare",
+        "name": "Prepare Sequence Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          690,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    to: data.config.owner.email,\n    subject: `Quick question about ${data.company}'s operations`,\n    html: `<p>Hi ${data.firstName || 'there'},</p><p>I came across ${data.company} and wanted to reach out. We help ${data.industry || 'businesses'} like yours automate operations — everything from lead follow-up to invoicing to client onboarding.</p><p>Most of our clients save 15-20 hours per week once their systems are running.</p><p>Worth a 15-minute conversation to see if there's a fit?</p><p>— John<br/>IntraWeb Technologies</p>`,\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence'\n  }\n}];"
+        },
+        "id": "sys03-touch1-prep",
+        "name": "Touch 1: Prep Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          910,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch1-send",
+        "name": "Touch 1: Send Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1130,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence',\n    contactName: data.firstName,\n    phone: '',\n    eventType: 'email_sent',\n    status: 'success',\n    notes: 'Touch 1: Initial outreach email'\n  }\n}];"
+        },
+        "id": "sys03-touch1-log-prep",
+        "name": "Touch 1: Log Prep",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch1-log",
+        "name": "Touch 1: Log",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1570,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "days"
+        },
+        "id": "sys03-wait1",
+        "name": "Wait 2 Days",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1790,
+          300
+        ],
+        "webhookId": "9b1353f5-cb59-44e6-a397-1205e88dcc20"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "get",
+          "contactId": "={{ $('Prepare Sequence Data').first().json.contactId }}",
+          "additionalFields": {
+            "properties": [
+              "replied_flag",
+              "booking_flag"
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys03-check1",
+        "name": "Check Reply (Day 2)",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          2010,
+          300
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-replied-1",
+                "leftValue": "={{ $json.properties.replied_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "check-booking-1",
+                "leftValue": "={{ $json.properties.booking_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys03-if-continue1",
+        "name": "Continue? (Day 2)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2230,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    to: data.config.owner.phone,\n    body: `Hi ${data.firstName || 'there'}, sent you an email about automating ${data.company}'s operations. Worth a 15-min chat? — John, IntraWeb`,\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence'\n  }\n}];"
+        },
+        "id": "sys03-touch2-prep",
+        "name": "Touch 2: Prep SMS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2450,
+          250
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "VzxtOFmmGEitVEQk",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch2-send",
+        "name": "Touch 2: Send SMS",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2670,
+          250
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 3,
+          "unit": "days"
+        },
+        "id": "sys03-wait2",
+        "name": "Wait 3 Days",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2890,
+          250
+        ],
+        "webhookId": "f177db75-1e18-4ca3-a7b3-c0e63bd64094"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "get",
+          "contactId": "={{ $('Prepare Sequence Data').first().json.contactId }}",
+          "additionalFields": {
+            "properties": [
+              "replied_flag",
+              "booking_flag"
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys03-check2",
+        "name": "Check Reply (Day 5)",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          3110,
+          250
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cr2a",
+                "leftValue": "={{ $json.properties.replied_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "cr2b",
+                "leftValue": "={{ $json.properties.booking_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys03-if-continue2",
+        "name": "Continue? (Day 5)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3330,
+          250
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    to: data.config.owner.email,\n    subject: `What ${data.industry || 'business'} owners are automating in 2025`,\n    html: `<p>Hi ${data.firstName || 'there'},</p><p>Quick follow-up — I've been working with several ${data.industry || 'businesses'} on automating their operations this year.</p><p>The pattern I keep seeing: owners spending 10+ hours/week on tasks that should take zero. Follow-ups that slip through the cracks. Invoices that go unpaid because nobody sent a reminder.</p><p>We build systems that handle all of it — automatically. No templates, no generic software. Custom-built for your operation.</p><p>Here's my calendar if you want to see what this looks like for ${data.company}: ${data.config.owner.calendarLink}</p><p>— John</p>`,\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence'\n  }\n}];"
+        },
+        "id": "sys03-touch3-prep",
+        "name": "Touch 3: Prep Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3550,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch3-send",
+        "name": "Touch 3: Send Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          3770,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 3,
+          "unit": "days"
+        },
+        "id": "sys03-wait3",
+        "name": "Wait 3 Days (to Day 8)",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3990,
+          200
+        ],
+        "webhookId": "ac024f73-39a1-4303-bc53-bca8aa649c96"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "get",
+          "contactId": "={{ $('Prepare Sequence Data').first().json.contactId }}",
+          "additionalFields": {
+            "properties": [
+              "replied_flag",
+              "booking_flag"
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys03-check3",
+        "name": "Check Reply (Day 8)",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          4210,
+          200
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cr3a",
+                "leftValue": "={{ $json.properties.replied_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "cr3b",
+                "leftValue": "={{ $json.properties.booking_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys03-if-continue3",
+        "name": "Continue? (Day 8)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          4430,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    to: data.config.owner.phone,\n    body: `${data.firstName || 'Hi'}, just following up — would a quick ops audit for ${data.company} be useful? No strings attached. — John`,\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence'\n  }\n}];"
+        },
+        "id": "sys03-touch4-prep",
+        "name": "Touch 4: Prep SMS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4650,
+          150
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "VzxtOFmmGEitVEQk",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch4-send",
+        "name": "Touch 4: Send SMS",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          4870,
+          150
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 6,
+          "unit": "days"
+        },
+        "id": "sys03-wait4",
+        "name": "Wait 6 Days (to Day 14)",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          5090,
+          150
+        ],
+        "webhookId": "36621426-909e-406f-bf47-8a22b258ab1f"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "get",
+          "contactId": "={{ $('Prepare Sequence Data').first().json.contactId }}",
+          "additionalFields": {
+            "properties": [
+              "replied_flag",
+              "booking_flag"
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys03-check4",
+        "name": "Check Reply (Day 14)",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          5310,
+          150
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cr4a",
+                "leftValue": "={{ $json.properties.replied_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "cr4b",
+                "leftValue": "={{ $json.properties.booking_flag }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys03-if-continue4",
+        "name": "Continue? (Day 14)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          5530,
+          150
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    to: data.config.owner.email,\n    subject: `Free ops audit for ${data.company}`,\n    html: `<p>Hi ${data.firstName || 'there'},</p><p>Last note from me — I wanted to offer a free operations audit for ${data.company}. No pitch, no commitment.</p><p>I'll spend 30 minutes mapping out where you're losing time and money on manual processes, and show you exactly what we'd automate.</p><p>If it's useful, great. If not, you'll still walk away with a clear picture of your operational bottlenecks.</p><p>Book a time here: ${data.config.owner.calendarLink}</p><p>— John<br/>IntraWeb Technologies</p>`,\n    workflowName: 'SYS 02 — Outbound Lead Outreach Sequence'\n  }\n}];"
+        },
+        "id": "sys03-touch5-prep",
+        "name": "Touch 5: Prep Final Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5750,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-touch5-send",
+        "name": "Touch 5: Send Final Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          5970,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('Prepare Sequence Data').first().json;\n\nreturn [{\n  json: {\n    message: `Lead replied: ${data.firstName} at ${data.company}`,\n    priority: 'info'\n  }\n}];"
+        },
+        "id": "sys03-reply-alert-prep",
+        "name": "Prep Reply Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2450,
+          450
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys03-reply-alert",
+        "name": "Send Reply Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2670,
+          450
+        ]
+      }
+    ],
+    "connections": {
+      "Outreach Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Prepare Sequence Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Sequence Data": {
+        "main": [
+          [
+            {
+              "node": "Touch 1: Prep Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 1: Prep Email": {
+        "main": [
+          [
+            {
+              "node": "Touch 1: Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 1: Send Email": {
+        "main": [
+          [
+            {
+              "node": "Touch 1: Log Prep",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 1: Log Prep": {
+        "main": [
+          [
+            {
+              "node": "Touch 1: Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 1: Log": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Days",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Days": {
+        "main": [
+          [
+            {
+              "node": "Check Reply (Day 2)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Reply (Day 2)": {
+        "main": [
+          [
+            {
+              "node": "Continue? (Day 2)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Continue? (Day 2)": {
+        "main": [
+          [
+            {
+              "node": "Touch 2: Prep SMS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Reply Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 2: Prep SMS": {
+        "main": [
+          [
+            {
+              "node": "Touch 2: Send SMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 2: Send SMS": {
+        "main": [
+          [
+            {
+              "node": "Wait 3 Days",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 3 Days": {
+        "main": [
+          [
+            {
+              "node": "Check Reply (Day 5)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Reply (Day 5)": {
+        "main": [
+          [
+            {
+              "node": "Continue? (Day 5)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Continue? (Day 5)": {
+        "main": [
+          [
+            {
+              "node": "Touch 3: Prep Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Reply Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 3: Prep Email": {
+        "main": [
+          [
+            {
+              "node": "Touch 3: Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 3: Send Email": {
+        "main": [
+          [
+            {
+              "node": "Wait 3 Days (to Day 8)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 3 Days (to Day 8)": {
+        "main": [
+          [
+            {
+              "node": "Check Reply (Day 8)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Reply (Day 8)": {
+        "main": [
+          [
+            {
+              "node": "Continue? (Day 8)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Continue? (Day 8)": {
+        "main": [
+          [
+            {
+              "node": "Touch 4: Prep SMS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Reply Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 4: Prep SMS": {
+        "main": [
+          [
+            {
+              "node": "Touch 4: Send SMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 4: Send SMS": {
+        "main": [
+          [
+            {
+              "node": "Wait 6 Days (to Day 14)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 6 Days (to Day 14)": {
+        "main": [
+          [
+            {
+              "node": "Check Reply (Day 14)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Reply (Day 14)": {
+        "main": [
+          [
+            {
+              "node": "Continue? (Day 14)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Continue? (Day 14)": {
+        "main": [
+          [
+            {
+              "node": "Touch 5: Prep Final Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Reply Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Touch 5: Prep Final Email": {
+        "main": [
+          [
+            {
+              "node": "Touch 5: Send Final Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Reply Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Reply Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:42:43.485Z",
+        "id": 1488,
+        "workflowId": "jDbLNf6Q1mIaTlGy",
+        "versionId": "3cf2d6d8-7798-48a5-b8be-6d6dbca84536",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:43.475Z",
+        "id": 1487,
+        "workflowId": "jDbLNf6Q1mIaTlGy",
+        "versionId": "3cf2d6d8-7798-48a5-b8be-6d6dbca84536",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

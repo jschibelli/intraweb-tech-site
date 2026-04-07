@@ -13,7 +13,8 @@
     "analyze": "ANALYZE=true next build",
     "postbuild": "next-sitemap",
     "audit:cookies": "ts-node scripts/auditCookies.ts",
-    "recaptcha:token": "node scripts/recaptcha-print-token.js"
+    "recaptcha:token": "node scripts/recaptcha-print-token.js",
+    "sync:n8n": "node scripts/sync-workflows-to-n8n.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",

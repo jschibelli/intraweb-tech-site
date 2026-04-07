@@ -1,5 +1,19 @@
 {
   "id": "98765432109876",
+  "lineItems": [
+    {
+      "name": "Marketing website",
+      "description": "Next.js site, CMS, lead forms, performance baseline",
+      "quantity": 1,
+      "amount": 12000
+    },
+    {
+      "name": "Dispatch & field automation",
+      "description": "HubSpot workflows, SMS reminders, technician mobile status",
+      "quantity": 1,
+      "amount": 13000
+    }
+  ],
   "properties": {
     "dealname": "Summit Plumbing & Heating",
     "name": "Summit Plumbing & Heating",
@@ -8,7 +22,6 @@
     "deal_pain_points": "We're drowning in paper job tickets and phone calls. Dispatchers spend half the day chasing technicians for status updates. Customers call repeatedly asking when we'll arrive. We need one place to see every job, automate reminders, and get our field guys updating status from their phones so the office can stop playing telephone tag. Invoicing is manual and slow; we want same-day quotes and less back-and-forth.",
     "painPoints": "Paper tickets, no job visibility, customer call-backs, manual invoicing.",
     "pain_point_summary": "Paper tickets, no job visibility, customer call-backs, manual invoicing.",
-    "amount": "2500",
     "tier": "growth",
     "contact_email": "jschibelli@gmail.com",
     "contact_firstname": "Mike",

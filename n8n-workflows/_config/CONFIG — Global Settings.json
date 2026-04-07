@@ -1,6 +1,11 @@
 {
+  "updatedAt": "2026-04-03T03:42:42.185Z",
+  "createdAt": "2026-03-08T22:38:04.864Z",
+  "id": "1eTTVoSFSlSPvZV4",
   "name": "CONFIG — Global Settings",
-  "description": "Single source of truth for the IntraWeb OS: owner, Google (Sheets, Drive, Maps, Chat), timing, scoring, tier pricing, leadSourcing.minScoreForHubSpot, Hunter, industries, and leadSourcingQueries. Secrets: Data table CONFIG_secrets (columns hunterApiKey, mapsApiKey, chatWebhookUrl) — no $env. Code node cannot read n8n Credentials; use Data table, or HTTP Request/Postgres with a credential before Code. Called via Execute Workflow from every system workflow.",
+  "description": "Single source of truth for the IntraWeb OS: owner, Google (Sheets, Drive, Maps, Chat), timing, scoring, tier pricing, leadSourcing.minScoreForHubSpot, Hunter, industries, and leadSourcingQueries. Called via Execute Workflow from every system workflow.",
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -36,7 +41,7 @@
       "id": "f4462f2f-4de9-48e8-84aa-68c263592374",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.3,
+      "typeVersion": 1.1,
       "position": [
         864,
         1040
@@ -80,7 +85,6 @@
       ]
     }
   ],
-  "pinData": {},
   "connections": {
     "Manual Trigger": {
       "main": [
@@ -116,16 +120,213 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "versionId": "4b0a9fa1-0b5c-45f4-9b36-63e1223d7d0a",
-  "meta": {
-    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
-  },
-  "id": "1eTTVoSFSlSPvZV4",
-  "tags": []
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+  "activeVersionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+  "versionCounter": 287,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:38:04.871Z",
+      "createdAt": "2026-03-08T22:38:04.871Z",
+      "role": "workflow:owner",
+      "workflowId": "1eTTVoSFSlSPvZV4",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:05:41.020Z",
+    "createdAt": "2026-04-03T03:05:41.020Z",
+    "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+    "workflowId": "1eTTVoSFSlSPvZV4",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## CONFIG — Global Settings\n\nThis workflow is the **single source of truth** for all shared settings used by the IntraWeb OS. It is called by every other workflow via *Execute Workflow*.\n\n**Testing:** Use **Manual Trigger** → *Test workflow* on this canvas. n8n does not allow standalone runs when the only entry point is *Execute Workflow Trigger*.\n\n**What it does:**\n- Exposes owner info (name, phone, email, company, Calendly, payment link + Stripe test payment links by offer)\n- Google settings (master sheet ID, Drive folder, Chat webhook)\n- Timing (follow-up delays, invoice reminders, health check cadence)\n- Scoring thresholds (hot/warm lead, health warning)\n- **Lead sourcing:** `leadSourcing.minScoreForHubSpot` — minimum Maps lead score (0–10) before SYS 01 syncs a scraped lead to HubSpot (`0` = all leads; `4` = warm+ only, legacy)\n- **HubSpot:** `hubspot.pipelineId` (optional) and `hubspot.dealStageIds` — values must match what HubSpot sends on **dealstage** webhooks (usually **numeric** IDs from Pipelines API, or strings like `closedwon` / `closedlost`). **Never** use display names or guesses like `contractsent` for `contractSent` — paste the real stage **id** from **Settings → Deals → Pipelines** or `GET .../pipelines/deals/{id}/stages`. Leave `contractSent` as `''` until set.\n- Tier pricing (Starter, Growth, Ops)\n- Lead sourcing queries and industry list\n\n**Secrets (Data table — works with env blocking on):** In **Data tables**, create a table named **`CONFIG_secrets`** with three **text** columns: `hunterApiKey`, `mapsApiKey`, `chatWebhookUrl`. Add **one row** with your real values. The **Load secrets (Data table)** node loads the first row (`limit` 1). If you rename the table, open that node and pick the correct table. Do not commit secrets in workflow JSON.\n\n**n8n Credentials:** The **Code** node **cannot** read credentials (`getCredentials` / `$getCredentials` are not supported there — see [Code node common issues](https://docs.n8n.io/code/code-node/#common-issues)). To use **Header Auth**, **Postgres**, etc., insert an **HTTP Request** (GET a private JSON secrets URL) or **Postgres** (SELECT one row) **between** the trigger and **Return Config**, wire it instead of the Data table node, and map fields into the same three keys the Code expects.\n\n**Usage:** Import this workflow first. Replace no hardcoded values in other workflows — they all read from here.",
+          "height": 340,
+          "width": 440,
+          "color": 5
+        },
+        "id": "54821348-cde2-4a85-95d9-49b3400de9ea",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          352,
+          640
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "a7c3e8b1-2d4f-4e6a-9c0d-1b2e3f4a5b6c",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          640,
+          1040
+        ]
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "f4462f2f-4de9-48e8-84aa-68c263592374",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          864,
+          1040
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "name",
+            "value": "CONFIG_secrets",
+            "cachedResultName": "CONFIG_secrets"
+          },
+          "matchType": "anyCondition",
+          "filters": {},
+          "returnAll": false,
+          "limit": 1
+        },
+        "id": "7f2a9c1e-4b3d-4e5f-8a0b-1c2d3e4f5a6b",
+        "name": "Load secrets (Data table)",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          976,
+          1040
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const row = $input.first()?.json ?? {};\nconst hunterApiKey = row.hunterApiKey ?? '';\nconst mapsApiKey = row.mapsApiKey ?? '';\nconst chatWebhookUrl = row.chatWebhookUrl ?? '';\n\nreturn [{\n  json: {\n    owner: {\n      name: 'John Schibelli',\n      phone: '+18622079004',\n      email: 'john.schibelli@intrawebtech.com',\n      companyName: 'IntraWeb Technologies LLC',\n      fromEmail: 'john.schibelli@intrawebtech.com',\n      fromName: 'John Schibelli| IntraWeb Technologies',\n      calendarLink: 'https://cal.com/intraweb/discovery?overlayCalendar=true',\n      kickoffCalendarLink: 'https://cal.com/intraweb/website-discovery',\n      googleReviewLink: 'https://g.page/r/PLACEHOLDER/review',\n      paymentLink: 'https://buy.stripe.com/cNi00j6TS6ck7XR2tA2Ry09',\n      stripePaymentLinksTest: {\n        starterMonthly: 'https://buy.stripe.com/test_6oU3cv0vu0S0gungkq2Ry08',\n        growthMonthly: 'https://buy.stripe.com/test_cNi00j6TS6ck7XR2tA2Ry09',\n        starterSetup: 'https://buy.stripe.com/test_4gM7sLba89ow5PJfgm2Ry0a',\n        growthSetup: 'https://buy.stripe.com/test_5kQ8wP0vu9ow91V5FM2Ry0b'\n      },\n      hubspotOwnerId: '80526695',\n      n8nBaseUrl: 'https://n8n.intrawebtech.com'\n    },\n    stripe: {\n      pricesBySku: {\n        'IW-AS-TIER': 'price_1TGrfiFFObU2Nf6zLOeGE3Tq',\n        'IW-AS-SETUP': 'price_1TGrfkFFObU2Nf6z33apk1kF',\n        'IW-AS-MRR': 'price_1TGrfpFFObU2Nf6ziLmjJiso',\n        'IW-AG-TIER': 'price_1TGrgoFFObU2Nf6zyqlI4xxc',\n        'IW-AG-SETUP': 'price_1TGrgqFFObU2Nf6zcjrjC4rL',\n        'IW-AG-MRR': 'price_1TGrgwFFObU2Nf6z2bdTO0Sj',\n        'IW-WS-SETUP': 'price_1TGrh2FFObU2Nf6znhAomQpj',\n        'IW-WS-MRR': 'price_1TGrh7FFObU2Nf6zoIWil3yJ',\n        'IW-WG-SETUP': 'price_1TGrhCFFObU2Nf6zh7rFMvWf',\n        'IW-WG-MRR': 'price_1TGrhIFFObU2Nf6zKktzOwW1',\n        'IW-WC-SETUP': 'price_1TGrhQFFObU2Nf6zB02xcksp',\n        'IW-COPY-ADDON': 'price_1TGrhUFFObU2Nf6ziEihCAJO'\n      },\n      paymentLinksBySku: {\n        'IW-AS-TIER': 'https://buy.stripe.com/7sY4gz1zy6ck1zteci2Ry06',\n        'IW-AS-SETUP': 'https://buy.stripe.com/cNi00j6TS6ck7XR2tA2Ry09',\n        'IW-AS-MRR': 'https://buy.stripe.com/4gM7sLba89ow5PJfgm2Ry0a',\n        'IW-AG-TIER': 'https://buy.stripe.com/5kQ8wP0vu9ow91V5FM2Ry0b',\n        'IW-AG-SETUP': 'https://buy.stripe.com/6oU3cv0vu0S0gungkq2Ry08',\n        'IW-AG-MRR': 'https://buy.stripe.com/8x2bJ1a64gQY4LFb062Ry07',\n        'IW-WS-SETUP': 'https://buy.stripe.com/4gM28r1zy3084LFgkq2Ry0c',\n        'IW-WS-MRR': 'https://buy.stripe.com/9B6eVddig8ksba3b062Ry0d',\n        'IW-WG-SETUP': 'https://buy.stripe.com/4gMdR9920asAdib2tA2Ry0e',\n        'IW-WG-MRR': 'https://buy.stripe.com/14A3cv2DC8ks6TN5FM2Ry0h',\n        'IW-COPY-ADDON': 'https://buy.stripe.com/eVqaEXemk44cdibc4a2Ry0f'\n      }\n    },\n    pipeline: 'default',\n    hubspot: {\n      pipelineId: 'default',\n      dealStageIds: {\n        leadQualified: '3382756081',\n        discoveryCallRequested: '3382756082',\n        discoveryCallScheduled: '3382756083',\n        discoveryCallComplete: '3382756084',\n        proposal: '3382756085',\n        contractSent: '',\n        closedWon: 'closedwon',\n        invoiceSent: '3382756086',\n        paid: '3382756087',\n        projectComplete: '3382756088',\n        lost: 'closedlost'\n      }\n    },\n    calcom: {\n      username: 'intraweb',\n      kickoffEventTypeId: 5229696,\n      kickoffEventTypeSlug: 'website-discovery',\n      kickoffEventTypeTitle: 'Website Intake — Discovery Kickoff',\n      kickoffBookingUrl: 'https://cal.com/intraweb/website-discovery'\n    },\n    hunter: {\n      apiKey: hunterApiKey\n    },\n    google: {\n      masterSheetId: '11mUg_0EKtW45lg735vOKnvPNm0AVEmZXxiLClKiCRtE',\n      clientFolderParentId: '1T6UkRAh7H1H5fQfs271byfLUzIWagKZf',\n      mapsApiKey,\n      chatWebhookUrl\n    },\n    branding: { logoUrl: '' },\n    timing: {\n      followUpDelayHours: 48,\n      websiteKickoffReminderHours: 48,\n      invoiceReminderDays: [3, 7, 14, 21],\n      reactivationDays: 60,\n      healthCheckDays: 14,\n      reviewRequestDelayMinutes: 60,\n      referralDelayDays: 7\n    },\n    scoring: {\n      hotLeadThreshold: 7,\n      warmLeadThreshold: 4,\n      healthScoreWarningThreshold: 4\n    },\n    leadSourcing: {\n      minScoreForHubSpot: 0\n    },\n    tiers: {\n      starter: { name: 'Starter', monthlyPrice: 300, setupFee: 1000 },\n      growth: { name: 'Growth', monthlyPrice: 450, setupFee: 2000 },\n      ops: { name: 'Ops', monthlyPrice: 1000, setupFee: 2500 }\n    },\n    industries: ['HVAC', 'Plumbing', 'Electrical', 'Accounting', 'Insurance', 'Landscaping', 'Med Spa', 'Dental'],\n    leadSourcingQueries: [\n      'HVAC company NJ', 'plumbing company NJ', 'accounting firm NJ',\n      'insurance agency NJ', 'landscaping company NJ', 'med spa NJ', 'dental practice NJ'\n    ]\n  }\n}];"
+        },
+        "id": "bdc13b14-d54d-408b-9545-3d8fb554c6af",
+        "name": "Return Config",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1088,
+          1040
+        ]
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Load secrets (Data table)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Load secrets (Data table)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Load secrets (Data table)": {
+        "main": [
+          [
+            {
+              "node": "Return Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:05:41.054Z",
+        "id": 1392,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.169Z",
+        "id": 1412,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.213Z",
+        "id": 1460,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.045Z",
+        "id": 1391,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.155Z",
+        "id": 1411,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.204Z",
+        "id": 1459,
+        "workflowId": "1eTTVoSFSlSPvZV4",
+        "versionId": "25acd048-4301-4746-8fb0-7442a652b3c1",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

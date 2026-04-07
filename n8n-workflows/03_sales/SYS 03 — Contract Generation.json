@@ -1,7 +1,11 @@
 {
-  "id": "sys-15-contract-generation",
+  "updatedAt": "2026-04-03T03:42:44.580Z",
+  "createdAt": "2026-03-21T17:14:25.980Z",
+  "id": "5gXQdYfFgl0JStaA",
   "name": "SYS 03 — Contract Generation",
-  "description": "Webhook on Contract Sent: Claude generates Exhibit A scope summary → fixed MSA-style HTML/PDF → html2pdf → Drive upload → Contracts sheet queue (Pending Review) → Chat alert → poll until Approved → client email + HubSpot contract_sent_date + Log. Not legal advice; e-sign is out of scope.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -33,7 +37,8 @@
       "position": [
         250,
         300
-      ]
+      ],
+      "webhookId": "2a83d054-b43e-407c-a1c9-321910ab0019"
     },
     {
       "parameters": {
@@ -178,7 +183,7 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "ANTHROPIC_API_CREDENTIAL_ID",
+          "id": "weYEDVXsLfY0tPqi",
           "name": "Anthropic API"
         }
       }
@@ -370,7 +375,8 @@
       "position": [
         3010,
         200
-      ]
+      ],
+      "webhookId": "7e1eb85d-fd7d-44d2-b928-e7db2d1a14f6"
     },
     {
       "parameters": {
@@ -834,7 +840,882 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2a6db986-b02f-4d2e-85f9-23d89ef21c66",
+  "activeVersionId": "2a6db986-b02f-4d2e-85f9-23d89ef21c66",
+  "versionCounter": 126,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-21T17:14:25.984Z",
+      "createdAt": "2026-03-21T17:14:25.984Z",
+      "role": "workflow:owner",
+      "workflowId": "5gXQdYfFgl0JStaA",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:44.581Z",
+    "createdAt": "2026-04-03T03:42:44.581Z",
+    "versionId": "2a6db986-b02f-4d2e-85f9-23d89ef21c66",
+    "workflowId": "5gXQdYfFgl0JStaA",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 03 — Contract Generation\n\n### Purpose\nGenerate a **Master Services Agreement (MSA) PDF** when a deal enters **Contract Sent**: AI-written **Exhibit A — Statement of Work summary** plus **fixed** commercial terms (fees from deal/tier, signatures). Same human-in-the-loop pattern as SYS 03 — Proposal and Contract Delivery (**Contracts** tab in the master sheet).\n\n### What this workflow does *not* do\nIt does **not** provide legal advice or replace attorney review. It does **not** run e-signature (use DocuSign, HubSpot quotes, or similar after the PDF is approved). Requires **`client_drive_folder_id`** on the deal for upload (same as SYS 03 — Proposal and Contract Delivery).\n\n### When it fires\n- **Webhook:** `POST` → `/webhook/hubspot-deal-contract-sent`\n- **HubSpot:** Deal enters **Contract Sent** (direct workflow, or **SYS 00** router on `dealstage`).\n\n### Dependencies\nCONFIG, Anthropic, Google Drive & Sheets, Send Email, Send Google Chat Alert, Log sub-workflows. Add a **Contracts** tab to the master sheet (see `docs/google-sheets-setup.md`). Create deal property **`contract_sent_date`** (see `docs/hubspot-setup.md`).",
+          "height": 520,
+          "width": 500,
+          "color": 5
+        },
+        "id": "note-sys15",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "hubspot-deal-contract-sent",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "sys15-trigger",
+        "name": "Deal Contract Sent Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "2a83d054-b43e-407c-a1c9-321910ab0019"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          }
+        },
+        "id": "sys15-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          470,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const deal = $('Deal Contract Sent Webhook').first().json;\nconst config = $('Get Config').first().json;\nconst body = deal.body && typeof deal.body === 'object' ? deal.body : deal;\nconst props = body.properties || body;\n\nconst valueFrom = (...values) => {\n  for (const value of values) {\n    if (value !== undefined && value !== null && String(value).trim()) {\n      return String(value).trim();\n    }\n  }\n  return '';\n};\n\nconst money = (value) => {\n  if (value === undefined || value === null || value === '') return 0;\n  const normalized = Number(String(value).replace(/[^0-9.-]/g, ''));\n  return Number.isFinite(normalized) ? normalized : 0;\n};\n\nconst titleCase = (value) => value ? value.charAt(0).toUpperCase() + value.slice(1) : '';\n\nconst addressParts = [\n  valueFrom(props.address, props.street, props.street_address, props.company_address),\n  valueFrom(props.city, props.company_city),\n  valueFrom(props.state, props.state_region, props.company_state),\n  valueFrom(props.zip, props.zip_code, props.postal_code, props.company_zip),\n  valueFrom(props.country, props.company_country)\n].filter(Boolean);\n\nconst tierKey = valueFrom(props.tier).toLowerCase() || 'starter';\nconst tierInfo = (config.tiers && (config.tiers[tierKey] || config.tiers.starter)) || {\n  name: titleCase(tierKey) || 'Starter',\n  monthlyPrice: 0,\n  setupFee: 0\n};\n\nconst rawPainSources = [\n  valueFrom(props.deal_pain_points),\n  valueFrom(props.painPoints),\n  valueFrom(props.pain_point_summary)\n].filter(Boolean);\n\nconst uniquePainSources = [...new Set(rawPainSources)];\nconst painPoints = uniquePainSources.join('\\n\\n');\nconst contactFirstName = valueFrom(props.contact_firstname, props.firstName, props.firstname);\nconst contactLastName = valueFrom(props.contact_lastname, props.lastName, props.lastname);\nconst contactName = [contactFirstName, contactLastName].filter(Boolean).join(' ');\n\nconst companyName = valueFrom(\n  props.company,\n  props.company_name,\n  props.business_name,\n  props.dealname,\n  props.name\n);\nconst tierMonthly = money(tierInfo.monthlyPrice);\nconst upfrontDue = money(tierInfo.setupFee);\nconst tierAmount = money(props.amount) || upfrontDue;\nconst remainingTierBalance = Math.max(tierAmount - upfrontDue, 0);\nconst launchBalance = remainingTierBalance + tierMonthly;\n\nreturn [{\n  json: {\n    clientName: valueFrom(props.dealname, props.name, props.company, props.business_name, props.company_name),\n    company: companyName,\n    companyName,\n    industry: valueFrom(props.industry),\n    painPoints,\n    painPointSummary: valueFrom(props.pain_point_summary, props.painPoints),\n    rawPainPoints: valueFrom(props.deal_pain_points, painPoints),\n    dealValue: tierAmount,\n    tierAmount,\n    tier: tierKey,\n    tierLabel: tierInfo.name || titleCase(tierKey) || 'Starter',\n    tierMonthly,\n    upfrontDue,\n    launchBalance,\n    dealId: valueFrom(body.id, deal.id, body.dealId, deal.dealId),\n    contactEmail: valueFrom(props.contact_email, props.email),\n    contactPhone: valueFrom(props.contact_phone, props.phone, props.mobilephone),\n    contactFirstName,\n    contactName: contactName || contactFirstName,\n    address: addressParts.join(', '),\n    driveFolderId: valueFrom(props.client_drive_folder_id),\n    config\n  }\n}];"
+        },
+        "id": "sys15-extract",
+        "name": "Extract Deal Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          690,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-folder",
+                "leftValue": "={{ $json.driveFolderId }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys15-has-drive",
+        "name": "Has Client Drive Folder?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          910,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nreturn [{\n  json: {\n    message: `Contract Generation skipped: no client_drive_folder_id on deal for \"${d.clientName}\". Set the property or complete onboarding so the client Drive folder exists.`,\n    priority: 'warning'\n  }\n}];"
+        },
+        "id": "sys15-skip-alert-prep",
+        "name": "Prep Missing Folder Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          910,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          }
+        },
+        "id": "sys15-skip-alert-send",
+        "name": "Send Missing Folder Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1130,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nconst scopeContext = [d.rawPainPoints, d.painPointSummary].filter(Boolean).join('\\n') || d.painPoints || '(None provided)';\n\nreturn [{\n  json: {\n    systemPrompt: 'You are drafting Exhibit A (Statement of Work) for a Master Services Agreement for IntraWeb Technologies LLC, an implementation and automation consultancy. Output ONLY clean semantic HTML for the exhibit body: no markdown, no backticks, no DOCTYPE, no html/head/body tags. Use h2, h3, p, ul, ol, li, strong. This is an operational scope description, not legal language—no warranties, governing law, or liability caps. Do not invent facts not supported by the payload.',\n    userPrompt: `Write Exhibit A — Statement of Work for this engagement.\\n\\nClient: ${d.clientName}\\nCompany: ${d.company}\\nIndustry: ${d.industry || 'Not provided'}\\nTier: ${d.tierLabel}\\nProject / tier amount: $${d.tierAmount || 0}\\nMonthly recurring (if applicable): $${d.tierMonthly || 0}\\nUpfront / setup portion: $${d.upfrontDue || 0}\\n\\nContext from discovery (use for scope only):\\n\"\"\"\\n${scopeContext}\\n\"\"\"\\n\\nReturn sections:\\n1. Objectives\\n2. Deliverables and workstreams (bullet lists)\\n3. Client responsibilities (assumptions, access, approvals)\\n4. Out of scope (explicit)\\n5. Change requests (brief process)\\n\\nKeep it concise and implementation-ready.`,\n    maxTokens: 3500\n  }\n}];"
+        },
+        "id": "sys15-claude-prep",
+        "name": "Prep Claude Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1130,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: $json.maxTokens, system: $json.systemPrompt, messages: [{ role: 'user', content: $json.userPrompt }] }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "sys15-claude",
+        "name": "Call Claude API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1350,
+          200
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "weYEDVXsLfY0tPqi",
+            "name": "Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $('Call Claude API').first().json;\nconst text = (raw.content && raw.content[0] && raw.content[0].text) ? raw.content[0].text : '';\nconst d = $('Extract Deal Data').first().json;\nreturn [{ json: { data: { text }, html: text, fileName: `IntraWeb — ${d.clientName} — Master Services Agreement.pdf` } }];"
+        },
+        "id": "sys15-parse-claude",
+        "name": "Parse Claude Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1470,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const claudeResult = $('Parse Claude Response').first().json;\nconst d = $('Extract Deal Data').first().json;\nconst owner = (d.config && d.config.owner) || {};\nconst companyName = owner.companyName || 'IntraWeb Technologies LLC';\nconst ownerEmail = owner.email || '';\nconst ownerPhone = owner.phone || '';\nconst ownerName = owner.name || 'Authorized Representative';\nconst clientLegalName = d.company || d.clientName || 'Client';\nconst effectiveDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });\nconst exhibitBody = (claudeResult.data ? claudeResult.data.text : claudeResult.html || '').trim() || '<p>Exhibit A could not be generated.</p>';\n\nconst escapeHtml = (value) => String(value ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;')\n  .replace(/\\\"/g, '&quot;')\n  .replace(/'/g, '&#39;');\n\nconst formatCurrency = (value) => {\n  const numeric = Number(value || 0);\n  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number.isFinite(numeric) ? numeric : 0);\n};\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>Master Services Agreement — ${escapeHtml(clientLegalName)}</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n  <style>\n    @page { size: Letter; margin: 0.65in; }\n    * { box-sizing: border-box; }\n    body { margin: 0; padding: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 11.5px; line-height: 1.55; color: #1a1f2e; }\n    h1 { font-family: 'Manrope', Arial, sans-serif; font-size: 22px; margin: 0 0 8px; letter-spacing: -0.02em; }\n    .sub { font-family: 'Manrope', Arial, sans-serif; font-size: 11px; color: #5b6472; margin-bottom: 20px; }\n    h2 { font-family: 'Manrope', Arial, sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #374151; margin: 22px 0 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }\n    h3 { font-size: 12.5px; margin: 14px 0 8px; }\n    p { margin: 0 0 10px; }\n    ul, ol { margin: 0 0 10px 18px; padding: 0; }\n    table.fees { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-family: 'Manrope', Arial, sans-serif; font-size: 11px; }\n    table.fees td { padding: 8px 10px; border: 1px solid #e5e7eb; vertical-align: top; }\n    table.fees td:last-child { text-align: right; font-weight: 700; width: 28%; }\n    .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }\n    .party { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; background: #fafbfc; }\n    .party .label { font-family: 'Manrope', Arial, sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 6px; }\n    .exhibit { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px 18px; margin: 16px 0 20px; background: #fff; }\n    .exhibit h2:first-child, .exhibit h3:first-child { margin-top: 0; }\n    .sig { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; break-inside: avoid; }\n    .sig-box { border-top: 1px solid #111827; padding-top: 8px; min-height: 64px; font-family: 'Manrope', Arial, sans-serif; font-size: 10px; }\n    .notice { font-family: 'Manrope', Arial, sans-serif; font-size: 9.5px; color: #6b7280; margin-top: 20px; padding: 10px 12px; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 8px; line-height: 1.45; }\n  </style>\n</head>\n<body>\n  <h1>Master Services Agreement</h1>\n  <p class=\"sub\">Effective date: ${escapeHtml(effectiveDate)} &nbsp;|&nbsp; ${escapeHtml(companyName)}</p>\n\n  <h2>Parties</h2>\n  <div class=\"parties\">\n    <div class=\"party\">\n      <div class=\"label\">Client</div>\n      <p><strong>${escapeHtml(clientLegalName)}</strong><br/>Attn: ${escapeHtml(d.contactName || d.contactFirstName || '—')}<br/>${d.address ? escapeHtml(d.address) + '<br/>' : ''}${d.contactEmail ? escapeHtml(d.contactEmail) : ''}</p>\n    </div>\n    <div class=\"party\">\n      <div class=\"label\">Provider</div>\n      <p><strong>${escapeHtml(companyName)}</strong><br/>${ownerEmail ? escapeHtml(ownerEmail) : ''}${ownerPhone ? '<br/>' + escapeHtml(ownerPhone) : ''}</p>\n    </div>\n  </div>\n\n  <h2>1. Services</h2>\n  <p>Provider will perform the professional services described in <strong>Exhibit A</strong> (Statement of Work), which is incorporated into this Agreement. Exhibit A may be updated by written agreement of the parties (including email).</p>\n\n  <h2>2. Fees and payment</h2>\n  <p>Fees are based on the commercial terms selected for this engagement unless otherwise agreed in writing.</p>\n  <table class=\"fees\">\n    <tr><td>Tier / package amount</td><td>${escapeHtml(formatCurrency(d.tierAmount))}</td></tr>\n    <tr><td>Estimated upfront / setup</td><td>${escapeHtml(formatCurrency(d.upfrontDue))}</td></tr>\n    <tr><td>Monthly recurring (if applicable)</td><td>${escapeHtml(formatCurrency(d.tierMonthly))}</td></tr>\n    <tr><td>Launch / initial payment (estimate)</td><td>${escapeHtml(formatCurrency(d.launchBalance))}</td></tr>\n  </table>\n  <p>Invoices are due per the payment instructions on the invoice unless a different schedule is agreed in writing. Late payments may incur suspension of work until accounts are current.</p>\n\n  <h2>3. Term</h2>\n  <p>This Agreement begins on the Effective Date and continues until the services in Exhibit A are completed and fees for completed work are paid, unless terminated earlier under Section 4.</p>\n\n  <h2>4. Termination</h2>\n  <p>Either party may terminate for material breach if the other party fails to cure within fifteen (15) days of written notice. Client remains responsible for fees for work performed through the termination date.</p>\n\n  <h2>5. Confidentiality</h2>\n  <p>Each party agrees to protect the other’s non-public business information using reasonable care and to use it only for this engagement.</p>\n\n  <h2>6. Intellectual property</h2>\n  <p>Client retains ownership of its pre-existing materials. Deliverables created specifically for Client are assigned to Client upon full payment, excluding Provider tools, templates, and general know-how.</p>\n\n  <h2>7. Limitation of liability</h2>\n  <p>To the maximum extent permitted by law, neither party is liable for indirect or consequential damages. Provider’s total liability under this Agreement for any claim is limited to the fees paid by Client to Provider in the three (3) months preceding the claim.</p>\n\n  <h2>8. Independent contractor</h2>\n  <p>Provider is an independent contractor. This Agreement does not create a partnership or employment relationship.</p>\n\n  <h2>9. Notices</h2>\n  <p>Notices may be sent to the emails listed above or to such other addresses as the parties designate in writing.</p>\n\n  <h2>10. Exhibit A — Statement of Work</h2>\n  <div class=\"exhibit exhibit-body\">${exhibitBody}</div>\n\n  <h2>11. Signatures</h2>\n  <p>By signing below, the parties agree to this Agreement including Exhibit A.</p>\n  <div class=\"sig\">\n    <div class=\"sig-box\"><strong>${escapeHtml(clientLegalName)}</strong><br/><br/>Name: ___________________________<br/>Title: ___________________________<br/>Date: ___________________________</div>\n    <div class=\"sig-box\"><strong>${escapeHtml(companyName)}</strong><br/><br/>Name: ${escapeHtml(ownerName)}<br/>Title: Authorized Representative<br/>Date: ___________________________</div>\n  </div>\n\n  <p class=\"notice\"><strong>Important:</strong> This document is a business template for internal use. It is not legal advice. Have qualified counsel review and customize before execution. Electronic signature and filing are your team’s responsibility after internal approval in the master sheet.</p>\n</body>\n</html>`;\n\nreturn [{ json: { html, fileName: `IntraWeb — ${d.clientName} — Master Services Agreement.pdf` } }];"
+        },
+        "id": "sys15-pdf-prep",
+        "name": "Prep Contract PDF",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1690,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://html2pdf.fly.dev/api/generate",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "content-type",
+                "value": "application/json"
+              },
+              {
+                "name": "accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ html: $json.html }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 60000
+          }
+        },
+        "id": "sys15-pdf",
+        "name": "Call PDF Service",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1910,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first();\nconst fileName = $('Prep Contract PDF').first().json.fileName || 'contract.pdf';\nreturn [{ json: { fileName }, binary: item.binary ? { ...item.binary } : {} }];"
+        },
+        "id": "sys15-pdf-ensure",
+        "name": "Ensure PDF Item",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2020,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "upload",
+          "name": "={{ $('Prep Contract PDF').first().json.fileName }}",
+          "parents": [
+            "={{ $('Extract Deal Data').first().json.driveFolderId }}"
+          ],
+          "options": {}
+        },
+        "id": "sys15-upload",
+        "name": "Upload to Drive",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2130,
+          200
+        ],
+        "credentials": {
+          "googleApi": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Extract Deal Data').first().json.config.google.masterSheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Contracts"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Date": "={{ new Date().toISOString().split('T')[0] }}",
+              "Client": "={{ $('Extract Deal Data').first().json.clientName }}",
+              "Company": "={{ $('Extract Deal Data').first().json.company }}",
+              "Industry": "={{ $('Extract Deal Data').first().json.industry }}",
+              "Deal Value": "={{ $('Extract Deal Data').first().json.dealValue }}",
+              "Tier": "={{ $('Extract Deal Data').first().json.tier }}",
+              "Contact Email": "={{ $('Extract Deal Data').first().json.contactEmail }}",
+              "Pain Points": "={{ ($('Extract Deal Data').first().json.painPoints || '').toString().slice(0, 500) }}",
+              "Drive Link": "={{ $('Upload to Drive').first()?.json?.id ? 'https://drive.google.com/file/d/' + $('Upload to Drive').first().json.id : ($('Upload to Drive').first()?.json?.data?.id ? 'https://drive.google.com/file/d/' + $('Upload to Drive').first().json.data.id : '') }}",
+              "Status": "Pending Review"
+            }
+          },
+          "options": {}
+        },
+        "id": "sys15-sheets",
+        "name": "Add to Contracts Queue",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          2350,
+          200
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nconst uploadOut = $('Upload to Drive').first();\nconst fileId = uploadOut?.json?.id ?? uploadOut?.json?.data?.id ?? '';\nconst driveLink = fileId ? 'https://drive.google.com/file/d/' + fileId : '';\nreturn [{\n  json: {\n    message: driveLink\n      ? `Contract PDF ready for ${d.clientName} — approve in **Contracts** tab then client email sends: ${driveLink}`\n      : `Contract PDF ready for ${d.clientName} — set **Contracts** Status to Approved to send. (Drive link unavailable.)`,\n    priority: 'info'\n  }\n}];"
+        },
+        "id": "sys15-alert-prep",
+        "name": "Prep Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2570,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          }
+        },
+        "id": "sys15-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2790,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30,
+          "unit": "minutes"
+        },
+        "id": "sys15-poll-wait",
+        "name": "Wait 30min",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3010,
+          200
+        ],
+        "webhookId": "7e1eb85d-fd7d-44d2-b928-e7db2d1a14f6"
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Extract Deal Data').first().json.config.google.masterSheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Contracts"
+          },
+          "filters": {
+            "values": [
+              {
+                "lookupColumn": "Client",
+                "lookupValue": "={{ $('Extract Deal Data').first().json.clientName }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys15-check-approval",
+        "name": "Check Approval Status",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          3230,
+          200
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "approved",
+                "leftValue": "={{ $json.Status }}",
+                "rightValue": "Approved",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "sys15-is-approved",
+        "name": "Approved?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          3450,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nconst uploadOut = $('Upload to Drive').first();\nconst fileId = uploadOut?.json?.id ?? uploadOut?.json?.data?.id ?? '';\nconst driveLink = fileId ? 'https://drive.google.com/file/d/' + fileId : '';\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Your IntraWeb agreement — ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Your Master Services Agreement is ready for review.</p>${driveLink ? `<p><a href=\"${driveLink}\">Open the agreement PDF in Google Drive</a></p>` : ''}<p>Please review the scope and commercial terms. If everything looks right, reply to this email and we will coordinate signature (e-signature or wet sign) on the final copy.</p><p>If you need changes, reply with edits and we will send an updated version.</p><p>— ${d.config?.owner?.name || 'John'}<br/>${d.config?.owner?.companyName || 'IntraWeb Technologies'}</p>`,\n    workflowName: 'SYS 03 — Contract Generation'\n  }\n}];"
+        },
+        "id": "sys15-send-prep",
+        "name": "Prep Send Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3670,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys15-send-email",
+        "name": "Send Contract Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          3890,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "update",
+          "dealId": "={{ $('Extract Deal Data').first().json.dealId }}",
+          "updateFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "contract_sent_date",
+                  "value": "={{ new Date().toISOString().split('T')[0] }}"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "id": "sys15-update-deal",
+        "name": "Update Deal",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          4110,
+          100
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 03 — Contract Generation',\n    contactName: $('Extract Deal Data').first().json.clientName,\n    phone: '',\n    eventType: 'contract_pdf_sent',\n    status: 'success',\n    notes: `Deal value: $${$('Extract Deal Data').first().json.dealValue}`\n  }\n}];"
+        },
+        "id": "sys15-log-prep",
+        "name": "Prep Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4330,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          }
+        },
+        "id": "sys15-log",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          4550,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "once",
+          "minutesSaved": 120
+        },
+        "id": "sys15-track-time",
+        "name": "Track Time Saved",
+        "type": "n8n-nodes-base.timeSaved",
+        "typeVersion": 1,
+        "position": [
+          4770,
+          100
+        ]
+      }
+    ],
+    "connections": {
+      "Deal Contract Sent Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Extract Deal Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Deal Data": {
+        "main": [
+          [
+            {
+              "node": "Has Client Drive Folder?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Client Drive Folder?": {
+        "main": [
+          [
+            {
+              "node": "Prep Claude Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prep Missing Folder Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Missing Folder Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Missing Folder Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Claude Prompt": {
+        "main": [
+          [
+            {
+              "node": "Call Claude API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call Claude API": {
+        "main": [
+          [
+            {
+              "node": "Parse Claude Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Claude Response": {
+        "main": [
+          [
+            {
+              "node": "Prep Contract PDF",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Contract PDF": {
+        "main": [
+          [
+            {
+              "node": "Call PDF Service",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call PDF Service": {
+        "main": [
+          [
+            {
+              "node": "Ensure PDF Item",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ensure PDF Item": {
+        "main": [
+          [
+            {
+              "node": "Upload to Drive",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload to Drive": {
+        "main": [
+          [
+            {
+              "node": "Add to Contracts Queue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add to Contracts Queue": {
+        "main": [
+          [
+            {
+              "node": "Prep Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Alert": {
+        "main": [
+          [
+            {
+              "node": "Wait 30min",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 30min": {
+        "main": [
+          [
+            {
+              "node": "Check Approval Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Approval Status": {
+        "main": [
+          [
+            {
+              "node": "Approved?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Approved?": {
+        "main": [
+          [
+            {
+              "node": "Prep Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 30min",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Send Email": {
+        "main": [
+          [
+            {
+              "node": "Send Contract Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Contract Email": {
+        "main": [
+          [
+            {
+              "node": "Update Deal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Deal": {
+        "main": [
+          [
+            {
+              "node": "Prep Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Log": {
+        "main": [
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Track Time Saved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
+  }
 }

@@ -1,7 +1,11 @@
 {
-  "id": "sys-12-google-chat-command-center",
+  "updatedAt": "2026-04-03T03:42:44.349Z",
+  "createdAt": "2026-03-08T23:03:33.832Z",
+  "id": "5zqAo5so5iSSCnXY",
   "name": "SYS 08 — Google Chat Command Center",
-  "description": "Webhook at /google-chat-command. Parses natural-language commands via Claude (e.g. leads this week, pipeline status, overdue invoices, client health, revenue this month). Routes to the right handler, queries HubSpot or Sheets, formats a reply, and responds in Chat. Ad-hoc queries without opening n8n or HubSpot.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -33,7 +37,8 @@
       "position": [
         250,
         300
-      ]
+      ],
+      "webhookId": "dc3a6b9b-bc70-4375-b993-a1a294d79963"
     },
     {
       "parameters": {
@@ -956,7 +961,1020 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "81c2a51f-1ebf-4205-abc1-0282848049b7",
+  "activeVersionId": "81c2a51f-1ebf-4205-abc1-0282848049b7",
+  "versionCounter": 189,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T23:03:33.834Z",
+      "createdAt": "2026-03-08T23:03:33.834Z",
+      "role": "workflow:owner",
+      "workflowId": "5zqAo5so5iSSCnXY",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:44.350Z",
+    "createdAt": "2026-04-03T03:42:44.350Z",
+    "versionId": "81c2a51f-1ebf-4205-abc1-0282848049b7",
+    "workflowId": "5zqAo5so5iSSCnXY",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 08 — Google Chat Command Center\n\n**Trigger:** Webhook POST at `/google-chat-command`.\n\n**Critical — Google Chat wiring:** Typing in a space does **not** call n8n by itself. **Incoming webhooks** (CONFIG `chatWebhookUrl`) only **send** messages **into** Chat; they cannot receive user text. You need a **Google Chat app** (Chat API → Configuration) with **HTTP endpoint URL** = your n8n webhook URL (`…/webhook/google-chat-command`). Users must **@mention the app** or **message it in DMs** (per Google). **Activate** this workflow in n8n. Endpoint must be **HTTPS** and reachable from Google.\n\n**What it does:** Parses commands via Claude; routes to HubSpot/Sheets; replies via HTTP to the space webhook from CONFIG.\n\n**Dependencies:** CONFIG, Call Claude API, HubSpot, Google Sheets (Revenue tab).\n\n**n8n 2.12.x:** Execute Sub-workflow = Database + `__rl`. **Prep Parse Prompt** reads Google **Event** shape (`message.text`, nested `event.message`, strips `<users/…>` mentions).",
+          "height": 520,
+          "width": 480,
+          "color": 5
+        },
+        "id": "note-sys12",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "google-chat-command",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "sys12-trigger",
+        "name": "Chat Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "dc3a6b9b-bc70-4375-b993-a1a294d79963"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys12-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          470,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $('Chat Webhook').first().json;\nlet input = raw;\nif (raw && raw.body != null) {\n  if (typeof raw.body === 'object' && !Array.isArray(raw.body)) {\n    input = raw.body;\n  } else if (typeof raw.body === 'string') {\n    try {\n      const parsed = JSON.parse(raw.body);\n      if (parsed && typeof parsed === 'object') input = parsed;\n    } catch (e) {}\n  }\n}\n\nfunction extractUserMessage(obj) {\n  if (!obj || typeof obj !== 'object') return '';\n  const evt = obj.event && typeof obj.event === 'object' ? obj.event : obj;\n  const msg = evt.message || obj.message;\n  if (msg && typeof msg === 'object') {\n    const t = msg.text || msg.argumentText || msg.formattedText;\n    if (typeof t === 'string' && t.trim()) {\n      return t\n        .replace(/<users\\/[^>]+>/g, ' ')\n        .replace(/\\s+/g, ' ')\n        .trim();\n    }\n  }\n  if (typeof obj.text === 'string' && obj.text.trim()) return obj.text.trim();\n  return '';\n}\n\nconst message = extractUserMessage(input);\n\nreturn [{\n  json: {\n    systemPrompt: 'Parse this Google Chat message into a structured command. Return JSON only: { \"command\": \"string\", \"params\": {} }. Valid commands: leads_this_week, pipeline_status, overdue_invoices, client_health, approve_post, send_followup, due_this_week, revenue_this_month, regenerate_manual, unknown. Extract any relevant params like row numbers or contact names.',\n    userPrompt: message,\n    maxTokens: 500\n  }\n}];"
+        },
+        "id": "sys12-parse-prep",
+        "name": "Prep Parse Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          690,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "4PPD67ZzEON8Rxxe",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "systemPrompt": "={{ $json.systemPrompt }}",
+              "userPrompt": "={{ $json.userPrompt }}",
+              "maxTokens": "={{ $json.maxTokens }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys12-parse",
+        "name": "Parse Command",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          910,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const result = $('Parse Command').first().json;\nconst text =\n  (result.data && typeof result.data.text === 'string' && result.data.text) ||\n  (typeof result.text === 'string' && result.text) ||\n  '';\nlet parsed;\ntry {\n  parsed = text ? JSON.parse(text) : { command: 'unknown', params: {} };\n} catch (e) {\n  parsed = { command: 'unknown', params: {} };\n}\nif (!parsed || typeof parsed !== 'object') {\n  parsed = { command: 'unknown', params: {} };\n}\nif (!parsed.command) parsed.command = 'unknown';\n\nreturn [{ json: parsed }];"
+        },
+        "id": "sys12-extract-cmd",
+        "name": "Extract Command",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1130,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "rules",
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-leads",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "leads_this_week",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-pipeline",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "pipeline_status",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-overdue",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "overdue_invoices",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-health",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "client_health",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-revenue",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "revenue_this_month",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "sys12-rule-regen",
+                      "leftValue": "={{ $json.command }}",
+                      "rightValue": "regenerate_manual",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": false
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "id": "sys12-route",
+        "name": "Route Command",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          1350,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "getAll",
+          "filters": {
+            "values": [
+              {
+                "propertyName": "createdate",
+                "operator": "GT",
+                "value": "={{ new Date(Date.now() - 7*24*60*60*1000).toISOString() }}"
+              }
+            ]
+          },
+          "limit": 50,
+          "options": {
+            "properties": [
+              "firstname",
+              "lastname",
+              "company",
+              "lead_score"
+            ]
+          }
+        },
+        "id": "sys12-leads",
+        "name": "Query Leads",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          50
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const leads = $('Query Leads').all();\nconst count = leads.length;\nconst top3 = leads.slice(0, 3).map(l => {\n  const p = l.json.properties || l.json;\n  return `${p.firstname || ''} ${p.lastname || ''} (${p.company || 'N/A'}) — Score: ${p.lead_score || 0}`;\n}).join('\\n');\n\nreturn [{ json: { text: `Leads this week: ${count}\\n\\nTop 3:\\n${top3 || 'None'}` } }];"
+        },
+        "id": "sys12-leads-format",
+        "name": "Format Leads",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          50
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "getAll",
+          "limit": 100,
+          "options": {
+            "properties": [
+              "dealname",
+              "dealstage",
+              "amount"
+            ]
+          }
+        },
+        "id": "sys12-pipeline",
+        "name": "Query Pipeline",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          200
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const deals = $('Query Pipeline').all();\nconst stages = {};\nfor (const d of deals) {\n  const p = d.json.properties || d.json;\n  const s = p.dealstage || 'unknown';\n  if (!stages[s]) stages[s] = { count: 0, value: 0 };\n  stages[s].count++;\n  stages[s].value += parseFloat(p.amount) || 0;\n}\n\nlet text = 'Pipeline Status:\\n';\nfor (const [stage, data] of Object.entries(stages)) {\n  text += `${stage}: ${data.count} deals ($${data.value})\\n`;\n}\n\nreturn [{ json: { text } }];"
+        },
+        "id": "sys12-pipeline-format",
+        "name": "Format Pipeline",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { text: 'Available commands:\\n- leads this week\\n- pipeline status\\n- overdue invoices\\n- client health\\n- revenue this month\\n- regenerate manual\\n- approve post [row]\\n- send followup [name]\\n- due this week' } }];"
+        },
+        "id": "sys12-unknown",
+        "name": "Unknown Command",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          600
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const config = $('Get Config').first().json;\nconst text = $input.first().json.text;\nconst webhookUrl = config.google.chatWebhookUrl;\n\nreturn [{ json: { webhookUrl, text } }];"
+        },
+        "id": "sys12-respond-prep",
+        "name": "Prep Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2010,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.webhookUrl }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+          "options": {}
+        },
+        "id": "sys12-respond",
+        "name": "Reply to Chat",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2230,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 08 — Google Chat Command Center',\n    contactName: '', phone: '', eventType: 'command_processed', status: 'success',\n    notes: `Command: ${$('Extract Command').first().json.command}`\n  }\n}];"
+        },
+        "id": "sys12-log-prep",
+        "name": "Prep Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys12-log",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2670,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ status: 'ok' }) }}",
+          "options": {}
+        },
+        "id": "sys12-webhook-respond",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.3,
+        "position": [
+          2890,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "BAwRpt7tMRXm6YcZ",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys12-regen-manual",
+        "name": "Trigger OS Manual Generator",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1570,
+          500
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { text: 'Owner\\'s manual regeneration started. You\\'ll receive a notification when complete.' } }];"
+        },
+        "id": "sys12-regen-format",
+        "name": "Format Regen Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          500
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "read",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Get Config').first().json.google.masterSheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Revenue"
+          },
+          "options": {}
+        },
+        "id": "sys12-revenue",
+        "name": "Query Revenue",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          1570,
+          400
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = $('Query Revenue').all();\nconst now = new Date();\nconst currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;\n\nconst monthRow = rows.find(r => (r.json.Month || '').startsWith(currentMonth));\nlet text;\nif (monthRow) {\n  text = `Revenue (${currentMonth}):\\nInvoiced: $${monthRow.json.Invoiced || 0}\\nCollected: $${monthRow.json.Collected || 0}\\nOutstanding: $${monthRow.json.Outstanding || 0}\\nOverdue: $${monthRow.json.Overdue || 0}`;\n} else {\n  text = `No revenue data found for ${currentMonth}`;\n}\n\nreturn [{ json: { text } }];"
+        },
+        "id": "sys12-revenue-format",
+        "name": "Format Revenue",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "getAll",
+          "filters": {
+            "values": [
+              {
+                "propertyName": "dealstage",
+                "operator": "IN",
+                "value": "closed_won,invoice_sent,paid"
+              }
+            ]
+          },
+          "limit": 50,
+          "options": {
+            "properties": [
+              "dealname",
+              "client_health_score"
+            ]
+          }
+        },
+        "id": "sys12-health",
+        "name": "Query Health",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          300
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const deals = $('Query Health').all();\nlet text = 'Client Health:\\n';\nfor (const d of deals) {\n  const p = d.json.properties || d.json;\n  text += `${p.dealname || 'Unknown'}: ${p.client_health_score || 'N/A'}\\n`;\n}\nreturn [{ json: { text } }];"
+        },
+        "id": "sys12-health-format",
+        "name": "Format Health",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "getAll",
+          "filters": {
+            "values": [
+              {
+                "propertyName": "dealstage",
+                "operator": "EQ",
+                "value": "invoice_sent"
+              }
+            ]
+          },
+          "limit": 50,
+          "options": {
+            "properties": [
+              "dealname",
+              "amount"
+            ]
+          }
+        },
+        "id": "sys12-overdue",
+        "name": "Query Overdue",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1570,
+          150
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const deals = $('Query Overdue').all();\nlet text = `Overdue Invoices: ${deals.length}\\n`;\nfor (const d of deals) {\n  const p = d.json.properties || d.json;\n  text += `${p.dealname || 'Unknown'}: $${p.amount || 0}\\n`;\n}\nreturn [{ json: { text } }];"
+        },
+        "id": "sys12-overdue-format",
+        "name": "Format Overdue",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1790,
+          150
+        ]
+      }
+    ],
+    "connections": {
+      "Chat Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Prep Parse Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Parse Prompt": {
+        "main": [
+          [
+            {
+              "node": "Parse Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Command": {
+        "main": [
+          [
+            {
+              "node": "Extract Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Command": {
+        "main": [
+          [
+            {
+              "node": "Route Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Command": {
+        "main": [
+          [
+            {
+              "node": "Query Leads",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Query Pipeline",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Query Overdue",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Query Health",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Query Revenue",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Trigger OS Manual Generator",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Unknown Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Leads": {
+        "main": [
+          [
+            {
+              "node": "Format Leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Leads": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Pipeline": {
+        "main": [
+          [
+            {
+              "node": "Format Pipeline",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Pipeline": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Overdue": {
+        "main": [
+          [
+            {
+              "node": "Format Overdue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Overdue": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Health": {
+        "main": [
+          [
+            {
+              "node": "Format Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Health": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Revenue": {
+        "main": [
+          [
+            {
+              "node": "Format Revenue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Revenue": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger OS Manual Generator": {
+        "main": [
+          [
+            {
+              "node": "Format Regen Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Regen Response": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Unknown Command": {
+        "main": [
+          [
+            {
+              "node": "Prep Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Response": {
+        "main": [
+          [
+            {
+              "node": "Reply to Chat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reply to Chat": {
+        "main": [
+          [
+            {
+              "node": "Prep Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Log": {
+        "main": [
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:42:44.393Z",
+        "id": 1498,
+        "workflowId": "5zqAo5so5iSSCnXY",
+        "versionId": "81c2a51f-1ebf-4205-abc1-0282848049b7",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:44.380Z",
+        "id": 1497,
+        "workflowId": "5zqAo5so5iSSCnXY",
+        "versionId": "81c2a51f-1ebf-4205-abc1-0282848049b7",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

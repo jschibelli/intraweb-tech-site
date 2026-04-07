@@ -1,6 +1,11 @@
 {
+  "updatedAt": "2026-04-03T03:42:43.153Z",
+  "createdAt": "2026-03-08T22:45:31.533Z",
+  "id": "RJngRI1L2LcmFmZ0",
   "name": "SYS 01 — Lead Sourcing Machine",
-  "description": "Weekly cron: Google Maps lead discovery from CONFIG queries, scores leads, appends to Sheets, syncs to HubSpot when score meets CONFIG leadSourcing.minScoreForHubSpot (default all leads). Hunter.io for email; SW contact upsert (email or phone); company search/create, association, deal, sheet logging, optional SYS 02 enroll on new contact only.",
+  "description": "Runs every Monday 7AM EST. Finds local businesses via Google Maps Places API using CONFIG queries, fetches details (phone, website), normalizes to leads; for warm/hot finds emails via Hunter.io and creates/updates HubSpot contact; logs to Leads sheet and Automations Log; dedupes by Place ID.",
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -1232,7 +1237,6 @@
       "name": "Call 'CONFIG — Global Settings'"
     }
   ],
-  "pinData": {},
   "connections": {
     "Every Monday 7AM EST": {
       "main": [
@@ -1816,17 +1820,1919 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "dynamic",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "versionId": "2dd76231-7add-47ef-9dda-4240f42fd859",
+  "staticData": {
+    "node:Every Monday 7AM EST": {
+      "recurrenceRules": []
+    }
+  },
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+    "templateCredsSetupCompleted": true
   },
-  "id": "RJngRI1L2LcmFmZ0",
-  "tags": []
+  "pinData": {},
+  "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+  "activeVersionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+  "versionCounter": 628,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:45:31.537Z",
+      "createdAt": "2026-03-08T22:45:31.537Z",
+      "role": "workflow:owner",
+      "workflowId": "RJngRI1L2LcmFmZ0",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:05:39.627Z",
+    "createdAt": "2026-04-03T03:05:39.627Z",
+    "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+    "workflowId": "RJngRI1L2LcmFmZ0",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 01 — Lead Sourcing Machine\n\n**Trigger:** Every Monday 7AM EST (cron).\n\n**What it does:** Finds local businesses via Google Maps Places API using CONFIG's lead sourcing queries (e.g. \"HVAC company NJ\"). For each query it fetches places, gets details (phone, website), normalizes to a lead record. **Send to HubSpot?** uses **CONFIG `leadSourcing.minScoreForHubSpot`** (default `0` = every scraped lead after sheet append; set `4` for legacy warm+ only). When sent to HubSpot, optionally finds emails via **Hunter.io** (domain from website), creates/updates the HubSpot contact (phone-only path when no real email — see SW: Create or Update HubSpot Contact), creates or finds the HubSpot company, associates, and creates a deal. Results are logged to the Leads, Contacts, Companies, and Deals sheets, plus the Automations Log.\n\n**Loop Over Leads** processes one lead at a time (batch size 1), so you get one row per lead in the Leads tab and one CRM path per lead that passes the HubSpot score gate. The loop runs back from Log to Sheet to process the next lead until done.\n\n**SYS 02 enrollment:** Only when the contact subworkflow returns **created** (not **updated**); phone-only updates do not re-enroll outreach.\n\n**Dedupe:** Filter New Leads Only skips places whose Place ID is already in the Leads sheet. Ensure the Leads sheet has a **Place ID** column (added automatically on append); existing sheets may need this column added manually for dedupe to work.\n\n**Dependencies:** CONFIG, Create/Update Contact, Create Deal, Log, Google Chat Alert. Requires Google Maps API credential and HubSpot API credential.",
+          "height": 340,
+          "width": 460,
+          "color": 5
+        },
+        "id": "f568c06c-0b6c-4d18-a81b-95d94f8d194c",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          61312,
+          12128
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 7 * * 1"
+              }
+            ]
+          }
+        },
+        "id": "83c0b140-0d0a-48c1-b87f-d742a6c1afa2",
+        "name": "Every Monday 7AM EST",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          61088,
+          12848
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const config = $('Call \\'CONFIG — Global Settings\\'').first().json;\nconst queries = config.leadSourcingQueries;\n\nreturn queries.map(query => ({\n  json: { query: query, config: config }\n}));"
+        },
+        "id": "3d46adb4-b0e7-40bc-b805-3f17d047e0b5",
+        "name": "Split Queries",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          61536,
+          12848
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "b5608317-273a-4be2-8bd0-066cea8a4ccf",
+        "name": "Process Each Query",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          61760,
+          12848
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://maps.googleapis.com/maps/api/place/textsearch/json",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "query",
+                "value": "={{ $json.query }}"
+              },
+              {
+                "name": "key",
+                "value": "={{ $json.config?.google?.mapsApiKey || $json.config?.googleMapsApiKey || '' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "e7105159-d823-4c97-b30f-980859915931",
+        "name": "Google Maps Places Search",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          61984,
+          12728
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $('Google Maps Places Search').first().json;\nconst results = Array.isArray(response.results) ? response.results : [];\nconst batchItem = $('Process Each Query').first().json;\nconst query = (batchItem && batchItem.query) ? String(batchItem.query) : '';\nreturn results.map(place => ({\n  json: {\n    businessName: place.name != null ? String(place.name) : '',\n    address: place.formatted_address != null ? String(place.formatted_address) : '',\n    rating: typeof place.rating === 'number' ? place.rating : 0,\n    reviewCount: typeof place.user_ratings_total === 'number' ? place.user_ratings_total : 0,\n    placeId: place.place_id != null ? String(place.place_id) : '',\n    hasPhone: false,\n    hasWebsite: false,\n    phone: '',\n    website: '',\n    sourcingQuery: query\n  }\n}));"
+        },
+        "id": "fbecaadc-dfc9-4874-9675-540ce4c452cb",
+        "name": "Extract Place Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          62208,
+          12728
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://maps.googleapis.com/maps/api/place/details/json",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "place_id",
+                "value": "={{ $json.placeId }}"
+              },
+              {
+                "name": "fields",
+                "value": "formatted_phone_number,international_phone_number,website"
+              },
+              {
+                "name": "key",
+                "value": "={{ $('Call \\'CONFIG — Global Settings\\'').first().json.google?.mapsApiKey || $('Process Each Query').first().json.config?.google?.mapsApiKey || '' }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "07118f01-ca77-49d8-bde1-3dab1aaa69ee",
+        "name": "Get Place Details",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          62432,
+          12728
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const detailItems = $input.all();\nconst placeItems = $('Extract Place Data').all();\n\nreturn detailItems.map((detailItem, index) => {\n  const detailJson = detailItem && detailItem.json ? detailItem.json : {};\n  const result = detailJson.result || {};\n  const placeJson = placeItems[index] && placeItems[index].json ? placeItems[index].json : {};\n\n  let phone = result.international_phone_number || result.formatted_phone_number || '';\n  phone = String(phone).replace(/[^+\\d]/g, '');\n  if (phone && !phone.startsWith('+')) phone = '+1' + phone;\n\n  const website = result.website != null ? String(result.website) : '';\n\n  return {\n    json: {\n      businessName: placeJson.businessName != null ? String(placeJson.businessName) : '',\n      address: placeJson.address != null ? String(placeJson.address) : '',\n      rating: typeof placeJson.rating === 'number' ? placeJson.rating : 0,\n      reviewCount: typeof placeJson.reviewCount === 'number' ? placeJson.reviewCount : 0,\n      placeId: placeJson.placeId != null ? String(placeJson.placeId) : '',\n      hasPhone: !!phone,\n      hasWebsite: !!website,\n      phone: phone,\n      website: website,\n      sourcingQuery: placeJson.sourcingQuery != null ? String(placeJson.sourcingQuery) : ''\n    }\n  };\n});"
+        },
+        "id": "131fa2c5-657e-497a-b047-7d76688edd70",
+        "name": "Enrich with Details",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          62656,
+          12728
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "f85dd6ce-5783-4fc4-8b7b-f1c5100631f6",
+        "name": "Limit One for Read",
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1.3,
+        "position": [
+          62880,
+          12728
+        ]
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Call \\'CONFIG — Global Settings\\'').first().json.google?.masterSheetId || '' }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Leads"
+          },
+          "options": {}
+        },
+        "id": "80a016fc-15a4-46cc-be21-72958a152cde",
+        "name": "Read Leads Sheet",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          63104,
+          12632
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "let sheetRows = [];\ntry {\n  const readNode = $('Read Leads Sheet').all();\n  if (readNode && Array.isArray(readNode) && readNode.length > 0 && !readNode[0].json?.error) {\n    sheetRows = readNode;\n  }\n} catch (e) {}\nconst existingPlaceIds = new Set(\n  sheetRows\n    .map(r => r.json && (r.json['Place ID'] != null || r.json.placeId != null)\n      ? String(r.json['Place ID'] || r.json.placeId).trim()\n      : '')\n    .filter(Boolean)\n);\nconst items = $('Enrich with Details').all();\nconst filtered = items.filter(item => {\n  const pid = item.json && item.json.placeId ? String(item.json.placeId).trim() : '';\n  return pid && !existingPlaceIds.has(pid);\n});\nreturn filtered.map(item => ({ json: item.json }));"
+        },
+        "id": "03f2fd6c-d486-4772-99e0-738415d65f80",
+        "name": "Filter New Leads Only",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          63104,
+          12824
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "224b6751-7a77-4d1e-b992-68d0e2a9916e",
+        "name": "Loop Over Leads",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          63328,
+          12824
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const place = $('Loop Over Leads').first().json;\nlet score = 0;\nif (place.hasPhone) score += 2;\nif (place.hasWebsite) score += 2;\nif (typeof place.rating === 'number' && place.rating >= 4.0) score += 2;\nif (typeof place.reviewCount === 'number') {\n  if (place.reviewCount >= 100) score += 2;\n  else if (place.reviewCount >= 50) score += 1;\n}\nconst config = $('Call \\'CONFIG — Global Settings\\'').first().json;\nconst hotThreshold = config.scoring?.hotLeadThreshold || 7;\nconst warmThreshold = config.scoring?.warmLeadThreshold || 4;\nlet tier = 'cold';\nif (score >= hotThreshold) tier = 'hot';\nelse if (score >= warmThreshold) tier = 'warm';\nreturn [{ json: { success: true, data: { score, tier } } }];"
+        },
+        "id": "c6ef3248-8b87-4949-9bc3-d6ef62fd50ad",
+        "name": "Score Lead",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          63552,
+          12608
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const scoreResult = $input.first().json;\nconst place = $('Loop Over Leads').first().json;\nconst config = $('Call \\'CONFIG — Global Settings\\'').first().json;\nconst sheetId = config.google?.masterSheetId || '';\nconst now = new Date().toISOString();\nconst queries = config.leadSourcingQueries || [];\nconst industries = config.industries || [];\nconst queryIndex = queries.indexOf(place.sourcingQuery || '');\nconst industry = queryIndex >= 0 && industries[queryIndex] ? industries[queryIndex] : (place.sourcingQuery || '');\nconst score = scoreResult && scoreResult.data && typeof scoreResult.data.score === 'number' ? scoreResult.data.score : 0;\nconst tier = (scoreResult && scoreResult.data && scoreResult.data.tier) ? String(scoreResult.data.tier) : 'cold';\nconst website = place.website != null ? String(place.website) : '';\nconst companySlug = (place.businessName || 'lead').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'lead';\nconst normalizedPhone = String(place.phone || '').replace(/[^\\d]/g, '');\nconst placeKey = String(place.placeId || place.address || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';\nconst email = companySlug + '-' + (normalizedPhone || placeKey) + '@leads.intraweb.local';\nreturn [{\n  json: {\n    success: true,\n    data: { score: score, tier: tier },\n    sheetId: String(sheetId),\n    timestamp: now,\n    name: place.businessName != null ? String(place.businessName) : '',\n    company: place.businessName != null ? String(place.businessName) : '',\n    industry: String(industry),\n    source: 'google_maps_scraper',\n    leadScore: score,\n    status: tier,\n    placeId: place.placeId != null ? String(place.placeId) : '',\n    website: website,\n    email: email,\n    phone: place.phone != null ? String(place.phone) : '',\n    address: place.address != null ? String(place.address) : ''\n  }\n}];"
+        },
+        "id": "569d408e-1185-4270-bfc3-181dbe611ae8",
+        "name": "Prepare Leads Row",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          63776,
+          12608
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $json.sheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Leads"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $json.timestamp }}",
+              "Name": "={{ $json.name }}",
+              "Company": "={{ $json.company }}",
+              "Industry": "={{ $json.industry }}",
+              "Source": "={{ $json.source }}",
+              "Lead Score": "={{ $json.leadScore }}",
+              "Status": "={{ $json.status }}",
+              "Place ID": "={{ $json.placeId }}",
+              "Website": "={{ $json.website }}",
+              "Email": "={{ $json.email }}",
+              "Phone": "={{ $json.phone }}",
+              "Address": "={{ $json.address }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Timestamp",
+                "displayName": "Timestamp",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company",
+                "displayName": "Company",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Industry",
+                "displayName": "Industry",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Website",
+                "displayName": "Website",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Email",
+                "displayName": "Email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Phone",
+                "displayName": "Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Address",
+                "displayName": "Address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Source",
+                "displayName": "Source",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Lead Score",
+                "displayName": "Lead Score",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Place ID",
+                "displayName": "Place ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "4e62bcdf-582f-49df-826e-a5aba0bf7ed8",
+        "name": "Append to Leads",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          64000,
+          12608
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 3,
+          "unit": "seconds"
+        },
+        "id": "b4aaf64d-e721-4b48-90d1-0b3f40668466",
+        "name": "Wait 3s After Append",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          64224,
+          12608
+        ],
+        "webhookId": "6f99490d-b916-4595-9d9d-759a83e082ab"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "warm-or-hot-send-to-hubspot",
+                "leftValue": "={{ Number($json.leadScore || $json['Lead Score'] || 0) }}",
+                "rightValue": "={{ $('Call \\'CONFIG — Global Settings\\'').first().json.leadSourcing?.minScoreForHubSpot ?? 0 }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "29a464b2-0dd5-41ca-ba5d-c291d92649b6",
+        "name": "Send to HubSpot?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          64448,
+          12608
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const place = $('Loop Over Leads').first().json;\nlet domain = '';\nif (place.website && typeof place.website === 'string') {\n  try {\n    const u = new URL(place.website.startsWith('http') ? place.website : 'https://' + place.website);\n    domain = (u.hostname || '').replace(/^www\\./, '').toLowerCase();\n  } catch (e) {}\n}\nreturn [{ json: { domain } }];"
+        },
+        "id": "b0176b4a-e207-4cb9-bf65-7ad2217811e7",
+        "name": "Extract Domain",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          64672,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-domain",
+                "leftValue": "={{ $json.domain }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "6f71e3c7-5639-46d5-983f-299fe766df60",
+        "name": "Has Website Domain?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          64896,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://api.hunter.io/v2/domain-search",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "domain",
+                "value": "={{ $json.domain }}"
+              },
+              {
+                "name": "api_key",
+                "value": "={{ $('Call \\'CONFIG — Global Settings\\'').first().json.hunter?.apiKey || '' }}"
+              },
+              {
+                "name": "limit",
+                "value": 5
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "dbdf2638-78a3-4138-9ea3-fb63ec14df34",
+        "name": "Hunter Domain Search",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          65120,
+          12416
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { data: { emails: [] } } }];"
+        },
+        "id": "dcedb62e-8e83-4370-a379-47079853a395",
+        "name": "No Hunter Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          65120,
+          12608
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const hunterItem = $input.first().json;\nconst hunterEmails = hunterItem?.data?.emails || [];\nconst preferred = hunterEmails.find(e => (e.type || '').toLowerCase() === 'generic') || hunterEmails[0];\nconst hunterEmail = (preferred && preferred.value) ? String(preferred.value).trim() : '';\n\nconst place = $('Loop Over Leads').first().json;\nconst scoreResult = $('Score Lead').first().json;\nconst scoreData = scoreResult.data || {};\nconst leadScore = typeof scoreData.score === 'number' ? scoreData.score : 0;\nconst tier = (scoreData.tier != null) ? String(scoreData.tier) : 'cold';\n\nlet email;\nif (hunterEmail) {\n  email = hunterEmail;\n} else {\n  const companySlug = (place.businessName || 'lead').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'lead';\n  const normalizedPhone = String(place.phone || '').replace(/[^\\d]/g, '');\n  const placeKey = String(place.placeId || place.address || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';\n  const uniqueKey = normalizedPhone || placeKey;\n  email = `${companySlug}-${uniqueKey}@leads.intraweb.local`;\n}\n\nconst config = $('Call \\'CONFIG — Global Settings\\'').first().json;\nconst queries = config.leadSourcingQueries || [];\nconst industries = config.industries || [];\nconst qi = queries.indexOf(place.sourcingQuery || '');\nconst industry = (qi >= 0 && industries[qi]) ? industries[qi] : '';\nreturn [{\n  json: {\n    email,\n    phone: place.phone,\n    firstName: (preferred && preferred.first_name) ? String(preferred.first_name) : '',\n    lastName: (preferred && preferred.last_name) ? String(preferred.last_name) : '',\n    company: place.businessName,\n    website: place.website != null ? String(place.website) : '',\n    address: place.address != null ? String(place.address) : '',\n    industry,\n    leadScore,\n    tier,\n    source: 'google_maps_scraper',\n    customProps: { lead_status: 'new' }\n  }\n}];"
+        },
+        "id": "4e0b2759-c857-4885-8c1d-203f0845a0a0",
+        "name": "Prepare Contact Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          65344,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "HbPxMMcf5tGERxEr",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/HbPxMMcf5tGERxEr",
+            "cachedResultName": "SW: Create or Update HubSpot Contact"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "email": "={{ $json.email }}",
+              "phone": "={{ $json.phone }}",
+              "firstName": "={{ $json.firstName }}",
+              "lastName": "={{ $json.lastName }}",
+              "company": "={{ $json.company }}",
+              "industry": "={{ $json.industry }}",
+              "leadScore": "={{ $json.leadScore }}",
+              "source": "={{ $json.source }}",
+              "customProps": "={{ $json.customProps }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "0acfff54-5db3-4d59-a18f-0df980a028ab",
+        "name": "Create/Update HubSpot Contact",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          65568,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const contactResult = $input.first().json;\nconst preparedContact = $('Prepare Contact Data').item.json;\nconst config = $('Call \\'CONFIG — Global Settings\\'').first().json;\nconst place = {\n  businessName: preparedContact.company || '',\n  phone: preparedContact.phone || '',\n  website: preparedContact.website || '',\n  address: preparedContact.address || '',\n};\nconst contactId = contactResult?.data?.contactId || '';\nconst contactAction = contactResult?.data?.action || 'unknown';\nlet city = '', state = '';\nconst parts = (place.address || '').split(',').map(s => s.trim());\nif (parts.length >= 3) {\n  city = parts[parts.length - 3] || '';\n  const stateZip = parts[parts.length - 2] || '';\n  state = stateZip.replace(/\\d+/g, '').trim();\n}\nconst rawIndustry = (preparedContact.industry || '').trim();\nconst HUBSPOT_INDUSTRIES = new Set(['ACCOUNTING','AIRLINES_AVIATION','ALTERNATIVE_DISPUTE_RESOLUTION','ALTERNATIVE_MEDICINE','ANIMATION','APPAREL_FASHION','ARCHITECTURE_PLANNING','ARTS_AND_CRAFTS','AUTOMOTIVE','AVIATION_AEROSPACE','BANKING','BIOTECHNOLOGY','BROADCAST_MEDIA','BUILDING_MATERIALS','BUSINESS_SUPPLIES_AND_EQUIPMENT','CAPITAL_MARKETS','CHEMICALS','CIVIC_SOCIAL_ORGANIZATION','CIVIL_ENGINEERING','COMMERCIAL_REAL_ESTATE','COMPUTER_NETWORK_SECURITY','COMPUTER_GAMES','COMPUTER_HARDWARE','COMPUTER_NETWORKING','COMPUTER_SOFTWARE','INTERNET','CONSTRUCTION','CONSUMER_ELECTRONICS','CONSUMER_GOODS','CONSUMER_SERVICES','COSMETICS','DAIRY','DEFENSE_SPACE','DESIGN','EDUCATION_MANAGEMENT','E_LEARNING','ELECTRICAL_ELECTRONIC_MANUFACTURING','ENTERTAINMENT','ENVIRONMENTAL_SERVICES','EVENTS_SERVICES','EXECUTIVE_OFFICE','FACILITIES_SERVICES','FARMING','FINANCIAL_SERVICES','FINE_ART','FISHERY','FOOD_BEVERAGES','FOOD_PRODUCTION','FUND_RAISING','FURNITURE','GAMBLING_CASINOS','GLASS_CERAMICS_CONCRETE','GOVERNMENT_ADMINISTRATION','GOVERNMENT_RELATIONS','GRAPHIC_DESIGN','HEALTH_WELLNESS_AND_FITNESS','HIGHER_EDUCATION','HOSPITAL_HEALTH_CARE','HOSPITALITY','HUMAN_RESOURCES','IMPORT_AND_EXPORT','INDIVIDUAL_FAMILY_SERVICES','INDUSTRIAL_AUTOMATION','INFORMATION_SERVICES','INFORMATION_TECHNOLOGY_AND_SERVICES','INSURANCE','INTERNATIONAL_AFFAIRS','INTERNATIONAL_TRADE_AND_DEVELOPMENT','INVESTMENT_BANKING','INVESTMENT_MANAGEMENT','JUDICIARY','LAW_ENFORCEMENT','LAW_PRACTICE','LEGAL_SERVICES','LEGISLATIVE_OFFICE','LEISURE_TRAVEL_TOURISM','LIBRARIES','LOGISTICS_AND_SUPPLY_CHAIN','LUXURY_GOODS_JEWELRY','MACHINERY','MANAGEMENT_CONSULTING','MARITIME','MARKET_RESEARCH','MARKETING_AND_ADVERTISING','MECHANICAL_OR_INDUSTRIAL_ENGINEERING','MEDIA_PRODUCTION','MEDICAL_DEVICES','MEDICAL_PRACTICE','MENTAL_HEALTH_CARE','MILITARY','MINING_METALS','MOTION_PICTURES_AND_FILM','MUSEUMS_AND_INSTITUTIONS','MUSIC','NANOTECHNOLOGY','NEWSPAPERS','NON_PROFIT_ORGANIZATION_MANAGEMENT','OIL_ENERGY','ONLINE_MEDIA','OUTSOURCING_OFFSHORING','PACKAGE_FREIGHT_DELIVERY','PACKAGING_AND_CONTAINERS','PAPER_FOREST_PRODUCTS','PERFORMING_ARTS','PHARMACEUTICALS','PHILANTHROPY','PHOTOGRAPHY','PLASTICS','POLITICAL_ORGANIZATION','PRIMARY_SECONDARY_EDUCATION','PRINTING','PROFESSIONAL_TRAINING_COACHING','PROGRAM_DEVELOPMENT','PUBLIC_POLICY','PUBLIC_RELATIONS_AND_COMMUNICATIONS','PUBLIC_SAFETY','PUBLISHING','RAILROAD_MANUFACTURE','RANCHING','REAL_ESTATE','RECREATIONAL_FACILITIES_AND_SERVICES','RELIGIOUS_INSTITUTIONS','RENEWABLES_ENVIRONMENT','RESEARCH','RESTAURANTS','RETAIL','SECURITY_AND_INVESTIGATIONS','SEMICONDUCTORS','SHIPBUILDING','SPORTING_GOODS','SPORTS','STAFFING_AND_RECRUITING','SUPERMARKETS','TELECOMMUNICATIONS','TEXTILES','THINK_TANKS','TOBACCO','TRANSLATION_AND_LOCALIZATION','TRANSPORTATION_TRUCKING_RAILROAD','UTILITIES','VENTURE_CAPITAL_PRIVATE_EQUITY','VETERINARY','WAREHOUSING','WHOLESALE','WINE_AND_SPIRITS','WIRELESS','WRITING_AND_EDITING','MOBILE_GAMES']);\nconst INDUSTRY_MAP = { 'HVAC':'MECHANICAL_OR_INDUSTRIAL_ENGINEERING', 'HVAC COMPANY':'MECHANICAL_OR_INDUSTRIAL_ENGINEERING', 'HVAC COMPANY NJ':'MECHANICAL_OR_INDUSTRIAL_ENGINEERING', 'PLUMBING':'CONSTRUCTION', 'ELECTRICAL':'ELECTRICAL_ELECTRONIC_MANUFACTURING', 'ROOFING':'CONSTRUCTION', 'GENERAL CONTRACTOR':'CONSTRUCTION' };\nlet hubspotIndustry = '';\nif (rawIndustry) {\n  const upper = rawIndustry.toUpperCase().trim();\n  hubspotIndustry = INDUSTRY_MAP[upper] || (HUBSPOT_INDUSTRIES.has(upper) ? upper : 'MECHANICAL_OR_INDUSTRIAL_ENGINEERING');\n}\nreturn [{\n  json: {\n    contactId,\n    contactAction,\n    email: preparedContact.email || '',\n    phone: place.phone || '',\n    firstName: preparedContact.firstName || '',\n    lastName: preparedContact.lastName || '',\n    company: place.businessName || '',\n    industry: preparedContact.industry || '',\n    hubspotIndustry,\n    website: place.website || '',\n    address: place.address || '',\n    city,\n    state,\n    leadScore: preparedContact.leadScore ?? 0,\n    tier: preparedContact.tier || 'cold',\n    source: 'google_maps_scraper',\n    sheetId: config.google?.masterSheetId || '',\n    timestamp: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "build-crm-context",
+        "name": "Build CRM Context",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          65792,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ filterGroups: [{ filters: [{ propertyName: 'name', operator: 'EQ', value: $json.company }] }], limit: 1 }) }}",
+          "options": {}
+        },
+        "id": "search-hubspot-company",
+        "name": "Search Company in HubSpot",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          66016,
+          12512
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-company-found",
+                "leftValue": "={{ $json.total }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "company-found",
+        "name": "Company Found?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          66240,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const searchResult = $('Search Company in HubSpot').first().json;\nconst companyId = searchResult.results[0].id;\nconst ctx = $('Build CRM Context').first().json;\nreturn [{ json: { ...ctx, companyId, companyAction: 'existing' } }];"
+        },
+        "id": "extract-existing-company",
+        "name": "Extract Existing Company ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          66464,
+          12400
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.hubapi.com/crm/v3/objects/companies",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ (() => { const ctx = $('Build CRM Context').first().json; const props = { name: ctx.company, phone: ctx.phone || '', website: ctx.website || '', city: ctx.city || '', state: ctx.state || '' }; if (ctx.hubspotIndustry) props.industry = ctx.hubspotIndustry; return JSON.stringify({ properties: props }); })() }}",
+          "options": {}
+        },
+        "id": "create-hubspot-company",
+        "name": "Create Company in HubSpot",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          66464,
+          12620
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const created = $input.first().json;\nconst companyId = created.id;\nconst ctx = $('Build CRM Context').first().json;\nreturn [{ json: { ...ctx, companyId, companyAction: 'created' } }];"
+        },
+        "id": "extract-new-company",
+        "name": "Extract New Company ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          66688,
+          12620
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contactId }}/associations/companies/{{ $json.companyId }}/contact_to_company",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotApi",
+          "options": {}
+        },
+        "id": "associate-contact-company",
+        "name": "Associate Contact to Company",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          66912,
+          12512
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "company-created",
+                "leftValue": "={{ $json.companyAction }}",
+                "rightValue": "created",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-create-deal-new-company",
+        "name": "Create Deal Only for New Company?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          67024,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "r3XBl1iiKYzSOFWF",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "contactId": "={{ $('Build CRM Context').first().json.contactId }}",
+              "dealName": "={{ $('Build CRM Context').first().json.company }}",
+              "stage": "qualifiedtobuy",
+              "amount": "",
+              "industry": "={{ $('Build CRM Context').first().json.industry }}",
+              "painPoint": "",
+              "tier": "={{ $('Build CRM Context').first().json.tier }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "call-create-deal",
+        "name": "Call Create Deal",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          67136,
+          12512
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const ctx = $('Build CRM Context').first().json;\nlet companyId = '';\nlet companyAction = '';\ntry { const ex = $('Extract Existing Company ID').first().json; companyId = ex.companyId; companyAction = ex.companyAction || 'existing'; } catch(e) {}\nif (!companyId) try { const nu = $('Extract New Company ID').first().json; companyId = nu.companyId; companyAction = nu.companyAction || 'created'; } catch(e) {}\nlet dealId = '';\ntry { dealId = $('Call Create Deal').first().json?.data?.dealId || ''; } catch(e) {}\nreturn [{ json: { ...ctx, companyId, dealId, companyAction } }];"
+        },
+        "id": "gather-crm-ids",
+        "name": "Gather CRM IDs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          67360,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $json.sheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Contacts"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $json.timestamp }}",
+              "Name": "={{ ($json.firstName + ' ' + $json.lastName).trim() || $json.company }}",
+              "Email": "={{ $json.email }}",
+              "Phone": "={{ $json.phone }}",
+              "Company": "={{ $json.company }}",
+              "Industry": "={{ $json.industry }}",
+              "Source": "={{ $json.source }}",
+              "Lead Score": "={{ $json.leadScore }}",
+              "HubSpot Contact ID": "={{ $json.contactId }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "append-contacts-tab",
+        "name": "Append to Contacts Tab",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          67584,
+          12512
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "company-action-created",
+                "leftValue": "={{ $('Gather CRM IDs').first().json.companyAction }}",
+                "rightValue": "created",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-append-companies-new",
+        "name": "Append Companies Only When New?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          67664,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-deal-id",
+                "leftValue": "={{ $('Gather CRM IDs').first().json.dealId }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-append-deals-has-deal",
+        "name": "Append Deals Only When Has Deal?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          67888,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Gather CRM IDs').first().json.sheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Companies"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $('Gather CRM IDs').first().json.timestamp }}",
+              "Company Name": "={{ $('Gather CRM IDs').first().json.company }}",
+              "Industry": "={{ $('Gather CRM IDs').first().json.industry }}",
+              "Phone": "={{ $('Gather CRM IDs').first().json.phone }}",
+              "Website": "={{ $('Gather CRM IDs').first().json.website }}",
+              "Address": "={{ $('Gather CRM IDs').first().json.address }}",
+              "HubSpot Company ID": "={{ $('Gather CRM IDs').first().json.companyId }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "append-companies-tab",
+        "name": "Append to Companies Tab",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          67808,
+          12512
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Gather CRM IDs').first().json.sheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Deals"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $('Gather CRM IDs').first().json.timestamp }}",
+              "Deal Name": "={{ $('Gather CRM IDs').first().json.company }}",
+              "Company": "={{ $('Gather CRM IDs').first().json.company }}",
+              "Industry": "={{ $('Gather CRM IDs').first().json.industry }}",
+              "Tier": "={{ $('Gather CRM IDs').first().json.tier }}",
+              "Lead Score": "={{ $('Gather CRM IDs').first().json.leadScore }}",
+              "HubSpot Deal ID": "={{ $('Gather CRM IDs').first().json.dealId }}",
+              "HubSpot Contact ID": "={{ $('Gather CRM IDs').first().json.contactId }}",
+              "HubSpot Company ID": "={{ $('Gather CRM IDs').first().json.companyId }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "append-deals-tab",
+        "name": "Append to Deals Tab",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          68032,
+          12512
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-created",
+                "leftValue": "={{ $('Create/Update HubSpot Contact').first().json.data.action }}",
+                "rightValue": "created",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "10130e27-e578-4c84-a87e-32551f46c9dc",
+        "name": "Was Contact Created?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          68256,
+          12512
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Call \\'CONFIG — Global Settings\\'').first().json.n8nBaseUrl || $('Call \\'CONFIG — Global Settings\\'').first().json.owner?.n8nBaseUrl || 'https://your-n8n-domain.com' }}/webhook/enroll-outreach",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ contactId: $('Build CRM Context').first().json.contactId, company: $('Build CRM Context').first().json.company, industry: $('Build CRM Context').first().json.industry, firstName: $('Build CRM Context').first().json.firstName }) }}",
+          "options": {}
+        },
+        "id": "d4eb9612-f66d-49e1-b026-1e743311ae5e",
+        "name": "Enroll in SYS 02 — Outbound",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          68480,
+          12440
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const place = $('Loop Over Leads').first().json;\nconst scoreResult = $('Score Lead').first().json;\nlet notes = 'Score: ' + (scoreResult.data?.score || 0) + ', Tier: ' + (scoreResult.data?.tier || 'cold');\ntry {\n  const cr = $('Build CRM Context').first().json;\n  if (cr?.contactId) notes += ', ContactID: ' + cr.contactId;\n  if (cr?.companyId) notes += ', CompanyID: ' + cr.companyId;\n} catch (e) {}\ntry {\n  const dr = $('Gather CRM IDs').first().json;\n  if (dr?.dealId) notes += ', DealID: ' + dr.dealId;\n} catch (e) {}\nreturn [{\n  json: {\n    workflowName: 'SYS 01 — Lead Sourcing Machine',\n    contactName: place.businessName,\n    phone: place.phone,\n    eventType: 'lead_sourced',\n    status: 'success',\n    notes: notes\n  }\n}];"
+        },
+        "id": "88074bf8-a1ed-4c7e-8f38-f4ab9f841ec1",
+        "name": "Prepare Log Entry",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          68704,
+          12584
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/1qQFLOSHZsS9JPKP",
+            "cachedResultName": "SW: Log to Automations Log Sheet"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "workflowName": "={{ $json.workflowName }}",
+              "contactName": "={{ $json.contactName }}",
+              "phone": "={{ $json.phone }}",
+              "eventType": "={{ $json.eventType }}",
+              "status": "={{ $json.status }}",
+              "notes": "={{ $json.notes }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "c4741a79-bb3e-4317-8aa3-80b7c29c72b7",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          68928,
+          12584
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2
+        },
+        "id": "5f264da6-716e-4d3e-a2f4-66f6bc20fd73",
+        "name": "Wait for Sheets Quota",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          69152,
+          12944
+        ],
+        "webhookId": "3dd5e998-3da8-43b4-8cce-17f45ef6e9c1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const firstItem = $('Process Each Query').first();\nconst batchItem = firstItem && firstItem.json ? firstItem.json : {};\nconst config = batchItem.config || {};\nconst queries = config.leadSourcingQueries || [];\nconst justFinished = batchItem.query ? String(batchItem.query) : '';\nconst remaining = queries.filter(q => String(q).trim() !== justFinished.trim());\n\nif (remaining.length > 0) {\n  return remaining.map(query => ({ json: { query, config } }));\n}\nreturn [{ json: { _alert: true, message: 'Lead sourcing complete — check Automations Log for details', priority: 'info' } }];"
+        },
+        "id": "ec0ad197-d8a9-4b5a-814b-2fa2df88777a",
+        "name": "Prepare Completion Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          63552,
+          12832
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-query",
+                "leftValue": "={{ $json.query }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "1bbf817e-aa51-489e-b80d-85c8c3096e14",
+        "name": "Next Query or Alert",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          63776,
+          12824
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/PGf6jPoWtxSPlr0h",
+            "cachedResultName": "SW: Send Google Chat Alert"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "message": "={{ $json.message || 'Lead sourcing complete' }}",
+              "priority": "={{ $json.priority || 'info' }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "17a0a291-a1fa-44db-afbc-aeb874a0f865",
+        "name": "Send Completion Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          64000,
+          12824
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/1eTTVoSFSlSPvZV4",
+            "cachedResultName": "CONFIG — Global Settings"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          61312,
+          12848
+        ],
+        "id": "0a8e654f-6c07-4628-b211-aef0df9d183b",
+        "name": "Call 'CONFIG — Global Settings'"
+      }
+    ],
+    "connections": {
+      "Every Monday 7AM EST": {
+        "main": [
+          [
+            {
+              "node": "Call 'CONFIG — Global Settings'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call 'CONFIG — Global Settings'": {
+        "main": [
+          [
+            {
+              "node": "Split Queries",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Queries": {
+        "main": [
+          [
+            {
+              "node": "Process Each Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Each Query": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Google Maps Places Search",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Maps Places Search": {
+        "main": [
+          [
+            {
+              "node": "Extract Place Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Place Data": {
+        "main": [
+          [
+            {
+              "node": "Get Place Details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Place Details": {
+        "main": [
+          [
+            {
+              "node": "Enrich with Details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enrich with Details": {
+        "main": [
+          [
+            {
+              "node": "Limit One for Read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit One for Read": {
+        "main": [
+          [
+            {
+              "node": "Read Leads Sheet",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Filter New Leads Only",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter New Leads Only": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Leads": {
+        "main": [
+          [
+            {
+              "node": "Prepare Completion Alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Score Lead",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Score Lead": {
+        "main": [
+          [
+            {
+              "node": "Prepare Leads Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Leads Row": {
+        "main": [
+          [
+            {
+              "node": "Append to Leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append to Leads": {
+        "main": [
+          [
+            {
+              "node": "Wait 3s After Append",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 3s After Append": {
+        "main": [
+          [
+            {
+              "node": "Send to HubSpot?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send to HubSpot?": {
+        "main": [
+          [
+            {
+              "node": "Extract Domain",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Log Entry",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Domain": {
+        "main": [
+          [
+            {
+              "node": "Has Website Domain?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Website Domain?": {
+        "main": [
+          [
+            {
+              "node": "Hunter Domain Search",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Hunter Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Hunter Domain Search": {
+        "main": [
+          [
+            {
+              "node": "Prepare Contact Data",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Contact Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Hunter Result": {
+        "main": [
+          [
+            {
+              "node": "Prepare Contact Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Contact Data": {
+        "main": [
+          [
+            {
+              "node": "Create/Update HubSpot Contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create/Update HubSpot Contact": {
+        "main": [
+          [
+            {
+              "node": "Build CRM Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build CRM Context": {
+        "main": [
+          [
+            {
+              "node": "Search Company in HubSpot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Company in HubSpot": {
+        "main": [
+          [
+            {
+              "node": "Company Found?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Company in HubSpot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Company Found?": {
+        "main": [
+          [
+            {
+              "node": "Extract Existing Company ID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Company in HubSpot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Existing Company ID": {
+        "main": [
+          [
+            {
+              "node": "Associate Contact to Company",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Company in HubSpot": {
+        "main": [
+          [
+            {
+              "node": "Extract New Company ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract New Company ID": {
+        "main": [
+          [
+            {
+              "node": "Associate Contact to Company",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Associate Contact to Company": {
+        "main": [
+          [
+            {
+              "node": "Create Deal Only for New Company?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Deal Only for New Company?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Deal Only for New Company?": {
+        "main": [
+          [
+            {
+              "node": "Call Create Deal",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Gather CRM IDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call Create Deal": {
+        "main": [
+          [
+            {
+              "node": "Gather CRM IDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gather CRM IDs": {
+        "main": [
+          [
+            {
+              "node": "Append to Contacts Tab",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append to Contacts Tab": {
+        "main": [
+          [
+            {
+              "node": "Append Companies Only When New?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append Companies Only When New?": {
+        "main": [
+          [
+            {
+              "node": "Append to Companies Tab",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append Deals Only When Has Deal?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append to Companies Tab": {
+        "main": [
+          [
+            {
+              "node": "Append Deals Only When Has Deal?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append Deals Only When Has Deal?": {
+        "main": [
+          [
+            {
+              "node": "Append to Deals Tab",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Was Contact Created?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append to Deals Tab": {
+        "main": [
+          [
+            {
+              "node": "Was Contact Created?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Was Contact Created?": {
+        "main": [
+          [
+            {
+              "node": "Enroll in SYS 02 — Outbound",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Log Entry",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enroll in SYS 02 — Outbound": {
+        "main": [
+          [
+            {
+              "node": "Prepare Log Entry",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Log Entry",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Log Entry": {
+        "main": [
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Wait for Sheets Quota",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait for Sheets Quota": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Completion Alert": {
+        "main": [
+          [
+            {
+              "node": "Next Query or Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Next Query or Alert": {
+        "main": [
+          [
+            {
+              "node": "Process Each Query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Completion Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T03:05:39.710Z",
+        "id": 1376,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:06:00.861Z",
+        "id": 1436,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:43.213Z",
+        "id": 1484,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:39.684Z",
+        "id": 1375,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:06:00.829Z",
+        "id": 1435,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:43.194Z",
+        "id": 1483,
+        "workflowId": "RJngRI1L2LcmFmZ0",
+        "versionId": "55d1706f-def4-48b7-9d36-70a43eb9c30d",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

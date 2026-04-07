@@ -1,7 +1,11 @@
 {
-  "id": "sys-04-client-onboarding-logistics",
+  "updatedAt": "2026-04-03T03:42:44.883Z",
+  "createdAt": "2026-03-08T22:51:13.123Z",
+  "id": "Nsu2htyjU8ZTidLN",
   "name": "SYS 04 — Client Onboarding Logistics",
-  "description": "Webhook when deal enters Closed Won: welcome + credentials emails, Google Drive client folder and standard subfolders, Google Chat alert, triggers SYS 04 — Client Onboarding Docs Generator, 48h wait then email+SMS credential reminder, logs onboarding_started via Log sub-workflow.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -49,7 +53,8 @@
       "position": [
         250,
         300
-      ]
+      ],
+      "webhookId": "7c91207b-00a2-403d-bd9e-a8e8b7708485"
     },
     {
       "parameters": {
@@ -351,7 +356,8 @@
       "position": [
         3330,
         300
-      ]
+      ],
+      "webhookId": "ca72f311-a654-4f74-be3d-68c4a2dc3fcc"
     },
     {
       "parameters": {
@@ -753,8 +759,801 @@
   },
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
     "timeSavedMode": "dynamic",
-    "availableInMCP": true
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "cd4d8dfd-de7d-4c1a-8f50-a56846950b30",
+  "activeVersionId": "cd4d8dfd-de7d-4c1a-8f50-a56846950b30",
+  "versionCounter": 121,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:51:13.128Z",
+      "createdAt": "2026-03-08T22:51:13.128Z",
+      "role": "workflow:owner",
+      "workflowId": "Nsu2htyjU8ZTidLN",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:44.884Z",
+    "createdAt": "2026-04-03T03:42:44.884Z",
+    "versionId": "cd4d8dfd-de7d-4c1a-8f50-a56846950b30",
+    "workflowId": "Nsu2htyjU8ZTidLN",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 04 — Client Onboarding Logistics\n\n### Purpose\n**First-touch onboarding** when a deal is won: welcome the client, request credentials, stand up a **Drive workspace**, notify the team, kick off **SYS 04 — Client Onboarding Docs Generator** (onboarding doc package), then **nudge** if the credentials form still isn’t done after 48 hours—plus **logging** for the ops trail.\n\n### What this workflow does *not* do\nIt does **not** update HubSpot properties or create deals (e.g. `client_drive_folder_id`)—that may live in other automations. There is **no dedicated Google Sheets node** here; **Log** goes through your **Log** sub-workflow (often a sheet row). Replace **PLACEHOLDER_CREDENTIALS_FORM** in the Code nodes with your real form URL.\n\n### When it fires\n- **Webhook:** `POST` → `/webhook/hubspot-deal-closed-won`\n- **HubSpot:** Deal enters **Closed Won** (direct HubSpot workflow action, or via **SYS 00** router on `dealstage`).\n\n### How it works (flow)\n1. **Get Config** → **Extract Deal Data** (client name, tier, email, deal value, industry, pain points, deal id).\n2. **Welcome email** → **Credentials email** (links to intake form).\n3. **Create Client Folder** under `config.google.clientFolderParentId` → **Prep Subfolders** → **Create Subfolders** (`Onboarding Docs`, `Proposals`, `Contracts`, `Deliverables`).\n4. **Google Chat** onboarding alert (new client + folder ready).\n5. **Prep SYS 13 Input** → **Trigger SYS 13** (full onboarding PDF/package workflow).\n6. **Wait 48hrs** → **Reminder email** → **Reminder SMS** (credentials nudge).\n7. **Prep Log** → **Log to Sheet** (`onboarding_started`).\n\n### Dependencies\nCONFIG, **Send Email**, **Send SMS**, **Send Google Chat Alert**, **Log**, **SYS 13** sub-workflows; **Google Drive** (service account) on folder nodes.\n\n**Google Drive (node v3):** Folder create uses **Parent Folder** (`folderId`) and **Parent Drive** (`driveId`), not legacy `parents`. Wrong/missing parent IDs put **Onboarding Docs / Proposals / Contracts / Deliverables** beside the client folder instead of inside it. If your client root lives on a **shared drive**, set **Parent Drive** on both folder-create nodes to that drive (not *My Drive*).\n\n**Insights:** **Calc Time Saved** → **Track Time Saved** after **Log to Sheet** (minutes from task breakdown); **settings** → *Estimated time saved* → **Dynamic**.\n\n### Ops\n**Execute Sub-workflow** nodes use **Source: Database** + workflow IDs (same pattern as SYS 13). **Define Below** with empty JSON causes `Unexpected end of JSON input`. Repo IDs target IntraWeb production — re-select sub-workflows after import if yours differ. Confirm **clientFolderParentId** in CONFIG points at the shared parent Drive folder.",
+          "height": 560,
+          "width": 520,
+          "color": 5
+        },
+        "id": "note-sys04",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Time saved (labor) — per Closed Won client\n\n**Unit:** one run from **Closed Won webhook** through **Log to Sheet** (`onboarding_started`), including the **48h** credential reminder branch.\n\n**Definition:** *Labor* = hands-on minutes. **Wait 48hrs** is *clock* time, not labor.\n\n### Manual baseline (same outcome, no SYS 04 — Client Onboarding Logistics)\n\n| # | Task | min |\n|---|------|-----|\n| 1 | Pull won-deal + contact details from HubSpot for handoff | 10 |\n| 2 | Draft + send **welcome** email (on-brand) | 25 |\n| 3 | Draft + send **credentials** email + correct form link | 15 |\n| 4 | Create **Drive** root + 4 standard subfolders, correct naming | 15 |\n| 5 | Notify team (**Chat** / equivalent) with client + folder context | 5 |\n| 6 | Hand off / start **onboarding package** (trigger or coordinate — not the full doc write time) | 12 |\n| 7 | After ~48h: **reminder** email (credentials) | 15 |\n| 8 | **Reminder SMS** | 8 |\n| 9 | **Log** onboarding event to ops / automations sheet | 4 |\n\n**Manual total** = **109 min** (~1.8 h)\n\n### With SYS 04 (human only)\n\n| # | Task | min |\n|---|------|-----|\n| A | Confirm **Drive** folder + subfolders exist | 3 |\n| B | Optional: skim auto-sent welcome / credentials | 6 |\n\n**Human total** = **9 min**\n\n### Net\n\n**Time saved** = 109 − 9 = **100 min** ≈ **1.7 h labor** per **Closed Won** onboarding kickoff.\n\n*SYS 13 document generation is separate; only the handoff/trigger slice is in row 6 above.*\n\nAdjust row minutes if your real process differs; re-sum **Manual total** and **109 − 9**.",
+          "height": 520,
+          "width": 480,
+          "color": 4
+        },
+        "id": "note-sys04-time-saved",
+        "name": "Note — Time saved",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          620,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "hubspot-deal-closed-won",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "sys04-trigger",
+        "name": "Deal Closed Won Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "7c91207b-00a2-403d-bd9e-a8e8b7708485"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          470,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const config = $('Get Config').first().json;\nlet raw = $('Deal Closed Won Webhook').first().json;\n\n// n8n often nests the POST body under `body` (object or JSON string).\nif (raw.body != null && typeof raw.body === 'object' && raw.properties === undefined && raw.id === undefined) {\n  raw = raw.body;\n} else if (typeof raw.body === 'string') {\n  try {\n    const parsed = JSON.parse(raw.body);\n    if (parsed && typeof parsed === 'object') raw = parsed;\n  } catch (e) {}\n}\n\nconst p = raw.properties && typeof raw.properties === 'object' ? raw.properties : {};\n\nconst firstNonEmpty = (...candidates) => {\n  for (const v of candidates) {\n    if (v === undefined || v === null) continue;\n    const s = String(v).trim();\n    if (s) return s;\n  }\n  return '';\n};\n\nconst clientName = firstNonEmpty(\n  p.dealname,\n  p.name,\n  p.company,\n  raw.dealname,\n  raw.name,\n  raw.company,\n) || 'New Client';\n\nconst company = firstNonEmpty(p.company, raw.company) || clientName;\n\nconst tier = firstNonEmpty(p.tier, raw.tier) || 'starter';\nconst contactEmail = firstNonEmpty(p.contact_email, p.email, raw.email);\nconst contactFirstName = firstNonEmpty(p.contact_firstname, p.firstname, raw.firstName);\nconst amountRaw = firstNonEmpty(p.amount, raw.amount);\nconst dealValue = amountRaw === '' ? 0 : Number.parseFloat(String(amountRaw).replace(/[^0-9.-]/g, '')) || 0;\nconst industry = firstNonEmpty(p.industry, raw.industry);\nconst painPoints = firstNonEmpty(\n  p.deal_pain_points,\n  p.pain_point_summary,\n  p.painPoints,\n  raw.painPoints,\n);\n\nreturn [{\n  json: {\n    clientName,\n    company,\n    tier,\n    contactEmail,\n    contactFirstName,\n    dealValue,\n    industry,\n    painPoints,\n    dealId: firstNonEmpty(raw.id, raw.dealId),\n    config,\n  },\n}];"
+        },
+        "id": "sys04-extract",
+        "name": "Extract Deal Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          690,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Welcome to IntraWeb Technologies — let's get started`,\n    html: `<div style=\"font-family: 'DM Sans', Arial, sans-serif; max-width: 600px;\"><div style=\"background: #1a1f2e; padding: 30px; text-align: center;\"><h1 style=\"color: #3d8b8b; margin: 0;\">Welcome to IntraWeb</h1></div><div style=\"padding: 30px;\"><p>Hi ${d.contactFirstName || 'there'},</p><p>We're excited to officially kick things off. Here's what happens next:</p><h3>Week 1 Expectations</h3><ul><li>You'll receive a credentials intake form (next email) — fill this out so we can get access to the tools we need</li><li>We'll schedule a 30-minute kickoff call to align on priorities</li><li>Your dedicated Google Drive folder has been created for all project files</li></ul><p>If you have any questions at all, reply to this email or text me directly at ${d.config.owner.phone}.</p><p>Looking forward to building something great for ${d.clientName}.</p><p>— John<br/>${d.config.owner.companyName}</p></div></div>`,\n    workflowName: 'SYS 04 — Client Onboarding Logistics'\n  }\n}];"
+        },
+        "id": "sys04-welcome-prep",
+        "name": "Prep Welcome Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          910,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-welcome-send",
+        "name": "Send Welcome Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1130,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `${d.clientName} — Credentials & Access Form`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>To get started, we need access credentials for the tools and platforms we'll be integrating.</p><p><strong><a href=\"https://forms.google.com/PLACEHOLDER_CREDENTIALS_FORM\">Fill out the credentials intake form here</a></strong></p><p>This typically takes 10-15 minutes. If you're unsure about any field, leave it blank and we'll walk through it on our kickoff call.</p><p>— John</p>`,\n    workflowName: 'SYS 04 — Client Onboarding Logistics'\n  }\n}];"
+        },
+        "id": "sys04-creds-prep",
+        "name": "Prep Credentials Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-creds-send",
+        "name": "Send Credentials Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1570,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "operation": "create",
+          "name": "=IntraWeb — {{ $('Extract Deal Data').first().json.clientName }}",
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Extract Deal Data').first().json.config.google.clientFolderParentId }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "id": "sys04-create-root-folder",
+        "name": "Create Client Folder",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1790,
+          300
+        ],
+        "credentials": {
+          "googleApi": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Use $input (output of Create Client Folder) so parent id always matches the folder just created.\nconst created = $input.first().json;\nconst parentId = created.id || created.fileId;\nif (!parentId || String(parentId).trim() === '') {\n  throw new Error('Create Client Folder did not return a folder id (expected json.id). Check Drive credentials and API response.');\n}\nconst subfolders = ['Onboarding Docs', 'Proposals', 'Contracts', 'Deliverables'];\nreturn subfolders.map((name) => ({ json: { name, parentId: String(parentId).trim() } }));"
+        },
+        "id": "sys04-prep-subfolders",
+        "name": "Prep Subfolders",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2010,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "operation": "create",
+          "name": "={{ $json.name }}",
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.parentId }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "id": "sys04-create-subfolders",
+        "name": "Create Subfolders",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2230,
+          300
+        ],
+        "credentials": {
+          "googleApi": {
+            "id": "IJzDJS1jpbItegZD",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nconst folderId = $('Create Client Folder').first().json.id;\n\nreturn [{\n  json: {\n    message: `New client: ${d.clientName} — ${d.tier}. Drive folder created.`,\n    priority: 'info'\n  }\n}];"
+        },
+        "id": "sys04-alert-prep",
+        "name": "Prep Onboarding Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "PGf6jPoWtxSPlr0h",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-alert",
+        "name": "Send Onboarding Alert",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2670,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\nconst created = $('Create Client Folder').first().json;\nconst folderId = created.id || created.fileId;\nif (!folderId) {\n  throw new Error('Missing client folder id from Create Client Folder; cannot hand off to onboarding docs generator.');\n}\n\nreturn [{\n  json: {\n    clientName: d.clientName,\n    company: d.company || d.clientName,\n    industry: d.industry,\n    tier: d.tier,\n    startDate: new Date().toISOString().split('T')[0],\n    dealValue: d.dealValue,\n    painPoints: d.painPoints,\n    ownerPhone: d.config.owner.phone,\n    ownerEmail: d.config.owner.email,\n    contactEmail: d.contactEmail,\n    contactFirstName: d.contactFirstName,\n    driveFolderId: folderId\n  }\n}];"
+        },
+        "id": "sys04-trigger-docs",
+        "name": "Prep Onboarding Docs Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2890,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "QjW7q9bT5wqCjynz",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-call-sys13",
+        "name": "Trigger Onboarding Docs",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          3110,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "timeInterval",
+          "amount": 48,
+          "unit": "hours"
+        },
+        "id": "sys04-wait-creds",
+        "name": "Wait 48hrs",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3330,
+          300
+        ],
+        "webhookId": "ca72f311-a654-4f74-be3d-68c4a2dc3fcc"
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail,\n    subject: `Reminder: Credentials form for ${d.clientName}`,\n    html: `<p>Hi ${d.contactFirstName || 'there'},</p><p>Just a quick reminder — we're ready to get started but need your credentials form completed first.</p><p><strong><a href=\"https://forms.google.com/PLACEHOLDER_CREDENTIALS_FORM\">Complete the form here</a></strong></p><p>Takes about 10 minutes. Once submitted, we'll schedule your kickoff call within 24 hours.</p><p>— John</p>`,\n    workflowName: 'SYS 04 — Client Onboarding Logistics'\n  }\n}];"
+        },
+        "id": "sys04-reminder-email-prep",
+        "name": "Prep Reminder Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3550,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "FF6VOLCcRxI4uNYD",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "to": "={{ $json.to }}",
+              "subject": "={{ $json.subject }}",
+              "html": "={{ $json.html }}",
+              "workflowName": "={{ $json.workflowName }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-reminder-email",
+        "name": "Send Reminder Email",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          3770,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $('Extract Deal Data').first().json;\n\nreturn [{\n  json: {\n    to: d.contactEmail ? d.config.owner.phone : d.config.owner.phone,\n    body: `Hi ${d.contactFirstName || 'there'}, just checking in — did you get the credentials form we sent? Need that to get your project rolling. Let me know if you need help. — John`,\n    workflowName: 'SYS 04 — Client Onboarding Logistics'\n  }\n}];"
+        },
+        "id": "sys04-reminder-sms-prep",
+        "name": "Prep Reminder SMS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3990,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "VzxtOFmmGEitVEQk",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-reminder-sms",
+        "name": "Send Reminder SMS",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          4210,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    workflowName: 'SYS 04 — Client Onboarding Logistics',\n    contactName: $('Extract Deal Data').first().json.clientName,\n    phone: '',\n    eventType: 'onboarding_started',\n    status: 'success',\n    notes: `Tier: ${$('Extract Deal Data').first().json.tier}`\n  }\n}];"
+        },
+        "id": "sys04-log-prep",
+        "name": "Prep Log",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4430,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1qQFLOSHZsS9JPKP",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sys04-log",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          4650,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Labor only (matches sticky Note — Time saved). Clock waits (e.g. 48h) are not labor.\nconst manualByTask = [\n  { task: 'Pull won-deal + contact from HubSpot', min: 10 },\n  { task: 'Draft + send welcome email', min: 25 },\n  { task: 'Draft + send credentials email + form link', min: 15 },\n  { task: 'Create Drive root + 4 standard subfolders', min: 15 },\n  { task: 'Notify team (Chat / equivalent)', min: 5 },\n  { task: 'Hand off / start onboarding package (onboarding docs trigger slice)', min: 12 },\n  { task: 'Reminder email (credentials)', min: 15 },\n  { task: 'Reminder SMS', min: 8 },\n  { task: 'Log onboarding event to ops sheet', min: 4 }\n];\nconst humanByTask = [\n  { task: 'Confirm Drive folder + subfolders exist', min: 3 },\n  { task: 'Optional: skim auto-sent welcome / credentials', min: 6 }\n];\nconst manualLaborMinutes = manualByTask.reduce((s, t) => s + t.min, 0);\nconst residualHumanMinutes = humanByTask.reduce((s, t) => s + t.min, 0);\nconst minutesSaved = manualLaborMinutes - residualHumanMinutes;\n\nconst base = $input.first().json;\nreturn [{\n  json: {\n    ...base,\n    minutesSaved,\n    timeSavedBreakdown: {\n      manualLaborMinutes,\n      residualHumanMinutes,\n      manualByTask,\n      humanByTask\n    }\n  }\n}];"
+        },
+        "id": "sys04-calc-time-saved",
+        "name": "Calc Time Saved",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4760,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "once",
+          "minutesSaved": "={{ $json.minutesSaved }}"
+        },
+        "id": "sys04-track-time-saved",
+        "name": "Track Time Saved",
+        "type": "n8n-nodes-base.timeSaved",
+        "typeVersion": 1,
+        "position": [
+          4980,
+          300
+        ],
+        "notes": "Uses minutesSaved from Calc Time Saved (manual labor total minus residual human minutes)."
+      }
+    ],
+    "connections": {
+      "Deal Closed Won Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Extract Deal Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Deal Data": {
+        "main": [
+          [
+            {
+              "node": "Prep Welcome Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Welcome Email": {
+        "main": [
+          [
+            {
+              "node": "Send Welcome Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Welcome Email": {
+        "main": [
+          [
+            {
+              "node": "Prep Credentials Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Credentials Email": {
+        "main": [
+          [
+            {
+              "node": "Send Credentials Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Credentials Email": {
+        "main": [
+          [
+            {
+              "node": "Create Client Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Client Folder": {
+        "main": [
+          [
+            {
+              "node": "Prep Subfolders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Subfolders": {
+        "main": [
+          [
+            {
+              "node": "Create Subfolders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Subfolders": {
+        "main": [
+          [
+            {
+              "node": "Prep Onboarding Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Onboarding Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Onboarding Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Onboarding Alert": {
+        "main": [
+          [
+            {
+              "node": "Prep Onboarding Docs Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Onboarding Docs Input": {
+        "main": [
+          [
+            {
+              "node": "Trigger Onboarding Docs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Onboarding Docs": {
+        "main": [
+          [
+            {
+              "node": "Wait 48hrs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 48hrs": {
+        "main": [
+          [
+            {
+              "node": "Prep Reminder Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Reminder Email": {
+        "main": [
+          [
+            {
+              "node": "Send Reminder Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Reminder Email": {
+        "main": [
+          [
+            {
+              "node": "Prep Reminder SMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Reminder SMS": {
+        "main": [
+          [
+            {
+              "node": "Send Reminder SMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Reminder SMS": {
+        "main": [
+          [
+            {
+              "node": "Prep Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep Log": {
+        "main": [
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Calc Time Saved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calc Time Saved": {
+        "main": [
+          [
+            {
+              "node": "Track Time Saved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
+  }
 }

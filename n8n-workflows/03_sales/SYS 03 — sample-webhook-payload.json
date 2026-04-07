@@ -1,5 +1,19 @@
 {
   "id": "18472938475621",
+  "lineItems": [
+    {
+      "name": "Website",
+      "description": "Marketing site + CMS",
+      "quantity": 1,
+      "amount": 10000
+    },
+    {
+      "name": "Automation",
+      "description": "HubSpot workflows + integrations",
+      "quantity": 1,
+      "amount": 8500
+    }
+  ],
   "properties": {
     "dealname": "Summit Plumbing & Heating",
     "name": "Summit Plumbing & Heating",

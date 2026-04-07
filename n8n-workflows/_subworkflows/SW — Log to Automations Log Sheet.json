@@ -1,7 +1,11 @@
 {
-  "id": "sw-log-automations-log-sheet",
+  "updatedAt": "2026-04-03T03:42:42.687Z",
+  "createdAt": "2026-03-08T22:43:16.244Z",
+  "id": "1qQFLOSHZsS9JPKP",
   "name": "SW: Log to Automations Log Sheet",
-  "description": "Subworkflow: append one row to the Automations Log tab (masterSheetId from CONFIG). Input: workflowName, contactName, phone, eventType, status, notes. Standard audit trail for all systems.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -236,8 +240,347 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true,
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed",
     "errorWorkflow": ""
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+  "activeVersionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+  "versionCounter": 222,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:43:16.246Z",
+      "createdAt": "2026-03-08T22:43:16.246Z",
+      "role": "workflow:owner",
+      "workflowId": "1qQFLOSHZsS9JPKP",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-02T04:22:56.536Z",
+    "createdAt": "2026-04-02T04:22:56.536Z",
+    "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+    "workflowId": "1qQFLOSHZsS9JPKP",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SW: Log to Automations Log Sheet\n\n**Subworkflow.** Appends one row to the **Automations Log** tab of the master Google Sheet. Every workflow that performs an action should log here for audit and debugging.\n\n**Input:** `workflowName`, `contactName`, `phone`, `eventType`, `status`, `notes` (optional). Document ID is read from **Get Config** (`masterSheetId`).\n\n**Google Sheets (v4.7):** Append uses **Define Below** — each column maps from **Prepare Row Data** (`$json[...]`). **Auto-map** with empty `columns.value` triggers *At least one value has to be added under 'Values to Send'* on some n8n builds.\n\n**Output:** `{ success, data, error }`. Ensures a consistent paper trail across all systems.\n\n**Critical:** In n8n **Settings** for this workflow, set **Error workflow** to **None** (empty). If it points at **SYS 00 — Global Error Notification**, a Sheets quota failure can re-trigger SYS 00, which calls this logger again and causes a Chat alert storm.",
+          "height": 280,
+          "width": 420,
+          "color": 5
+        },
+        "id": "note-sw-log",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "sw-log-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          250,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return $input.all();"
+        },
+        "id": "sw-log-pass-input",
+        "name": "Pass Input",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "sw-log-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          400,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "id": "sw-log-merge",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          620,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst now = new Date().toISOString();\n// Merge can output flat { ...input1, ...input2 } or sometimes input1/input2 keys\nconst trigger = raw.workflowName !== undefined || raw.contactName !== undefined ? raw : (raw.input1 || raw.input2 || {});\nconst config = raw.google ? raw : (raw.input2 || raw.input1 || raw);\nconst w = trigger.workflowName || trigger.workflow || '';\nconst c = trigger.contactName || trigger.contact || trigger.name || '';\nconst p = trigger.phone || trigger.phoneNumber || '';\nconst e = trigger.eventType || trigger.event || '';\nconst s = trigger.status || 'success';\nconst n = trigger.notes || trigger.note || '';\n// Keys must match Automations Log header row exactly (Google Sheets v4+ auto-map).\nreturn [{\n  json: {\n    'Timestamp': now,\n    'Workflow Name': (typeof w === 'string' && w.trim()) ? w : 'Unknown',\n    'Contact Name': typeof c === 'string' ? c : (c ? String(c) : ''),\n    'Phone': typeof p === 'string' ? p : (p ? String(p) : ''),\n    'Event Type': (typeof e === 'string' && e.trim()) ? e : 'unknown',\n    'Status': (typeof s === 'string' && s.trim()) ? s : 'success',\n    'Notes': typeof n === 'string' ? n : (n ? String(n) : ''),\n  },\n}];"
+        },
+        "id": "sw-log-prepare",
+        "name": "Prepare Row Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          840,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "mode": "id",
+            "value": "={{ $('Get Config').first().json.google.masterSheetId }}"
+          },
+          "sheetName": {
+            "mode": "name",
+            "value": "Automations Log"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $json['Timestamp'] }}",
+              "Workflow Name": "={{ $json['Workflow Name'] }}",
+              "Contact Name": "={{ $json['Contact Name'] }}",
+              "Phone": "={{ $json['Phone'] }}",
+              "Event Type": "={{ $json['Event Type'] }}",
+              "Status": "={{ $json['Status'] }}",
+              "Notes": "={{ $json['Notes'] }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "sw-log-append",
+        "name": "Append to Log",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1060,
+          300
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 120000,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "pKS06498CxELp8nS",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const prep = $('Prepare Row Data').first().json;\nreturn [{\n  json: {\n    success: true,\n    data: { logged: true, timestamp: prep['Timestamp'] || new Date().toISOString() },\n    error: null\n  }\n}];"
+        },
+        "id": "sw-log-response",
+        "name": "Return Success",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1280,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Pass Input",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pass Input": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Prepare Row Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Row Data": {
+        "main": [
+          [
+            {
+              "node": "Append to Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append to Log": {
+        "main": [
+          [
+            {
+              "node": "Return Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-02T04:22:56.573Z",
+        "id": 1330,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.540Z",
+        "id": 1406,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.904Z",
+        "id": 1426,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.717Z",
+        "id": 1474,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-02T04:22:56.564Z",
+        "id": 1329,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:41.533Z",
+        "id": 1405,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:05:59.890Z",
+        "id": 1425,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T03:42:42.707Z",
+        "id": 1473,
+        "workflowId": "1qQFLOSHZsS9JPKP",
+        "versionId": "29c17fdb-e072-445e-8d2e-b80cf7922e8b",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }

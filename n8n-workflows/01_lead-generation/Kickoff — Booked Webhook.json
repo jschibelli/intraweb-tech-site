@@ -51,7 +51,7 @@
     "executionOrder": "v1"
   },
   "staticData": null,
-  "tags": [],
+  "tags": [{"name":"SYS 01"}],
   "triggerCount": 0,
   "meta": {
     "templateCredsSetupCompleted": false

@@ -1,6 +1,11 @@
 {
+  "updatedAt": "2026-04-03T03:42:44.473Z",
+  "createdAt": "2026-03-08T22:44:52.798Z",
+  "id": "VzxtOFmmGEitVEQk",
   "name": "SW: Send SMS",
-  "description": "Subworkflow: send SMS via Twilio (E.164 to, body, workflowName for logging). From number from CONFIG; logs to Automations Log and Chat alert on failure. Used for follow-ups, reminders, and referrals.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -189,17 +194,6 @@
       "name": "Call 'CONFIG — Global Settings'"
     }
   ],
-  "pinData": {
-    "Execute Workflow Trigger": [
-      {
-        "json": {
-          "to": "+18622079004",
-          "body": "Testing the SMS feature.",
-          "workflowName": "SW: Send SMS"
-        }
-      }
-    ]
-  },
   "connections": {
     "Alert on Error": {
       "main": [
@@ -297,17 +291,345 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "66fc0050-b106-43e5-a5e3-aacf9512dc81",
+  "staticData": null,
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+    "templateCredsSetupCompleted": true
   },
-  "id": "VzxtOFmmGEitVEQk",
-  "tags": []
+  "pinData": {
+    "Execute Workflow Trigger": [
+      {
+        "json": {
+          "to": "+18622079004",
+          "body": "Testing the SMS feature.",
+          "workflowName": "SW: Send SMS"
+        }
+      }
+    ]
+  },
+  "versionId": "3db87dd6-d106-4140-ad31-28154547d6c9",
+  "activeVersionId": "3db87dd6-d106-4140-ad31-28154547d6c9",
+  "versionCounter": 114,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-08T22:44:52.808Z",
+      "createdAt": "2026-03-08T22:44:52.808Z",
+      "role": "workflow:owner",
+      "workflowId": "VzxtOFmmGEitVEQk",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:05:41.685Z",
+    "createdAt": "2026-04-03T03:05:41.685Z",
+    "versionId": "3db87dd6-d106-4140-ad31-28154547d6c9",
+    "workflowId": "VzxtOFmmGEitVEQk",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    success: false,\n    data: null,\n    error: 'SMS send failed'\n  }\n}];"
+        },
+        "id": "a69330f9-9d51-458c-909c-0e945025f37e",
+        "name": "Return Error",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2816,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-send-google-chat-alert",
+            "mode": "id",
+            "cachedResultName": "SW: Send Google Chat Alert"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "id": "62f03fdf-5311-40ff-8679-1f200a52920d",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2592,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Prepare SMS').first().json;\n\nreturn [{\n  json: {\n    message: `SMS send failed to ${input.to} — workflow: ${input.workflowName}`,\n    priority: 'error'\n  }\n}];"
+        },
+        "id": "36410862-ba00-4a6f-a364-9ff0c7a58415",
+        "name": "Prepare Error Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2368,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    success: true,\n    data: { sent: true, to: $('Prepare SMS').first().json.to },\n    error: null\n  }\n}];"
+        },
+        "id": "59fd03c5-afad-4ab9-a59c-1971a884761e",
+        "name": "Return Success",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2816,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "source": "parameter",
+          "options": {}
+        },
+        "id": "36d3990a-6a5c-427c-a6d8-42e6f344a7be",
+        "name": "Log to Sheet",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2592,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Prepare SMS').first().json;\n\nreturn [{\n  json: {\n    workflowName: input.workflowName,\n    contactName: '',\n    phone: input.to,\n    eventType: 'sms_sent',\n    status: 'success',\n    notes: `SMS sent to ${input.to}`\n  }\n}];"
+        },
+        "id": "e2d3007e-5ba5-40d4-ad6f-33de8d623ae5",
+        "name": "Prepare Log Entry",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2368,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "from": "={{ $json.from }}",
+          "to": "={{ $json.to }}",
+          "message": "={{ $json.body }}",
+          "options": {}
+        },
+        "id": "88e033ee-13ea-47f8-a734-8ad440b4cdfd",
+        "name": "Send SMS via Twilio",
+        "type": "n8n-nodes-base.twilio",
+        "typeVersion": 1.3,
+        "position": [
+          2144,
+          160
+        ],
+        "credentials": {
+          "twilioApi": {
+            "id": "ZRRComz8qrOWMeSK",
+            "name": "Twilio account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Config from previous node (Get Config) to avoid 'Referenced node doesn't exist'\nconst config = $input.first().json;\nlet input;\ntry {\n  input = $('Execute Workflow Trigger').first().json;\n} catch (e) {\n  input = $('When executed by another node').first().json;\n}\n\nreturn [{\n  json: {\n    to: input.to,\n    body: input.body,\n    from: config.owner.phone,\n    workflowName: input.workflowName || 'SW: Send SMS'\n  }\n}];"
+        },
+        "id": "55f91a1e-abdf-45c4-9e16-31295345a0cb",
+        "name": "Prepare SMS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1936,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "44d78894-9ab8-4a8e-9a2c-491dd56cccaa",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          1488,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## SW: Send SMS\n\n**Subworkflow.** Sends an SMS via Twilio. From number comes from CONFIG (owner phone). Used for follow-ups, reminders, and referral nudges.\n\n**Input:** `to` (E.164), `body`, `workflowName` (for logging).\n\n**Output:** `{ success, data: { sid }, error }`. Logs to Automations Log and alerts on failure. Expects E.164 format for all phone numbers.",
+          "height": 280,
+          "width": 420,
+          "color": 5
+        },
+        "id": "ec76acb3-5a0e-40f1-b4ba-e16880dc6ebc",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          1312,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/1eTTVoSFSlSPvZV4",
+            "cachedResultName": "CONFIG — Global Settings"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1680,
+          160
+        ],
+        "id": "90a444bb-fab0-485b-9dfb-bdc40f0ce802",
+        "name": "Call 'CONFIG — Global Settings'"
+      }
+    ],
+    "connections": {
+      "Alert on Error": {
+        "main": [
+          [
+            {
+              "node": "Return Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Error Alert": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Sheet": {
+        "main": [
+          [
+            {
+              "node": "Return Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Log Entry": {
+        "main": [
+          [
+            {
+              "node": "Log to Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send SMS via Twilio": {
+        "main": [
+          [
+            {
+              "node": "Prepare Log Entry",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare SMS": {
+        "main": [
+          [
+            {
+              "node": "Send SMS via Twilio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Call 'CONFIG — Global Settings'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call 'CONFIG — Global Settings'": {
+        "main": [
+          [
+            {
+              "node": "Prepare SMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
+  }
 }

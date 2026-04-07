@@ -1,7 +1,11 @@
 {
-  "id": "sys-03-stripe-paid-sync",
+  "updatedAt": "2026-04-03T03:42:44.761Z",
+  "createdAt": "2026-03-31T02:42:24.194Z",
+  "id": "i1Fe1DxmomgmKK7k",
   "name": "SYS 03 — Stripe Payment → HubSpot Paid Sync",
-  "description": "Receives Stripe webhooks, verifies the event by fetching it from Stripe, then updates the matching HubSpot deal to Paid and writes Stripe IDs to the deal. Requires Stripe event metadata.hubspotDealId (recommended) or a fallback mapping strategy.",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -33,7 +37,8 @@
       "position": [
         260,
         320
-      ]
+      ],
+      "webhookId": "87142032-4d59-4c38-b217-b8eb255cbb60"
     },
     {
       "parameters": {
@@ -291,11 +296,337 @@
       ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
-  "pinData": {}
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4757093e-e214-4f64-9c99-af42093314a4",
+  "activeVersionId": "4757093e-e214-4f64-9c99-af42093314a4",
+  "versionCounter": 13,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-31T02:42:24.198Z",
+      "createdAt": "2026-03-31T02:42:24.198Z",
+      "role": "workflow:owner",
+      "workflowId": "i1Fe1DxmomgmKK7k",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T03:42:44.762Z",
+    "createdAt": "2026-04-03T03:42:44.762Z",
+    "versionId": "4757093e-e214-4f64-9c99-af42093314a4",
+    "workflowId": "i1Fe1DxmomgmKK7k",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 03 — Stripe Payment → HubSpot Paid Sync (v1)\n\n### Purpose\nWhen Stripe confirms payment, automatically mark the HubSpot Deal as **Paid** and store Stripe identifiers on the deal so downstream automation can trust the CRM state.\n\n### How it works\n1. Receives Stripe webhook\n2. Extracts `event.id` from payload\n3. **Verifies** authenticity by calling Stripe API `GET /v1/events/{id}` using `$env.STRIPE_SECRET_KEY`\n4. Reads `metadata.hubspotDealId` (recommended) from the underlying Stripe object (e.g. Checkout Session)\n5. Updates HubSpot deal:\n   - `dealstage` → `config.hubspot.dealStageIds.paid`\n   - writes Stripe IDs (customer, payment_intent, checkout_session, subscription, invoice)\n\n### Required configuration\n- n8n env var: `STRIPE_SECRET_KEY`\n- HubSpot credential on the update node\n- Your Stripe Checkout / Payment Link flow should set `metadata.hubspotDealId` + `metadata.sku` when possible\n",
+          "height": 420,
+          "width": 560,
+          "color": 5
+        },
+        "id": "note-paid-sync",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          60,
+          60
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "stripe-payment-webhook",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "stripe-webhook",
+        "name": "Stripe Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          260,
+          320
+        ],
+        "webhookId": "87142032-4d59-4c38-b217-b8eb255cbb60"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": ""
+        },
+        "id": "get-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          480,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Stripe Webhook').first().json;\nconst config = $('Get Config').first().json;\n\nconst eventId = body?.id;\nif (!eventId) throw new Error('Missing Stripe event id on webhook body');\n\nreturn [{\n  json: {\n    eventId,\n    config\n  }\n}];"
+        },
+        "id": "extract-event-id",
+        "name": "Extract Event ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          700,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.stripe.com/v1/events/{{$json.eventId}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$env.STRIPE_SECRET_KEY}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "fetch-event",
+        "name": "Fetch Stripe Event (verify)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          920,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const config = $('Extract Event ID').first().json.config;\nconst e = $json;\n\nconst type = e?.type || '';\nconst obj = e?.data?.object || {};\n\n// Supported payment success signals (v1)\nconst supported = new Set(['checkout.session.completed', 'invoice.paid', 'payment_intent.succeeded']);\nif (!supported.has(type)) {\n  return [{ json: { ignore: true, reason: `Unhandled stripe event type: ${type}`, type } }];\n}\n\nconst metadata = obj?.metadata || {};\nconst hubspotDealId = metadata.hubspotDealId || metadata.hubspot_deal_id || '';\nif (!hubspotDealId) {\n  return [{ json: { ignore: true, reason: 'Missing metadata.hubspotDealId on Stripe object', type } }];\n}\n\nreturn [{\n  json: {\n    ignore: false,\n    type,\n    hubspotDealId,\n    sku: metadata.sku || '',\n    stripeCustomerId: obj.customer || '',\n    stripePaymentIntentId: obj.payment_intent || obj.id || '',\n    stripeCheckoutSessionId: type === 'checkout.session.completed' ? obj.id : '',\n    stripeSubscriptionId: obj.subscription || '',\n    stripeInvoiceId: type === 'invoice.paid' ? obj.id : '',\n    config\n  }\n}];"
+        },
+        "id": "normalize",
+        "name": "Normalize Stripe Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1140,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "ignore",
+                "leftValue": "={{ $json.ignore }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "isTrue"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-ignore",
+        "name": "Ignore?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1360,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "update",
+          "dealId": "={{ $json.hubspotDealId }}",
+          "updateFields": {
+            "customPropertiesUi": {
+              "customPropertiesValues": [
+                {
+                  "property": "dealstage",
+                  "value": "={{ $json.config.hubspot.dealStageIds.paid }}"
+                },
+                {
+                  "property": "selected_sku",
+                  "value": "={{ $json.sku }}"
+                },
+                {
+                  "property": "stripe_customer_id",
+                  "value": "={{ $json.stripeCustomerId }}"
+                },
+                {
+                  "property": "stripe_payment_intent_id",
+                  "value": "={{ $json.stripePaymentIntentId }}"
+                },
+                {
+                  "property": "stripe_checkout_session_id",
+                  "value": "={{ $json.stripeCheckoutSessionId }}"
+                },
+                {
+                  "property": "stripe_subscription_id",
+                  "value": "={{ $json.stripeSubscriptionId }}"
+                },
+                {
+                  "property": "stripe_invoice_id",
+                  "value": "={{ $json.stripeInvoiceId }}"
+                },
+                {
+                  "property": "stripe_payment_status",
+                  "value": "paid"
+                }
+              ]
+            }
+          },
+          "options": {}
+        },
+        "id": "hs-update",
+        "name": "Update HubSpot Deal → Paid",
+        "type": "n8n-nodes-base.hubspot",
+        "typeVersion": 2,
+        "position": [
+          1580,
+          240
+        ],
+        "credentials": {
+          "hubspotApi": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    ok: true,\n    ignored: $json.ignore,\n    reason: $json.reason || null,\n    hubspotDealId: $json.hubspotDealId || null,\n    type: $json.type || null\n  }\n}];"
+        },
+        "id": "respond",
+        "name": "Return Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1800,
+          320
+        ]
+      }
+    ],
+    "connections": {
+      "Stripe Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Extract Event ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Event ID": {
+        "main": [
+          [
+            {
+              "node": "Fetch Stripe Event (verify)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Stripe Event (verify)": {
+        "main": [
+          [
+            {
+              "node": "Normalize Stripe Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Stripe Data": {
+        "main": [
+          [
+            {
+              "node": "Ignore?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ignore?": {
+        "main": [
+          [
+            {
+              "node": "Return Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update HubSpot Deal → Paid",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update HubSpot Deal → Paid": {
+        "main": [
+          [
+            {
+              "node": "Return Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
+  }
 }
-

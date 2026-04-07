@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T03:51:57.556Z",
+  "updatedAt": "2026-04-03T03:42:44.707Z",
   "createdAt": "2026-02-23T02:02:11.116Z",
   "id": "mH67fjS4eC9amV4n",
   "name": "SYS 03 — Pre-Call Diagnostic Brief",
@@ -113,7 +113,7 @@
       "name": "🔍 Check Form Submitted",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "affNvPsxISKxcDzM",
+          "id": "pKS06498CxELp8nS",
           "name": "Google Sheets account"
         }
       }
@@ -562,7 +562,7 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true,
+    "availableInMCP": false,
     "timeSavedMode": "dynamic",
     "callerPolicy": "workflowsFromSameOwner"
   },
@@ -571,9 +571,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-  "activeVersionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-  "versionCounter": 71,
+  "versionId": "3bb0f8cf-b257-475a-bb75-a4a49bfb634f",
+  "activeVersionId": "3bb0f8cf-b257-475a-bb75-a4a49bfb634f",
+  "versionCounter": 115,
   "triggerCount": 1,
   "shared": [
     {
@@ -596,9 +596,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-23T08:01:22Z",
-    "createdAt": "2026-02-23T07:46:18.724Z",
-    "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
+    "updatedAt": "2026-04-03T03:42:44.708Z",
+    "createdAt": "2026-04-03T03:42:44.708Z",
+    "versionId": "3bb0f8cf-b257-475a-bb75-a4a49bfb634f",
     "workflowId": "mH67fjS4eC9amV4n",
     "nodes": [
       {
@@ -707,7 +707,7 @@
         "name": "🔍 Check Form Submitted",
         "credentials": {
           "googleSheetsOAuth2Api": {
-            "id": "affNvPsxISKxcDzM",
+            "id": "pKS06498CxELp8nS",
             "name": "Google Sheets account"
           }
         }
@@ -882,9 +882,9 @@
       },
       {
         "parameters": {
-          "content": "## IntraWeb — Workflow: Pre-Call Diagnostic Brief\n\n**Trigger:** Cal.com webhook fires when prospect books Discovery Call\n\n**Flow:**\n1. Parse booking data (name, email, time, meeting link)\n2. Send intake form email to prospect\n3. Wait 24hrs for form response\n4. Check Google Sheets for submission\n5. If no response → send nudge email\n6. Generate AI diagnostic brief (GPT-4o)\n7. Create Google Doc in Drive\n8. Email brief to John with full details\n9. Google Chat notification\n\n**⚠️ Before activating:**\n1. Replace YOUR_TYPEFORM_URL in both email nodes\n2. Connect Google Sheets (set spreadsheet ID for form responses)\n3. Move Google Doc to correct Drive folder\n4. Update Google Chat webhook URL (rotate token!)\n5. Set Cal.com webhook to POST to this workflow's production URL\n6. Connect Google Docs credentials",
-          "height": 460,
-          "width": 520,
+          "content": "## SYS 03 — Pre-Call Diagnostic Brief\n\n**Webhook:** POST https://n8n.intrawebtech.com/webhook/intraweb-cal-booking\n\n**Trigger:** Cal.com fires when prospect books a Discovery Call.\n\n**Flow:**\n1. Parse booking data (name, email, time, meeting link)\n2. Upsert HubSpot contact (SW — Create or Update HubSpot Contact)\n3. Send intake form email to prospect\n4. Wait 24hrs for form response\n5. Check Google Sheets for submission\n6. Branch:\n   - Form submitted: Generate AI brief (GPT-4o) -> Google Doc -> Email + Chat alert -> Log\n   - No response: Send nudge email -> Log\n\n**Downstream handoffs:**\n- HubSpot upsert: SW — Create or Update HubSpot Contact (email, firstName, lastName)\n- Logging: SW — Log to Automations Log Sheet (brief_generated / nudge_sent)\n- Google Chat: inline alert to team space\n\n**System position:**\n- Upstream: SYS 02 — ElevenLabs Post-Call Handler booked branch (Cal.com booking auto-triggers this)\n- Downstream: SYS 03 — Proposal and Contract Delivery (after discovery call)\n- CRM: HubSpot contact created/updated on booking\n\n**Before activating:**\n1. Replace YOUR_TYPEFORM_URL in both email nodes\n2. Connect Google Sheets (set spreadsheet ID for form responses)\n3. Set Cal.com webhook to POST to this workflow's production URL\n4. Connect Google Docs credentials",
+          "height": 560,
+          "width": 540,
           "color": 4
         },
         "type": "n8n-nodes-base.stickyNote",
@@ -895,6 +895,111 @@
         ],
         "id": "9737ad18-ef0f-48a8-9e0d-c262aa90ecf7",
         "name": "📋 Setup Notes"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-create-update-hubspot-contact",
+            "mode": "id",
+            "cachedResultName": "SW: Create or Update HubSpot Contact"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "email": "={{ $('📋 Parse Booking Data').first().json.email }}",
+              "firstName": "={{ $('📋 Parse Booking Data').first().json.firstName }}",
+              "lastName": "={{ $('📋 Parse Booking Data').first().json.lastName }}",
+              "company": "",
+              "industry": "",
+              "customProps": "={{ JSON.stringify({ booking_uid: $('📋 Parse Booking Data').first().json.bookingUid, last_booking_date: new Date().toISOString() }) }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          -1696,
+          384
+        ],
+        "id": "hs-upsert-booking-001",
+        "name": "🔗 Upsert HubSpot Contact"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-log-automations-log-sheet",
+            "mode": "id",
+            "cachedResultName": "SW: Log to Automations Log Sheet"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "workflowName": "SYS 03 — Pre-Call Diagnostic Brief",
+              "contactName": "={{ $('📋 Parse Booking Data').first().json.fullName }}",
+              "phone": "",
+              "eventType": "brief_generated",
+              "status": "={{ $('📄 Assemble Brief').first().json.formSubmitted ? 'with_form_data' : 'booking_data_only' }}",
+              "notes": "={{ 'Pre-call brief generated for ' + $('📋 Parse Booking Data').first().json.fullName + ' — call on ' + $('📋 Parse Booking Data').first().json.formattedDate }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          224,
+          0
+        ],
+        "id": "log-brief-001",
+        "name": "📝 Log Brief Generated"
+      },
+      {
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "value": "sw-log-automations-log-sheet",
+            "mode": "id",
+            "cachedResultName": "SW: Log to Automations Log Sheet"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "workflowName": "SYS 03 — Pre-Call Diagnostic Brief",
+              "contactName": "={{ $('📋 Parse Booking Data').first().json.fullName }}",
+              "phone": "",
+              "eventType": "nudge_sent",
+              "status": "success",
+              "notes": "={{ 'Intake form nudge sent to ' + $('📋 Parse Booking Data').first().json.email + ' — form not submitted within 24hrs' }}"
+            },
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          -512,
+          288
+        ],
+        "id": "log-nudge-001",
+        "name": "📝 Log Nudge Sent"
       }
     ],
     "connections": {
@@ -914,6 +1019,11 @@
           [
             {
               "node": "📧 Send Intake Form Email",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "🔗 Upsert HubSpot Contact",
               "type": "main",
               "index": 0
             }
@@ -1019,213 +1129,34 @@
             }
           ]
         ]
+      },
+      "📧 Email Brief to John": {
+        "main": [
+          [
+            {
+              "node": "📝 Log Brief Generated",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "📧 Send Nudge Email": {
+        "main": [
+          [
+            {
+              "node": "📝 Log Nudge Sent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "John Schibelli",
-    "name": "Version 2229de58",
-    "description": "",
-    "autosaved": true,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-02-23T08:01:22.061Z",
-        "id": 11,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:01:28.373Z",
-        "id": 13,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:02:14.701Z",
-        "id": 18,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:02:55.926Z",
-        "id": 22,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-26T04:37:46.196Z",
-        "id": 27,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T02:11:16.046Z",
-        "id": 33,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:31:05.434Z",
-        "id": 41,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:32:04.627Z",
-        "id": 49,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:39:11.452Z",
-        "id": 59,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:47:15.886Z",
-        "id": 61,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:52:18.45Z",
-        "id": 71,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T04:00:05.829Z",
-        "id": 77,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-03-27T03:34:02.061Z",
-        "id": 425,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "activated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:01:28.347Z",
-        "id": 12,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:02:14.634Z",
-        "id": 17,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-23T08:02:55.907Z",
-        "id": 21,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-26T04:37:46.161Z",
-        "id": 26,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T02:11:16.022Z",
-        "id": 32,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:31:05.395Z",
-        "id": 40,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:32:04.61Z",
-        "id": 48,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:39:11.433Z",
-        "id": 58,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:47:15.866Z",
-        "id": 60,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T03:52:18.429Z",
-        "id": 70,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-02-27T04:00:05.707Z",
-        "id": 76,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      },
-      {
-        "createdAt": "2026-03-27T03:34:02.035Z",
-        "id": 424,
-        "workflowId": "mH67fjS4eC9amV4n",
-        "versionId": "2229de58-bf47-4429-b2d4-c1dfba1d493a",
-        "event": "deactivated",
-        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
-      }
-    ]
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": []
   }
 }

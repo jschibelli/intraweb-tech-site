@@ -1,14 +1,14 @@
 {
+  "updatedAt": "2026-04-03T05:30:45.826Z",
+  "createdAt": "2026-03-14T22:07:18.208Z",
+  "id": "zIP8vhSQ1bCQP9RR",
   "name": "SYS 00 — HubSpot Events Router",
-  "description": "Receives batched HubSpot webhook events at /hubspot-events, parses dealstage and contact changes, fetches full deal or contact from HubSpot API, then forwards to the correct system webhook so SYS 04 — Client Onboarding Logistics, SYS 03 — Proposal and Contract Delivery, SYS 03 — Contract Generation, SYS 03 — Invoice and Payment Collection, SYS 07 — Internal Reporting Dashboard, SYS 05 — Referral and Reactivation Engine, and related paths run on deal closed-won, proposal, contract sent, invoice, project-complete, and contact changes.",
+  "description": "Receives batched HubSpot webhook events at /hubspot-events, parses dealstage and contact changes, fetches full deal/contact from HubSpot API, then forwards to the correct system webhook so SYS 04, 05, 06, 09, and 11 run on closed-won, proposal, invoice, project-complete, and contact changes.",
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
-      "parameters": {
-        "content": "## SYS 00 — HubSpot Events Router\n\n**Trigger:** Webhook POST at `/hubspot-events` (single HubSpot app target URL).\n\n**What it does:** Receives batched HubSpot webhook events, parses event type and dealstage/contact changes, fetches full deal or contact from HubSpot API, then POSTs to the correct system webhook path so downstream workflows run unchanged — e.g. **SYS 04 — Client Onboarding Logistics** (closed-won), **SYS 03 — Proposal and Contract Delivery** (proposal), **SYS 03 — Contract Generation** (contract sent via direct webhook or HubSpot automation), **SYS 03 — Invoice and Payment Collection** (invoice sent), **SYS 07 — Internal Reporting Dashboard** (stage/contact changes), **SYS 05 — Referral and Reactivation Engine** (project complete).\n\n**HubSpot app Target URL:** `https://n8n.intrawebtech.com/webhook/hubspot-events`\n\n**Subscriptions to create in HubSpot:**\n- `deal.propertyChange` → property **dealstage** (for closed-won, proposal, invoice, project-complete, and reporting)\n- `contact.propertyChange` → properties as needed for **SYS 07 — Internal Reporting Dashboard** (e.g. lifecyclestage, or create multiple)\n\n**Dependencies:** CONFIG (**hubspot.dealStageIds** — internal stage IDs from your portal; if Proposal fires SYS 07 instead of SYS 03, your proposal ID does not match), HubSpot API credential.",
-        "height": 340,
-        "width": 480,
-        "color": 5
-      },
+      "parameters": {},
       "id": "note-sys00",
       "name": "Note — About this workflow",
       "type": "n8n-nodes-base.stickyNote",
@@ -30,10 +30,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        250,
+        256,
         320
       ],
-      "webhookId": ""
+      "webhookId": "1ac56db6-2649-4ee1-9ec3-fa8462e204a8"
     },
     {
       "parameters": {
@@ -46,21 +46,29 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.3,
       "position": [
-        470,
+        480,
         320
       ]
     },
     {
       "parameters": {
-        "source": "database",
-        "workflowId": "1eTTVoSFSlSPvZV4"
+        "workflowId": {
+          "__rl": true,
+          "value": "1eTTVoSFSlSPvZV4",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
       },
       "id": "sys00-config",
       "name": "Get Config",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        690,
+        704,
         320
       ]
     },
@@ -73,16 +81,21 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        910,
+        912,
         320
       ]
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "=https://api.hubapi.com/crm/v3/objects/{{ $json.objectType === 'deal' ? 'deals' : 'contacts' }}/{{ $json.objectId }}?properties={{ $json.objectType === 'deal' ? $json.dealProps : $json.contactProps }}",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "hubspotApi",
+        "nodeCredentialType": "hubspotDeveloperApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
         "options": {}
       },
       "id": "sys00-fetch",
@@ -90,13 +103,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1130,
-        320
+        1168,
+        496
       ],
       "credentials": {
-        "hubspotApi": {
-          "id": "volH6pGD5psvPC7a",
-          "name": "HubSpot App Token"
+        "hubspotDeveloperApi": {
+          "id": "GqT0NoNc7c9eAodv",
+          "name": "HubSpot Developer account"
         }
       }
     },
@@ -111,7 +124,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        1350,
+        1360,
         320
       ]
     },
@@ -140,7 +153,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1590,
+        1600,
         320
       ]
     },
@@ -158,9 +171,32 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1810,
+        1824,
         320
       ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "getAll",
+        "limit": 200,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        368
+      ],
+      "id": "ca04826b-15ad-4ed1-8c63-6f5bfdb35718",
+      "name": "Get many deals",
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token account"
+        }
+      }
     }
   ],
   "connections": {
@@ -201,12 +237,12 @@
       "main": [
         [
           {
-            "node": "Fetch Deal or Contact",
+            "node": "Merge Context with Fetched",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Merge Context with Fetched",
+            "node": "Get many deals",
             "type": "main",
             "index": 0
           }
@@ -215,13 +251,7 @@
     },
     "Fetch Deal or Contact": {
       "main": [
-        [
-          {
-            "node": "Merge Context with Fetched",
-            "type": "main",
-            "index": 1
-          }
-        ]
+        []
       ]
     },
     "Merge Context with Fetched": {
@@ -245,16 +275,336 @@
           }
         ]
       ]
+    },
+    "Get many deals": {
+      "main": [
+        [
+          {
+            "node": "Merge Context with Fetched",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": true
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "w9S9LovIY8CxchZm"
   },
   "staticData": null,
   "meta": {
-    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+    "templateCredsSetupCompleted": true
   },
-  "tags": []
+  "pinData": {},
+  "versionId": "0135789e-983f-4c65-851f-9e874d89046b",
+  "activeVersionId": "4158ad73-0238-4f14-99ce-e7c96c0b1965",
+  "versionCounter": 214,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T22:07:18.211Z",
+      "createdAt": "2026-03-14T22:07:18.211Z",
+      "role": "workflow:owner",
+      "workflowId": "zIP8vhSQ1bCQP9RR",
+      "projectId": "o5dYIcHW2mxs82d6",
+      "project": {
+        "updatedAt": "2026-02-23T01:06:36.093Z",
+        "createdAt": "2026-02-23T00:59:28.616Z",
+        "id": "o5dYIcHW2mxs82d6",
+        "name": "John Schibelli <john.schibelli@intrawebtech.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T05:25:39.792Z",
+    "createdAt": "2026-04-03T05:25:39.792Z",
+    "versionId": "4158ad73-0238-4f14-99ce-e7c96c0b1965",
+    "workflowId": "zIP8vhSQ1bCQP9RR",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## SYS 00 — HubSpot Events Router\n\n**Trigger:** Webhook POST at `/hubspot-events` (single HubSpot app target URL).\n\n**What it does:** Receives batched HubSpot webhook events, parses event type and dealstage/contact changes, fetches full deal or contact from HubSpot API, then POSTs to the correct system webhook path so downstream workflows run unchanged — e.g. **SYS 04 — Client Onboarding Logistics** (closed-won), **SYS 03 — Proposal and Contract Delivery** (proposal), **SYS 03 — Contract Generation** (contract sent via direct webhook or HubSpot automation), **SYS 03 — Invoice and Payment Collection** (invoice sent), **SYS 07 — Internal Reporting Dashboard** (stage/contact changes), **SYS 05 — Referral and Reactivation Engine** (project complete).\n\n**HubSpot app Target URL:** `https://n8n.intrawebtech.com/webhook/hubspot-events`\n\n**Subscriptions to create in HubSpot:**\n- `deal.propertyChange` → property **dealstage** (for closed-won, proposal, invoice, project-complete, and reporting)\n- `contact.propertyChange` → properties as needed for **SYS 07 — Internal Reporting Dashboard** (e.g. lifecyclestage, or create multiple)\n\n**Dependencies:** CONFIG (**hubspot.dealStageIds** — internal stage IDs from your portal; if Proposal fires SYS 07 instead of SYS 03, your proposal ID does not match), HubSpot API credential.",
+          "height": 340,
+          "width": 480,
+          "color": 5
+        },
+        "id": "note-sys00",
+        "name": "Note — About this workflow",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "hubspot-events",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "sys00-webhook",
+        "name": "HubSpot Events Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          320
+        ],
+        "webhookId": "1ac56db6-2649-4ee1-9ec3-fa8462e204a8"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"received\": true } }}",
+          "options": {}
+        },
+        "id": "sys00-respond",
+        "name": "Respond 200",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.3,
+        "position": [
+          470,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "1eTTVoSFSlSPvZV4",
+            "mode": "id"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {}
+          },
+          "options": {}
+        },
+        "id": "sys00-config",
+        "name": "Get Config",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          690,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// HubSpot sends an array of events. Parse and route each one.\nconst webhookNode = $('HubSpot Events Webhook').first();\nconst body = webhookNode.json.body ?? webhookNode.json;\nconst config = $input.first().json;\nconst n8nBaseUrl = (config.owner && config.owner.n8nBaseUrl) ? config.owner.n8nBaseUrl.replace(/\\/$/, '') : 'https://n8n.intrawebtech.com';\n\nconst events = Array.isArray(body) ? body : (body && typeof body.objectId !== 'undefined' ? [body] : []);\nif (events.length === 0) return [];\n\nconst dealProps = 'dealname,dealstage,amount,closedate,tier,contact_email,contact_firstname,contact_lastname,contact_phone,industry,deal_pain_points,client_drive_folder_id,monthly_retainer,client_health_score,company';\nconst contactProps = 'firstname,lastname,company,industry,lead_source,lead_score,hs_lead_status';\n\nconst stageCfg = (config.hubspot && config.hubspot.dealStageIds) || {};\nconst stageCandidates = (raw, fallback) => {\n  const parts = (v) => {\n    if (v === undefined || v === null || v === '') return [];\n    if (Array.isArray(v)) return v.map((x) => String(x).toLowerCase().trim()).filter(Boolean);\n    const s = String(v);\n    if (s.includes(',')) return s.split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);\n    const one = s.toLowerCase().trim();\n    return one ? [one] : [];\n  };\n  const fromRaw = parts(raw);\n  if (fromRaw.length) return fromRaw;\n  return parts(fallback);\n};\nconst closedWonStages = stageCandidates(stageCfg.closedWon, 'closedwon');\nconst proposalStages = stageCandidates(stageCfg.proposal, '3382756085');\nconst contractSentStages = stageCandidates(stageCfg.contractSent, '');\nconst invoiceSentStages = stageCandidates(stageCfg.invoiceSent, '3382756086');\nconst paidStages = stageCandidates(stageCfg.paid, '3382756087');\nconst projectCompleteStages = stageCandidates(stageCfg.projectComplete, '3382756088');\n\nconst out = [];\nfor (const e of events) {\n  const eventType = e.eventType || e.subscriptionType || '';\n  const objectId = e.objectId;\n  const propertyName = e.propertyName || '';\n  const propertyValue = String(e.propertyValue || '').toLowerCase();\n\n  if (!objectId) continue;\n\n  let route = 'skip';\n  let objectType = '';\n  let webhookPath = '';\n\n  if (eventType === 'deal.propertyChange' && propertyName === 'dealstage') {\n    objectType = 'deal';\n\n    if (closedWonStages.includes(propertyValue)) {\n      route = 'closed_won';\n      webhookPath = 'hubspot-deal-closed-won';\n\n    } else if (proposalStages.includes(propertyValue)) {\n      route = 'proposal_stage';\n      webhookPath = 'hubspot-deal-proposal-stage';\n\n    } else if (contractSentStages.length && contractSentStages.includes(propertyValue)) {\n      route = 'contract_sent';\n      webhookPath = 'hubspot-deal-contract-sent';\n\n    } else if (invoiceSentStages.includes(propertyValue)) {\n      route = 'invoice_sent';\n      webhookPath = 'hubspot-deal-invoice-sent';\n\n    } else if (paidStages.includes(propertyValue)) {\n      route = 'paid';\n      webhookPath = 'hubspot-deal-stage-change';\n\n    } else if (projectCompleteStages.includes(propertyValue)) {\n      route = 'project_complete';\n      webhookPath = 'hubspot-deal-project-complete';\n\n    } else {\n      route = 'deal_stage_change';\n      webhookPath = 'hubspot-deal-stage-change';\n    }\n\n  } else if (eventType === 'contact.propertyChange' || eventType === 'contact.creation') {\n    objectType = 'contact';\n    route = 'contact_change';\n    webhookPath = 'hubspot-contact-change';\n  }\n\n  if (route !== 'skip' && webhookPath) {\n    out.push({\n      json: {\n        route,\n        objectId: String(objectId),\n        objectType,\n        n8nBaseUrl,\n        webhookPath,\n        dealProps,\n        contactProps\n      }\n    });\n  }\n}\nreturn out;"
+        },
+        "id": "sys00-parse",
+        "name": "Parse and Route Events",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          910,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.hubapi.com/crm/v3/objects/{{ $json.objectType === 'deal' ? 'deals' : 'contacts' }}/{{ $json.objectId }}?properties={{ $json.objectType === 'deal' ? $json.dealProps : $json.contactProps }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "options": {}
+        },
+        "id": "sys00-fetch",
+        "name": "Fetch Deal or Contact",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1130,
+          320
+        ],
+        "credentials": {
+          "hubspotAppToken": {
+            "id": "volH6pGD5psvPC7a",
+            "name": "HubSpot App Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "id": "sys00-merge",
+        "name": "Merge Context with Fetched",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          1350,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "webhookUrl",
+                "value": "={{ $json.n8nBaseUrl }}/webhook/{{ $json.webhookPath }}",
+                "type": "string"
+              },
+              {
+                "id": "a2",
+                "name": "body",
+                "value": "={{ { id: $json.id, properties: $json.properties || {} } }}",
+                "type": "object"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "sys00-prep-post",
+        "name": "Prep POST to System Webhook",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1590,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.webhookUrl }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.body) }}",
+          "options": {}
+        },
+        "id": "sys00-post",
+        "name": "POST to System Webhook",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1810,
+          320
+        ]
+      }
+    ],
+    "connections": {
+      "HubSpot Events Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond 200",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond 200": {
+        "main": [
+          [
+            {
+              "node": "Get Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Config": {
+        "main": [
+          [
+            {
+              "node": "Parse and Route Events",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse and Route Events": {
+        "main": [
+          [
+            {
+              "node": "Fetch Deal or Contact",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge Context with Fetched",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Deal or Contact": {
+        "main": [
+          [
+            {
+              "node": "Merge Context with Fetched",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Context with Fetched": {
+        "main": [
+          [
+            {
+              "node": "Prep POST to System Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prep POST to System Webhook": {
+        "main": [
+          [
+            {
+              "node": "POST to System Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "John Schibelli",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T05:25:39.834Z",
+        "id": 1518,
+        "workflowId": "zIP8vhSQ1bCQP9RR",
+        "versionId": "4158ad73-0238-4f14-99ce-e7c96c0b1965",
+        "event": "activated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      },
+      {
+        "createdAt": "2026-04-03T05:25:39.822Z",
+        "id": 1517,
+        "workflowId": "zIP8vhSQ1bCQP9RR",
+        "versionId": "4158ad73-0238-4f14-99ce-e7c96c0b1965",
+        "event": "deactivated",
+        "userId": "02df643b-02ab-400b-8f54-77d37b6149c4"
+      }
+    ]
+  }
 }
