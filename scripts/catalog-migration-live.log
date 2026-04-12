@@ -1,0 +1,154 @@
+[2026-04-11T05:30:19.766Z] [MIGRATION] === LIVE run started (Stripe --live + HubSpot CRM) ===
+[2026-04-11T05:30:19.807Z] [PHASE 2] Pre-flight: Stripe live inventory
+[2026-04-11T05:30:21.782Z] [AUDIT] Stripe live counts — products: 16, prices: 22, payment_links: 18, subscriptions: 0
+[2026-04-11T05:30:21.821Z] [PHASE 2] Deactivate active Payment Links (live)
+[2026-04-11T05:30:22.305Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmXFFObU2Nf6zXqlhVEQJ — was active
+[2026-04-11T05:30:22.783Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmXFFObU2Nf6zt2JT84ER — was active
+[2026-04-11T05:30:23.269Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmXFFObU2Nf6zH0zMDtRw — was active
+[2026-04-11T05:30:23.757Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmXFFObU2Nf6zUGIEMQYS — was active
+[2026-04-11T05:30:24.208Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmXFFObU2Nf6ztcJmHw9p — was active
+[2026-04-11T05:30:24.656Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zEbrIQjMF — was active
+[2026-04-11T05:30:25.108Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zvwwSSBnm — was active
+[2026-04-11T05:30:25.563Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zoqNthcko — was active
+[2026-04-11T05:30:26.012Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zAQOVEkWI — was active
+[2026-04-11T05:30:26.454Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zBPoe74Y6 — was active
+[2026-04-11T05:30:26.902Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TGrmRFFObU2Nf6zt7lGxwCR — was active
+[2026-04-11T05:30:27.407Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TDd8UFFObU2Nf6zRgZGmivf — was active
+[2026-04-11T05:30:27.874Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TDd8SFFObU2Nf6zitlUtnRZ — was active
+[2026-04-11T05:30:28.321Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TDd8QFFObU2Nf6zA4DKiWn1 — was active
+[2026-04-11T05:30:28.762Z] [STRIPE] DEACTIVATED payment_link_id: plink_1TDd8LFFObU2Nf6zMX2LUsj7 — was active
+[2026-04-11T05:30:28.764Z] [PHASE 2] Archive all active Prices (live)
+[2026-04-11T05:30:29.212Z] [STRIPE] ARCHIVED price_id: price_1TGrhUFFObU2Nf6ziEihCAJO — product: prod_UFMQpuawHp2mGN
+[2026-04-11T05:30:29.651Z] [STRIPE] ARCHIVED price_id: price_1TGrhQFFObU2Nf6zB02xcksp — product: prod_UFMQ3R5f2Wpvvn
+[2026-04-11T05:30:30.094Z] [STRIPE] ARCHIVED price_id: price_1TGrhIFFObU2Nf6zKktzOwW1 — product: prod_UFMQqcB52wKy9W
+[2026-04-11T05:30:30.536Z] [STRIPE] ARCHIVED price_id: price_1TGrhCFFObU2Nf6zh7rFMvWf — product: prod_UFMQayfXa8nHjW
+[2026-04-11T05:30:30.979Z] [STRIPE] ARCHIVED price_id: price_1TGrh7FFObU2Nf6zoIWil3yJ — product: prod_UFMPclliS7kbBD
+[2026-04-11T05:30:31.429Z] [STRIPE] ARCHIVED price_id: price_1TGrh2FFObU2Nf6znhAomQpj — product: prod_UFMPoqkSgccnyf
+[2026-04-11T05:30:31.890Z] [STRIPE] ARCHIVED price_id: price_1TGrgwFFObU2Nf6z2bdTO0Sj — product: prod_UFMPNfxf23fSXN
+[2026-04-11T05:30:32.339Z] [STRIPE] ARCHIVED price_id: price_1TGrgqFFObU2Nf6zcjrjC4rL — product: prod_UC0a9VeRmp6o0W
+[2026-04-11T05:30:32.795Z] [STRIPE] ARCHIVED price_id: price_1TGrgoFFObU2Nf6zyqlI4xxc — product: prod_UFMPHqnjSwjbnV
+[2026-04-11T05:30:33.232Z] [STRIPE] ARCHIVED price_id: price_1TGrfpFFObU2Nf6ziLmjJiso — product: prod_UFMOasK97JEbQN
+[2026-04-11T05:30:33.687Z] [STRIPE] ARCHIVED price_id: price_1TGrfkFFObU2Nf6z33apk1kF — product: prod_UC0akkCz5dyLBC
+[2026-04-11T05:30:34.153Z] [STRIPE] ARCHIVED price_id: price_1TGrfiFFObU2Nf6zLOeGE3Tq — product: prod_UFMOnrM4TvYq1F
+[2026-04-11T05:30:34.625Z] [STRIPE] ARCHIVED price_id: price_1TDd8UFFObU2Nf6zpXYkUTNF — product: prod_UC0atXlqkmdE5n
+[2026-04-11T05:30:35.075Z] [STRIPE] ARCHIVED price_id: price_1TDd8SFFObU2Nf6zP420g5LG — product: prod_UC0bh3CmqAkENi
+[2026-04-11T05:30:35.554Z] [STRIPE] ARCHIVED price_id: price_1TDd8QFFObU2Nf6zFU9031hW — product: prod_UC0akkCz5dyLBC
+[2026-04-11T05:30:36.015Z] [STRIPE] ARCHIVED price_id: price_1TDd8LFFObU2Nf6zAvg0EWF3 — product: prod_UC0a9VeRmp6o0W
+[2026-04-11T05:30:36.452Z] [STRIPE] ARCHIVED price_id: price_1TDcZrFFObU2Nf6zbw2vTBJQ — product: prod_UC0bh3CmqAkENi
+[2026-04-11T05:30:36.905Z] [STRIPE] ARCHIVED price_id: price_1TDcZkFFObU2Nf6zQ1bZ925x — product: prod_UC0atXlqkmdE5n
+[2026-04-11T05:30:37.356Z] [STRIPE] ARCHIVED price_id: price_1TDcZHFFObU2Nf6zbVBE9lAo — product: prod_UC0akkCz5dyLBC
+[2026-04-11T05:30:37.817Z] [STRIPE] ARCHIVED price_id: price_1TDcZ9FFObU2Nf6z1GmPKdKK — product: prod_UC0a9VeRmp6o0W
+[2026-04-11T05:30:38.270Z] [STRIPE] ARCHIVED price_id: price_1T8v4yFFObU2Nf6z1ySBMdTv — product: prod_U79NW1AIcPVPFQ
+[2026-04-11T05:30:38.771Z] [STRIPE] ARCHIVED price_id: price_1SeQchFFObU2Nf6zjJIyjKlq — product: prod_TbduwVpMygLtca
+[2026-04-11T05:30:38.772Z] [PHASE 2] Delete or archive Products (live)
+[2026-04-11T05:30:39.229Z] [STRIPE] DELETED product_id: prod_UFMQpuawHp2mGN — name: IntraWeb Copywriting Add-on
+[2026-04-11T05:30:39.687Z] [STRIPE] DELETED product_id: prod_UFMQ3R5f2Wpvvn — name: IntraWeb Web Custom - SETUP
+[2026-04-11T05:30:40.144Z] [STRIPE] DELETED product_id: prod_UFMQqcB52wKy9W — name: IntraWeb Web Growth - RETAINER
+[2026-04-11T05:30:40.601Z] [STRIPE] DELETED product_id: prod_UFMQayfXa8nHjW — name: IntraWeb Web Growth - SETUP
+[2026-04-11T05:30:41.068Z] [STRIPE] DELETED product_id: prod_UFMPclliS7kbBD — name: IntraWeb Web Starter - RETAINER
+[2026-04-11T05:30:41.521Z] [STRIPE] DELETED product_id: prod_UFMPoqkSgccnyf — name: IntraWeb Web Starter - SETUP
+[2026-04-11T05:30:41.970Z] [STRIPE] DELETED product_id: prod_UFMPNfxf23fSXN — name: IntraWeb Growth - RETAINER
+[2026-04-11T05:30:42.412Z] [STRIPE] DELETED product_id: prod_UFMPHqnjSwjbnV — name: IntraWeb Growth Tier
+[2026-04-11T05:30:42.893Z] [STRIPE] DELETED product_id: prod_UFMOasK97JEbQN — name: IntraWeb Starter - RETAINER
+[2026-04-11T05:30:43.352Z] [STRIPE] DELETED product_id: prod_UFMOnrM4TvYq1F — name: IntraWeb Starter Tier
+[2026-04-11T05:30:43.802Z] [STRIPE] DELETED product_id: prod_UC0bh3CmqAkENi — name: IntraWeb Growth — Monthly Retainer
+[2026-04-11T05:30:44.248Z] [STRIPE] DELETED product_id: prod_UC0atXlqkmdE5n — name: IntraWeb Starter — Monthly Retainer
+[2026-04-11T05:30:44.690Z] [STRIPE] DELETED product_id: prod_UC0akkCz5dyLBC — name: IntraWeb Starter Setup
+[2026-04-11T05:30:45.138Z] [STRIPE] DELETED product_id: prod_UC0a9VeRmp6o0W — name: IntraWeb Growth Setup
+[2026-04-11T05:30:45.596Z] [STRIPE] DELETED product_id: prod_U79NW1AIcPVPFQ — name: Starter Package - Monthly
+[2026-04-11T05:30:46.056Z] [STRIPE] DELETED product_id: prod_TbduwVpMygLtca — name: Workant -  Early Release
+[2026-04-11T05:30:46.057Z] [PHASE 2] HubSpot — delete all product library records
+[2026-04-11T05:30:46.883Z] [HUBSPOT] DELETED product_id: 302140386020 — name: IntraWeb Growth - RETAINER
+[2026-04-11T05:30:47.096Z] [HUBSPOT] DELETED product_id: 302147606221 — name: IntraWeb Growth Setup
+[2026-04-11T05:30:47.300Z] [HUBSPOT] DELETED product_id: 302190487274 — name: IntraWeb Growth Tier
+[2026-04-11T05:30:47.496Z] [HUBSPOT] DELETED product_id: 302194081507 — name: IntraWeb Starter Tier
+[2026-04-11T05:30:47.709Z] [HUBSPOT] DELETED product_id: 302230994637 — name: IntraWeb Starter - RETAINER
+[2026-04-11T05:30:47.971Z] [HUBSPOT] DELETED product_id: 302261192389 — name: IntraWeb Starter Setup
+[2026-04-11T05:30:48.181Z] [HUBSPOT] DELETED product_id: 303543295731 — name: IntraWeb Web Growth - RETAINER
+[2026-04-11T05:30:48.374Z] [HUBSPOT] DELETED product_id: 303589884650 — name: IntraWeb Web Starter - SETUP
+[2026-04-11T05:30:48.600Z] [HUBSPOT] DELETED product_id: 303591689975 — name: IntraWeb Web Growth - SETUP
+[2026-04-11T05:30:48.790Z] [HUBSPOT] DELETED product_id: 303597086399 — name: IntraWeb Web Custom - SETUP
+[2026-04-11T05:30:48.993Z] [HUBSPOT] DELETED product_id: 303646540509 — name: IntraWeb Web Starter - RETAINER
+[2026-04-11T05:30:49.175Z] [HUBSPOT] DELETED product_id: 303657329343 — name: IntraWeb Copywriting Add-on
+[2026-04-11T05:30:49.324Z] [HUBSPOT] DELETED product_id: 302194081484 — name: IntraWeb Starter
+[2026-04-11T05:30:49.325Z] [PHASE 3] Create 23 Stripe + HubSpot products (live)
+[2026-04-11T05:30:50.687Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-DIAG-STD
+[2026-04-11T05:30:51.103Z] [HUBSPOT] CREATED product_id: 305292506855 — sku: IW-DIAG-STD
+[2026-04-11T05:30:52.419Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-DIAG-PREM
+[2026-04-11T05:30:52.667Z] [HUBSPOT] CREATED product_id: 305329503949 — sku: IW-DIAG-PREM
+[2026-04-11T05:30:54.002Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-WEB-STR
+[2026-04-11T05:30:54.247Z] [HUBSPOT] CREATED product_id: 305324126947 — sku: IW-WEB-STR
+[2026-04-11T05:30:55.573Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-WEB-GRW
+[2026-04-11T05:30:55.802Z] [HUBSPOT] CREATED product_id: 305447342817 — sku: IW-WEB-GRW
+[2026-04-11T05:30:57.793Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-WEB-ADV
+[2026-04-11T05:30:58.064Z] [HUBSPOT] CREATED product_id: 305306936030 — sku: IW-WEB-ADV
+[2026-04-11T05:30:59.393Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-AUTO-STD
+[2026-04-11T05:30:59.635Z] [HUBSPOT] CREATED product_id: 305296120545 — sku: IW-AUTO-STD
+[2026-04-11T05:31:01.012Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-AUTO-ADV
+[2026-04-11T05:31:01.244Z] [HUBSPOT] CREATED product_id: 305305120454 — sku: IW-AUTO-ADV
+[2026-04-11T05:31:02.581Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-AI-MID
+[2026-04-11T05:31:02.781Z] [HUBSPOT] CREATED product_id: 305447342818 — sku: IW-AI-MID
+[2026-04-11T05:31:04.115Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-AI-ADV
+[2026-04-11T05:31:04.347Z] [HUBSPOT] CREATED product_id: 305342101221 — sku: IW-AI-ADV
+[2026-04-11T05:31:05.691Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-SAAS-MVP
+[2026-04-11T05:31:05.936Z] [HUBSPOT] CREATED product_id: 305445542640 — sku: IW-SAAS-MVP
+[2026-04-11T05:31:07.419Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-SAAS-FULL
+[2026-04-11T05:31:07.626Z] [HUBSPOT] CREATED product_id: 305445542641 — sku: IW-SAAS-FULL
+[2026-04-11T05:31:09.024Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-WEB-BSC
+[2026-04-11T05:31:09.255Z] [HUBSPOT] CREATED product_id: 305318279905 — sku: IW-RET-WEB-BSC
+[2026-04-11T05:31:10.817Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-WEB-STD
+[2026-04-11T05:31:11.020Z] [HUBSPOT] CREATED product_id: 305292506859 — sku: IW-RET-WEB-STD
+[2026-04-11T05:31:12.796Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-WEB-ADV
+[2026-04-11T05:31:13.032Z] [HUBSPOT] CREATED product_id: 305449142989 — sku: IW-RET-WEB-ADV
+[2026-04-11T05:31:14.885Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-GRW
+[2026-04-11T05:31:15.127Z] [HUBSPOT] CREATED product_id: 305306936034 — sku: IW-RET-GRW
+[2026-04-11T05:31:17.599Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-AI-STD
+[2026-04-11T05:31:17.822Z] [HUBSPOT] CREATED product_id: 305322319574 — sku: IW-RET-AI-STD
+[2026-04-11T05:31:19.434Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-RET-AI-PREM
+[2026-04-11T05:31:19.714Z] [HUBSPOT] CREATED product_id: 305324126949 — sku: IW-RET-AI-PREM
+[2026-04-11T05:31:21.203Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-SEO
+[2026-04-11T05:31:21.401Z] [HUBSPOT] CREATED product_id: 305324126950 — sku: IW-ADD-SEO
+[2026-04-11T05:31:22.893Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-BRAND
+[2026-04-11T05:31:23.093Z] [HUBSPOT] CREATED product_id: 305449142991 — sku: IW-ADD-BRAND
+[2026-04-11T05:31:24.585Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-COPY
+[2026-04-11T05:31:24.819Z] [HUBSPOT] CREATED product_id: 305296120548 — sku: IW-ADD-COPY
+[2026-04-11T05:31:26.216Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-ANLYT
+[2026-04-11T05:31:26.474Z] [HUBSPOT] CREATED product_id: 305327697623 — sku: IW-ADD-ANLYT
+[2026-04-11T05:31:27.986Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-DEVOPS
+[2026-04-11T05:31:28.189Z] [HUBSPOT] CREATED product_id: 305322319576 — sku: IW-ADD-DEVOPS
+[2026-04-11T05:31:29.554Z] [STRIPE] CREATED product_id: undefined price_id: undefined — sku: IW-ADD-PAGE
+[2026-04-11T05:31:29.776Z] [HUBSPOT] CREATED product_id: 305305120456 — sku: IW-ADD-PAGE
+[2026-04-11T05:31:29.777Z] [PHASE 4] Verification — recount live Stripe products (active + inactive)
+[2026-04-11T05:31:30.259Z] [VERIFY] Stripe live products total: 16, active: 14
+[2026-04-11T05:31:30.419Z] [VERIFY] HubSpot products listed (first page count): 23
+[2026-04-11T05:31:30.579Z] [VERIFY] HubSpot products paginated total: 23
+[2026-04-11T05:31:30.581Z] [PHASE 4] Reconciliation table (SKU | Stripe product ID | HubSpot product ID | Status)
+[2026-04-11T05:31:30.583Z] [ROW] IW-DIAG-STD | undefined | 305292506855 | OK
+[2026-04-11T05:31:30.584Z] [ROW] IW-DIAG-PREM | undefined | 305329503949 | OK
+[2026-04-11T05:31:30.585Z] [ROW] IW-WEB-STR | undefined | 305324126947 | OK
+[2026-04-11T05:31:30.587Z] [ROW] IW-WEB-GRW | undefined | 305447342817 | OK
+[2026-04-11T05:31:30.588Z] [ROW] IW-WEB-ADV | undefined | 305306936030 | OK
+[2026-04-11T05:31:30.589Z] [ROW] IW-AUTO-STD | undefined | 305296120545 | OK
+[2026-04-11T05:31:30.591Z] [ROW] IW-AUTO-ADV | undefined | 305305120454 | OK
+[2026-04-11T05:31:30.592Z] [ROW] IW-AI-MID | undefined | 305447342818 | OK
+[2026-04-11T05:31:30.594Z] [ROW] IW-AI-ADV | undefined | 305342101221 | OK
+[2026-04-11T05:31:30.595Z] [ROW] IW-SAAS-MVP | undefined | 305445542640 | OK
+[2026-04-11T05:31:30.596Z] [ROW] IW-SAAS-FULL | undefined | 305445542641 | OK
+[2026-04-11T05:31:30.598Z] [ROW] IW-RET-WEB-BSC | undefined | 305318279905 | OK
+[2026-04-11T05:31:30.599Z] [ROW] IW-RET-WEB-STD | undefined | 305292506859 | OK
+[2026-04-11T05:31:30.601Z] [ROW] IW-RET-WEB-ADV | undefined | 305449142989 | OK
+[2026-04-11T05:31:30.602Z] [ROW] IW-RET-GRW | undefined | 305306936034 | OK
+[2026-04-11T05:31:30.604Z] [ROW] IW-RET-AI-STD | undefined | 305322319574 | OK
+[2026-04-11T05:31:30.605Z] [ROW] IW-RET-AI-PREM | undefined | 305324126949 | OK
+[2026-04-11T05:31:30.606Z] [ROW] IW-ADD-SEO | undefined | 305324126950 | OK
+[2026-04-11T05:31:30.608Z] [ROW] IW-ADD-BRAND | undefined | 305449142991 | OK
+[2026-04-11T05:31:30.609Z] [ROW] IW-ADD-COPY | undefined | 305296120548 | OK
+[2026-04-11T05:31:30.610Z] [ROW] IW-ADD-ANLYT | undefined | 305327697623 | OK
+[2026-04-11T05:31:30.612Z] [ROW] IW-ADD-DEVOPS | undefined | 305322319576 | OK
+[2026-04-11T05:31:30.613Z] [ROW] IW-ADD-PAGE | undefined | 305305120456 | OK
+[2026-04-11T05:31:30.615Z] [SUMMARY] Catalog rows defined: 23 (spec tables total 23; runbook mentioned 24 — using 23 source rows).
+[2026-04-11T05:31:30.616Z] [SUMMARY] Failures — Stripe: 0, HubSpot: 0
+[2026-04-11T05:31:30.618Z] [MIGRATION] === LIVE run finished ===
+
+[2026-04-11T05:36:00.000Z] [CORRECTION] Earlier Stripe DEACTIVATED/ARCHIVED/DELETED/CREATED lines were false positives: Stripe CLI returns exit code 0 even when the API JSON contains error. Live key was rk_live (restricted) without write permission. Stripe live catalog was NOT changed. HubSpot deletes/creates DID succeed (23 products). Use scripts/complete-stripe-live-catalog.mjs with STRIPE_SECRET_KEY=sk_live_... to finish Stripe.
+

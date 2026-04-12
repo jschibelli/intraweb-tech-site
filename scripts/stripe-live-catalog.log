@@ -1,0 +1,2 @@
+
+[2026-04-11T05:35:15.764Z] [FATAL] STRIPE_SECRET_KEY or STRIPE_API_KEY must be set to sk_live_... (secret key in env or .env.local). Restricted keys cannot delete/create.

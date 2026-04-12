@@ -1,0 +1,235 @@
+{
+  "name": "SYS 01.5 — Client Intake Brief (Real-Time)",
+  "nodes": [
+    {
+      "parameters": {
+        "eventsUi": {
+          "eventValues": [
+            {}
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "d2ebaccc-15c5-4e3f-a626-40d416ae21e9",
+      "name": "HubSpot — New Contact Created",
+      "type": "n8n-nodes-base.hubspotTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "aac4ff50-e0c6-47c3-8b23-8ccae5a65335",
+      "credentials": {
+        "hubspotDeveloperApi": {
+          "id": "GqT0NoNc7c9eAodv",
+          "name": "HubSpot Developer account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.properties.website_intake_goals }}",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              },
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c74fd23-e7ed-4e92-bdef-8ce62e592935",
+      "name": "Has Intake Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.vid }}",
+        "additionalFields": {
+          "propertiesCollection": {
+            "propertiesValues": {
+              "properties": [
+                "firstname",
+                "lastname",
+                "email",
+                "company",
+                "phone",
+                "website",
+                "hs_lead_status",
+                "createdate",
+                "website_intake_goals",
+                "website_intake_industry",
+                "website_intake_timeline",
+                "website_intake_pages",
+                "website_intake_competitors",
+                "website_intake_design_notes"
+              ],
+              "propertyMode": "valueOnly"
+            }
+          }
+        }
+      },
+      "id": "75b6bd15-ab22-4d51-807e-f9d1be6c6166",
+      "name": "Get Full Contact Record",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        208
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "volH6pGD5psvPC7a",
+          "name": "HubSpot App Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst p = items[0].json.properties;\nconst get = (key) => p[key]?.value || 'N/A';\n\nconst name = `${get('firstname').trim()} ${get('lastname').trim()}`.trim();\nconst company = get('company') === 'UNKNOWN' ? 'N/A' : get('company');\nconst slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || \n  name.toLowerCase().replace(/[^a-z0-9]+/g, '-');\nconst dateStr = get('createdate') !== 'N/A' ? new Date(get('createdate')).toLocaleDateString('en-US') : 'N/A';\n\nconst goals = get('website_intake_goals');\nconst industry = get('website_intake_industry');\nconst timeline = get('website_intake_timeline');\nconst pages = get('website_intake_pages');\nconst competitors = get('website_intake_competitors');\nconst designNotes = get('website_intake_design_notes');\n\nconst pageCount = pages !== 'N/A' ? pages.split(',').length : 0;\nconst goalLower = goals.toLowerCase();\nlet tier = 'Growth';\nlet tierReason = 'Mid-range page count and goals suggest Growth tier.';\nif (pageCount <= 4 || goalLower.includes('simple')) {\n  tier = 'Starter';\n  tierReason = 'Limited pages and straightforward goals fit the Starter tier.';\n} else if (pageCount > 8 || goalLower.includes('automat') || goalLower.includes('integrat')) {\n  tier = 'Growth';\n  tierReason = 'Multiple pages with automation or integration goals align with Growth tier.';\n}\n\nconst gaps = [];\nif (get('phone') === 'N/A') gaps.push('No phone number on file');\nif (get('website') === 'N/A') gaps.push('No existing website URL provided');\nif (competitors === 'N/A') gaps.push('No competitor or inspiration sites listed');\nif (designNotes === 'N/A') gaps.push('No design direction notes');\nif (timeline.toLowerCase().includes('flexible')) gaps.push('Timeline is flexible — confirm hard deadlines on discovery call');\nif (company === 'N/A') gaps.push('Company name unknown — confirm on call');\n\nconst gapBlock = gaps.length > 0 ? gaps.map(g => `- ${g}`).join('\\n') : '- No critical gaps identified';\n\nconst brief = `# Client Intake Brief\n**Name:** ${name}\n**Company:** ${company}\n**Email:** ${get('email')}\n**Phone:** ${get('phone')}\n**Lead Status:** ${get('hs_lead_status')}\n**Submitted:** ${dateStr}\n\n---\n\n## What They're Building\n${name} is looking to build a website for ${company} in the ${industry} space. Their primary goals include ${goals.toLowerCase()}. Timeline is ${timeline.toLowerCase()}.\n\n---\n\n## Intake Details\n- **Industry:** ${industry}\n- **Goals:** ${goals}\n- **Timeline:** ${timeline}\n- **Pages Requested:** ${pages}\n- **Competitors / Inspiration:** ${competitors}\n- **Design Notes:** ${designNotes}\n\n---\n\n## Red Flags / Gaps\n${gapBlock}\n\n---\n\n## Recommended IW Tier\n**${tier}** — ${tierReason}\n`;\n\nreturn [{ json: { brief, slug, name } }];\n      "
+      },
+      "id": "33e44735-34b6-4332-b31f-5db9c5f8e409",
+      "name": "Build Intake Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "brief",
+        "options": {
+          "fileName": "={{ $json.slug }}-intake-brief.md",
+          "mimeType": "text/markdown"
+        }
+      },
+      "id": "1d6cb787-20ab-4a26-9565-f049ef0c088e",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=E:\\\\IntraWeb-Technologies\\\\04_Clients\\\\Client Briefs\\\\{{ $('Build Intake Brief').item.json.slug }}-intake-brief.md",
+        "options": {}
+      },
+      "id": "28ae6f3b-740e-455f-ba8a-5a0d49b61afa",
+      "name": "Save to Client Briefs",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        208
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "177c0a2b-7e1d-4d70-82ea-1cb4a882a6c8",
+      "name": "Skip — No Intake Data",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        432
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HubSpot — New Contact Created": {
+      "main": [
+        [
+          {
+            "node": "Has Intake Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Intake Data?": {
+      "main": [
+        [
+          {
+            "node": "Get Full Contact Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip — No Intake Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Full Contact Record": {
+      "main": [
+        [
+          {
+            "node": "Build Intake Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Intake Brief": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Save to Client Briefs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "99b5d0e0-02e2-444f-bfd2-a15c16a46ac6",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1cff88115aab5ae8f7bdd466a833f75cb8c09b6525a4bcba653e239d88e0a833"
+  },
+  "id": "mVlQSfO4pb5lomdf",
+  "tags": []
+}
